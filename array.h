@@ -9,7 +9,8 @@ typedef struct array
     float* data;
     float* grad;
     int size;
-    struct array* child;
+    struct array* child1;
+    struct array* child2;
     void (*backward) (struct array* self);
 } array_t;
 
@@ -19,5 +20,6 @@ array_t* array_create_random(int size);
 void array_free(array_t* array);
 void array_zero_grad(array_t* array);
 void array_print(array_t* array);
+void backward(array_t* self);
 
 #endif

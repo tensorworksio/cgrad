@@ -10,36 +10,40 @@ void set_grad(array_t* self, float grad) {
 }
 
 int main() {
-    array_t* array = array_create_random(10);
-    printf("array \n");
-    array_print(array);
+    array_t* x1 = array_create_random(10);
+    array_t* x2 = array_create_random(10);
+
+    printf("x1 \n");
+    array_print(x1);
     printf("\n");
 
-    array_t* array2 = add(array, 1.);
-    printf("array2 \n");
-    array_print(array2);
+    printf("x2 \n");
+    array_print(x2);
     printf("\n");
 
-    array_t* array3 = add(array2, 2.);
-    printf("array3 \n");
-    array_print(array3);
+    array_t* y = mul(x1, x2);
+    printf("y \n");
+    array_print(y);
     printf("\n");
 
-    set_grad(array3, 1.);
-    printf("array3 grad set \n");
-    array_print(array3);
+    set_grad(y, 1.0);
+    printf("y grad set\n");
+    array_print(y);
     printf("\n");
 
-    array3->backward(array3);
+    backward(y);
 
-    printf("array2 backward\n");
-    array_print(array2);
+    printf("x1 backward\n");
+    array_print(x1);
     printf("\n");
 
-    printf("array backward\n");
-    array_print(array);
+    printf("x2 backward\n");
+    array_print(x2);
     printf("\n");
 
-    array_free(array3);
+    array_free(y);
+    array_free(x1);
+    array_free(x2);
+
     return 0;
 }
