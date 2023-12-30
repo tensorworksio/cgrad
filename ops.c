@@ -1,10 +1,11 @@
-#include "array.h"
+#include "tensor.h"
 #include "backops.h"
 #include "ops.h"
 
-array_t* add(array_t* a,  array_t* b)
-{
-    array_t* out = array_create(a->size);
+tensor_t* add(tensor_t* a,  tensor_t* b)
+{   
+    assert(a->size == b->size && "Size mismatch");
+    tensor_t* out = tensor_create(a->size);
     for (int i = 0; i < a->size; i++)
     {
         out->data[i] = a->data[i] + b->data[i];
@@ -16,9 +17,10 @@ array_t* add(array_t* a,  array_t* b)
     return out;
 }
 
-array_t* mul(array_t* a,  array_t* b)
-{
-    array_t* out = array_create(a->size);
+tensor_t* mul(tensor_t* a,  tensor_t* b)
+{   
+    assert(a->size == b->size && "Size mismatch");
+    tensor_t* out = tensor_create(a->size);
     for (int i = 0; i < a->size; i++)
     {
         out->data[i] = a->data[i] * b->data[i];
@@ -30,3 +32,30 @@ array_t* mul(array_t* a,  array_t* b)
     return out;
 }
 
+tensor_t* power(tensor_t* a, tensor_t* b)
+{   
+    assert(a->size == b->size && "Size mismatch");
+    tensor_t* out = tensor_create(a->size);
+    for (int i = 0; i < a->size; i++)
+    {
+        out->data[i] = powf(a->data[i], b->data[i]);
+    }
+    out->child1 = a;
+    out->child2 = b;
+    out->backward = backward_power;
+
+    return out;
+}
+
+tensor_t* sum(tensor_t* a)
+{   
+    tensor_t* out = tensor_create(1);
+    for (int i = 0; i < a->size; i++)
+    {
+        out->data[0] += a->data[i];
+    }
+    out->child1 = a;
+    out->backward = backward_sum;
+
+    return out;
+}

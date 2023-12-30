@@ -1,4 +1,10 @@
-#include "array.h"
+#include <math.h>
+#include "tensor.h"
 
-array_t* add(array_t* a, array_t* b);
-array_t* mul(array_t* a, array_t* b);
+// BINARY OPS
+tensor_t* add(tensor_t* a, tensor_t* b);
+tensor_t* mul(tensor_t* a, tensor_t* b);
+tensor_t* power(tensor_t* a, tensor_t* b);
+
+// REDUCE OPS
+tensor_t* sum(tensor_t* a);

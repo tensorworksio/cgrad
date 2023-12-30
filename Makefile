@@ -5,7 +5,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g
 
 # Source files
-SRCS = main.c array.c ops.c backops.c
+SRCS = main.c tensor.c ops.c backops.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
@@ -22,7 +22,7 @@ all: $(TARGET)
 
 # Link object files into the target executable
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ -lm
 
 # Clean up object files and the target executable
 clean:
