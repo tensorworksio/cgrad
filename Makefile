@@ -5,7 +5,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g
 
 # Source files
-SRCS = main.c tensor.c ops.c backops.c
+SRCS = main.c tensor.c ops.c backops.c helpers.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)

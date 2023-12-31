@@ -2,9 +2,10 @@
 #include "tensor.h"
 #include "ops.h"
 
+
 int main() {
-    tensor_t* x1 = tensor_create_random(10);
-    tensor_t* x2 = tensor_create_random(10);
+    tensor_t* x1 = tensor_create_random((int[]){10}, 1, true); 
+    tensor_t* x2 = tensor_create_random((int[]){10}, 1, true);
 
     printf("x1 \n");
     tensor_print(x1);

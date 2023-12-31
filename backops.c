@@ -3,7 +3,7 @@
 void _backward(tensor_t* self)
 {
     if (self->backward == NULL) {
-        printf("No backward function\n");
+        printf("No backward function implemented for that operator\n");
         return;
     }
     self->backward(self);
