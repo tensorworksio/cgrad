@@ -40,8 +40,20 @@ tensor_t* tensor_create_random(int shape[], int ndim, bool requires_grad)
     return tensor;
 }
 
-void tensor_free(tensor_t* tensor)
+void tensor_free(tensor_t* tensor, bool recursive)
 {
+    if (recursive)
+    {
+        if (tensor->child1)
+        {
+            tensor_free(tensor->child1, recursive);
+        }
+        if (tensor->child2)
+        {
+            tensor_free(tensor->child2, recursive);
+        }
+    }
+
     free(tensor->data);
     free(tensor->grad);
     free(tensor->shape);

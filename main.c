@@ -35,9 +35,7 @@ int main() {
     tensor_print(x2);
     printf("\n");
 
-    tensor_free(y);
-    tensor_free(x1);
-    tensor_free(x2);
-
+    // recursively free all tensors in the graph
+    tensor_free(loss, true); 
     return 0;
 }
