@@ -17,12 +17,14 @@ int main() {
     tensor_print(x2);
     printf("\n");
 
-    tensor_t* y = mul(x1, x2);
+    // FIXME: this example should output
+    // x1.grad = [3 3 3 3 3 3 3 3 3 3]
+    tensor_t* y = tensor_mul_ft(3, x2);
     printf("y \n");
     tensor_print(y);
     printf("\n");
 
-    tensor_t* loss = sum(y);
+    tensor_t* loss = tensor_sum(y);
     backward(loss);
 
     printf("y backward\n");

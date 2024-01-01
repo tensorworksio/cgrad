@@ -1,10 +1,28 @@
 #include <math.h>
 #include "tensor.h"
+#include "backops.h"
+#include "helpers.h"
+
+// UNARY OPS
+tensor_t* tensor_neg(tensor_t* a);
 
 // BINARY OPS
-tensor_t* add(tensor_t* a, tensor_t* b);
-tensor_t* mul(tensor_t* a, tensor_t* b);
-tensor_t* power(tensor_t* a, tensor_t* b);
+tensor_t* tensor_add(tensor_t* a, tensor_t* b);
+tensor_t* tensor_add_tt(tensor_t* a, tensor_t* b);
+tensor_t* tensor_add_tf(tensor_t* a, float b);
+tensor_t* tensor_add_ft(float a, tensor_t* b);
+
+tensor_t* tensor_mul(tensor_t* a, tensor_t* b);
+tensor_t* tensor_mul_tt(tensor_t* a, tensor_t* b);
+tensor_t* tensor_mul_tf(tensor_t* a, float b);
+tensor_t* tensor_mul_ft(float a, tensor_t* b);
+
+tensor_t* tensor_sub(tensor_t* a, tensor_t* b);
+tensor_t* tensor_sub_tt(tensor_t* a, tensor_t* b);
+tensor_t* tensor_sub_tf(tensor_t* a, float b);
+tensor_t* tensor_sub_ft(float a, tensor_t* b);
+
+tensor_t* tensor_pow_tt(tensor_t* a, tensor_t* b);
 
 // REDUCE OPS
-tensor_t* sum(tensor_t* a);
+tensor_t* tensor_sum(tensor_t* a);
