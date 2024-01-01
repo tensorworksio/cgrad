@@ -60,6 +60,18 @@ void tensor_free(tensor_t* tensor, bool recursive)
     free(tensor);
 }
 
+void tensor_print(tensor_t* tensor)
+{   
+    printf("DATA\n");
+    print_tensor(tensor->data, tensor->shape, tensor->ndim);
+    printf("\n");
+    if (tensor->requires_grad) {
+        printf("GRAD\n");
+        print_tensor(tensor->grad, tensor->shape, tensor->ndim);
+        printf("\n");
+    }
+}
+
 void tensor_set_data(tensor_t* tensor, float data)
 {
     for (int i = 0; i < tensor->size; i++)

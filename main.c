@@ -4,8 +4,8 @@
 
 
 int main() {
-    tensor_t* x1 = tensor_create_random((int[]){10}, 1, true); 
-    tensor_t* x2 = tensor_create_random((int[]){10}, 1, true);
+    tensor_t* x1 = tensor_create_random((int[]){5, 10}, 2, true); 
+    tensor_t* x2 = tensor_create_random((int[]){5, 10}, 2, true);
 
     printf("x1 \n");
     tensor_print(x1);
