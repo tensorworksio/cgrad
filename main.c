@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include "tensor.h"
 #include "ops.h"
+#include "logger.h"
 
+int log_level = LOG_LEVEL_DEBUG;
 
 int main() {
     tensor_t* x1 = tensor_create_random((int[]){5, 10}, 2, true); 

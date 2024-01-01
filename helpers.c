@@ -1,7 +1,5 @@
 #include "helpers.h"
 
-#define MAX_PRINT_SIZE 5
-
 int get_size(int shape[], int ndim)
 {
     int size = 1;
@@ -26,6 +24,14 @@ bool same_shape(tensor_t* a, tensor_t* b)
         }
     }
     return true;
+}
+
+void set_tensor(float* data, int size, float value)
+{
+    for (int i = 0; i < size; i++)
+    {
+        data[i] = value;
+    }
 }
 
 void print_tensor(float* data, int shape[], int ndim)

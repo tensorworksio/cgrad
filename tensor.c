@@ -72,26 +72,28 @@ void tensor_print(tensor_t* tensor)
     }
 }
 
-void tensor_set_data(tensor_t* tensor, float data)
+void tensor_set_data(tensor_t* tensor, float value)
 {
-    for (int i = 0; i < tensor->size; i++)
-    {
-        tensor->data[i] = data;
-    }
+    set_tensor(tensor->data, tensor->size, value);
 }
 
-void tensor_set_grad(tensor_t* tensor, float grad) 
+void tensor_set_grad(tensor_t* tensor, float value) 
 {
-    for (int i = 0; i < tensor->size; i++)
-    {
-        tensor->grad[i] = grad;
-    }
+    set_tensor(tensor->grad, tensor->size, value);
 }
 
 void backward(tensor_t* tensor)
 {   
-    assert(tensor->requires_grad && "Cannot perform backward on tensor that has no grad.");
-    assert(tensor->size == 1 && "Backward operation only supported for scalar tensors.");
+    if (!tensor->requires_grad) {
+        fprintf(stderr, "Cannot perform backward on tensor that has no grad.\n");
+        tensor_free(tensor, true);
+        exit(EXIT_FAILURE);
+    }
+    if (tensor->size != 1) {
+        fprintf(stderr, "Backward operation only supported for scalar tensors.\n");
+        tensor_free(tensor, true);
+        exit(EXIT_FAILURE);
+    }
     tensor_set_grad(tensor, 1.0);
     _backward(tensor);
 }
