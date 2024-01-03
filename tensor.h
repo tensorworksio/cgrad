@@ -30,7 +30,7 @@ typedef struct tensor
 } tensor_t;
 
 
-tensor_t* tensor_init(int size);
+tensor_t* tensor_alloc(int size);
 tensor_t* tensor_create(int shape[], int ndim, bool requires_grad);
 
 tensor_t* tensor(const float data[], int shape[], int ndim, bool requires_grad);
