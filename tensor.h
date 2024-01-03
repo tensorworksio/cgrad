@@ -37,7 +37,6 @@ tensor_t* tensor(const float data[], int shape[], int ndim, bool requires_grad);
 tensor_t* tensor_rand(int shape[], int ndim, bool requires_grad);
 tensor_t* tensor_zeros(int shape[], int ndim, bool requires_grad);
 tensor_t* tensor_ones(int shape[], int ndim, bool requires_grad);
-tensor_t* tensor_const(int shape[], int ndim, bool requires_grad, float value);
 
 void tensor_free(tensor_t* tensor, bool recursive);
 void tensor_set_data(tensor_t* self, float data);

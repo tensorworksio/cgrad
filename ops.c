@@ -33,7 +33,7 @@ tensor_t* tensor_add_tf(tensor_t* a,  float b)
         out->data[i] = a->data[i] + b;
     }
     out->child1 = a;
-    out->child2 = tensor_const((int[]){1}, 1, false, b);
+    out->child2 = tensor((float[]){b}, (int[]){1}, 1, false);
     if (out->requires_grad) out->backward = backward_add;
 
     return out;
@@ -73,7 +73,7 @@ tensor_t* tensor_mul_tf(tensor_t* a,  float b)
         out->data[i] = a->data[i] * b;
     }
     out->child1 = a;
-    out->child2 = tensor_const((int[]){1}, 1, false, b);
+    out->child2 = tensor((float[]){b}, (int[]){1}, 1, false);
     if (out->requires_grad) out->backward = backward_mul;
 
     return out;
@@ -107,7 +107,7 @@ tensor_t* tensor_pow_tf(tensor_t* a,  float b)
         out->data[i] = powf(a->data[i], b);
     }
     out->child1 = a;
-    out->child2 = tensor_const((int[]){1}, 1, false, b);
+    out->child2 = tensor((float[]){b}, (int[]){1}, 1, false);
     if (out->requires_grad) out->backward = backward_pow;
 
     return out;
@@ -120,7 +120,7 @@ tensor_t* tensor_pow_ft(float a,  tensor_t* b)
     {
         out->data[i] = powf(a, b->data[i]);
     }
-    out->child1 = tensor_const((int[]){1}, 1, false, a);
+    out->child1 = tensor((float[]){a}, (int[]){1}, 1, false);
     out->child2 = b;
     if (out->requires_grad) out->backward = backward_pow;
 

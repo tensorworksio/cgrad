@@ -7,6 +7,7 @@
 
 // UNARY OPS
 tensor_t* tensor_neg(tensor_t* a);
+tensor_t* tensor_exp(tensor_t* a);
 
 // BINARY OPS
 tensor_t* tensor_add(tensor_t* a, tensor_t* b);
@@ -23,7 +24,6 @@ tensor_t* tensor_pow(tensor_t* a, tensor_t* b);
 tensor_t* tensor_pow_tt(tensor_t* a, tensor_t* b);
 tensor_t* tensor_pow_tf(tensor_t* a, float b);
 tensor_t* tensor_pow_ft(float a, tensor_t* b);
-tensor_t* tensor_exp(tensor_t* a);
 
 tensor_t* tensor_sub(tensor_t* a, tensor_t* b);
 tensor_t* tensor_sub_tt(tensor_t* a, tensor_t* b);

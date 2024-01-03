@@ -61,13 +61,6 @@ tensor_t* tensor_ones(int shape[], int ndim, bool requires_grad)
     return tensor;
 }
 
-tensor_t* tensor_const(int shape[], int ndim, bool requires_grad, float value)
-{
-    tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
-    tensor_set_data(tensor, value);
-    return tensor;
-}
-
 void tensor_free(tensor_t* tensor, bool recursive)
 {
     if (recursive)
