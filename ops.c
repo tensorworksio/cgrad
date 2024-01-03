@@ -33,7 +33,7 @@ tensor_t* tensor_add_tf(tensor_t* a,  float b)
         out->data[i] = a->data[i] + b;
     }
     out->child1 = a;
-    out->child2 = tensor_create((int[]){1}, 1, false);
+    out->child2 = tensor_const((int[]){1}, 1, false, b);
     if (out->requires_grad) out->backward = backward_add;
 
     return out;
@@ -73,15 +73,19 @@ tensor_t* tensor_mul_tf(tensor_t* a,  float b)
         out->data[i] = a->data[i] * b;
     }
     out->child1 = a;
-    out->child2 = tensor_create((int[]){1}, 1, false);
+    out->child2 = tensor_const((int[]){1}, 1, false, b);
     if (out->requires_grad) out->backward = backward_mul;
 
     return out;
 }
 
+tensor_t* tensor_pow(tensor_t* a, tensor_t* b)
+{
+   return tensor_pow_tt(a, b);
+}
+
 tensor_t* tensor_pow_tt(tensor_t* a, tensor_t* b)
 {   
-    // pow vs exp
     assert(same_shape(a, b) && "Shape mismatch");
     tensor_t* out = tensor_create(a->shape, a->ndim, a->requires_grad || b->requires_grad);
     for (int i = 0; i < a->size; i++)
@@ -93,6 +97,39 @@ tensor_t* tensor_pow_tt(tensor_t* a, tensor_t* b)
     if (out->requires_grad) out->backward = backward_pow;
 
     return out;
+}
+
+tensor_t* tensor_pow_tf(tensor_t* a,  float b)
+{   
+    tensor_t* out = tensor_create(a->shape, a->ndim, a->requires_grad);
+    for (int i = 0; i < a->size; i++)
+    {
+        out->data[i] = powf(a->data[i], b);
+    }
+    out->child1 = a;
+    out->child2 = tensor_const((int[]){1}, 1, false, b);
+    if (out->requires_grad) out->backward = backward_pow;
+
+    return out;
+}
+
+tensor_t* tensor_pow_ft(float a,  tensor_t* b)
+{   
+    tensor_t* out = tensor_create(b->shape, b->ndim, b->requires_grad);
+    for (int i = 0; i < b->size; i++)
+    {
+        out->data[i] = powf(a, b->data[i]);
+    }
+    out->child1 = tensor_const((int[]){1}, 1, false, a);
+    out->child2 = b;
+    if (out->requires_grad) out->backward = backward_pow;
+
+    return out;
+}
+
+tensor_t* tensor_exp(tensor_t* a)
+{   
+    return tensor_pow_ft(E, a);
 }
 
 tensor_t* tensor_sum(tensor_t* a)

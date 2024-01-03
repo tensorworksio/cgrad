@@ -26,7 +26,7 @@ bool same_shape(tensor_t* a, tensor_t* b)
     return true;
 }
 
-void set_tensor(float* data, int size, float value)
+void set_tensor_data(float* data, int size, float value)
 {
     for (int i = 0; i < size; i++)
     {
@@ -34,7 +34,7 @@ void set_tensor(float* data, int size, float value)
     }
 }
 
-void print_tensor(float* data, int shape[], int ndim)
+void print_tensor_data(float* data, int shape[], int ndim)
 {
     int size = get_size(shape, ndim);
     int EOD[ndim];

@@ -3,6 +3,8 @@
 #include "backops.h"
 #include "helpers.h"
 
+#define E 2.718281828459045
+
 // UNARY OPS
 tensor_t* tensor_neg(tensor_t* a);
 
@@ -22,7 +24,11 @@ tensor_t* tensor_sub_tt(tensor_t* a, tensor_t* b);
 tensor_t* tensor_sub_tf(tensor_t* a, float b);
 tensor_t* tensor_sub_ft(float a, tensor_t* b);
 
+tensor_t* tensor_pow(tensor_t* a, tensor_t* b);
 tensor_t* tensor_pow_tt(tensor_t* a, tensor_t* b);
+tensor_t* tensor_pow_tf(tensor_t* a, float b);
+tensor_t* tensor_pow_ft(float a, tensor_t* b);
+tensor_t* tensor_exp(tensor_t* a);
 
 // REDUCE OPS
 tensor_t* tensor_sum(tensor_t* a);

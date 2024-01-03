@@ -30,13 +30,41 @@ tensor_t* tensor_create(int shape[], int ndim, bool requires_grad)
     return tensor;
 }
 
-tensor_t* tensor_create_random(int shape[], int ndim, bool requires_grad)
+tensor_t* tensor(const float data[], int shape[], int ndim, bool requires_grad)
+{
+    tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
+    memcpy(tensor->data, data, sizeof(float) * tensor->size);
+    return tensor;
+}
+
+tensor_t* tensor_rand(int shape[], int ndim, bool requires_grad)
 {
     tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
     for (int i = 0; i < tensor->size; ++i)
     {
         tensor->data[i] = (float)rand() / (float)RAND_MAX;
     }
+    return tensor;
+}
+
+tensor_t* tensor_zeros(int shape[], int ndim, bool requires_grad)
+{
+    tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
+    tensor_set_data(tensor, 0.0);
+    return tensor;
+}
+
+tensor_t* tensor_ones(int shape[], int ndim, bool requires_grad)
+{
+    tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
+    tensor_set_data(tensor, 1.0);
+    return tensor;
+}
+
+tensor_t* tensor_const(int shape[], int ndim, bool requires_grad, float value)
+{
+    tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
+    tensor_set_data(tensor, value);
     return tensor;
 }
 
@@ -63,26 +91,26 @@ void tensor_free(tensor_t* tensor, bool recursive)
 void tensor_print(tensor_t* tensor)
 {   
     printf("DATA\n");
-    print_tensor(tensor->data, tensor->shape, tensor->ndim);
+    print_tensor_data(tensor->data, tensor->shape, tensor->ndim);
     printf("\n");
     if (tensor->requires_grad) {
         printf("GRAD\n");
-        print_tensor(tensor->grad, tensor->shape, tensor->ndim);
+        print_tensor_data(tensor->grad, tensor->shape, tensor->ndim);
         printf("\n");
     }
 }
 
 void tensor_set_data(tensor_t* tensor, float value)
 {
-    set_tensor(tensor->data, tensor->size, value);
+    set_tensor_data(tensor->data, tensor->size, value);
 }
 
 void tensor_set_grad(tensor_t* tensor, float value) 
 {
-    set_tensor(tensor->grad, tensor->size, value);
+    set_tensor_data(tensor->grad, tensor->size, value);
 }
 
-void backward(tensor_t* tensor)
+void tensor_backward(tensor_t* tensor)
 {   
     if (!tensor->requires_grad) {
         fprintf(stderr, "Cannot perform backward on tensor that has no grad.\n");
@@ -95,5 +123,5 @@ void backward(tensor_t* tensor)
         exit(EXIT_FAILURE);
     }
     tensor_set_grad(tensor, 1.0);
-    _backward(tensor);
+    backward(tensor);
 }
