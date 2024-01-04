@@ -1,6 +1,7 @@
 .vscode
 
 main
+*.o
 
 src/*
 !src/*.c
