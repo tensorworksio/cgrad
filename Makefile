@@ -9,7 +9,7 @@ TEST_BIN = $(TEST_SRC:.c=)
 
 .PHONY: all clean test main
 
-all: main test
+all: main
 
 main: main.o $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
