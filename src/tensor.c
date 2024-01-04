@@ -106,12 +106,12 @@ void tensor_set_grad(tensor_t* tensor, float value)
 void tensor_backward(tensor_t* tensor)
 {   
     if (!tensor->requires_grad) {
-        fprintf(stderr, "Cannot perform backward on tensor that has no grad.\n");
+        log_error("Cannot perform backward on tensor that has no grad.\n");
         tensor_free(tensor, true);
         exit(EXIT_FAILURE);
     }
     if (tensor->size != 1) {
-        fprintf(stderr, "Backward operation only supported for scalar tensors.\n");
+        log_error("Backward operation only supported for scalar tensors.\n");
         tensor_free(tensor, true);
         exit(EXIT_FAILURE);
     }

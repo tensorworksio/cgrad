@@ -1,29 +1,27 @@
-# Compiler
 CC = gcc
+CFLAGS = -Isrc -Wall -Wextra -g
+LDFLAGS = -lm -lcriterion
+SRC = $(wildcard src/*.c)
+OBJ = $(SRC:.c=.o)
+TEST_SRC = $(wildcard tests/*.c)
+TEST_OBJ = $(TEST_SRC:.c=.o)
+TEST_BIN = $(TEST_SRC:.c=)
 
-# Compiler flags
-CFLAGS = -Wall -Wextra -g
+.PHONY: all clean test main
 
-# Source files
-SRCS = main.c tensor.c ops.c backops.c helpers.c logger.c
+all: main test
 
-# Object files
-OBJS = $(SRCS:.c=.o)
+main: main.o $(OBJ)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-# Target executable
-TARGET = main
-
-# Default target
-all: $(TARGET)
-
-# Compile source files into object files
-%.o: %.c
+main.o: main.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Link object files into the target executable
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ -lm
+test: $(TEST_BIN)
+	for test in $(TEST_BIN); do echo "Running $$test"; ./$$test; done
 
-# Clean up object files and the target executable
+tests/%: tests/%.o $(filter-out main.o, $(OBJ))
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJ) $(TEST_OBJ) $(TEST_BIN) main.o main

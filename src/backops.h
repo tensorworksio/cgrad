@@ -1,6 +1,6 @@
 #include <math.h>
+#include "log.h"
 #include "tensor.h"
-#include "logger.h"
 #include "helpers.h"
 
 void backward(tensor_t* self);

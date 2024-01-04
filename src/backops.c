@@ -66,7 +66,7 @@ void update_grad_exp(tensor_t* self, tensor_t* child, tensor_t* other)
 void backward_add(tensor_t* self)
 {   
     if (self->child1 == NULL || self->child2 == NULL) {
-        printf("A child is NULL\n");
+        log_warn("A child is NULL\n");
         return;
     }
     update_grad_add(self, self->child1);
@@ -79,7 +79,7 @@ void backward_add(tensor_t* self)
 void backward_mul(tensor_t* self)
 {   
     if (self->child1 == NULL || self->child2 == NULL) {
-        printf("A child is NULL\n");
+        log_warn("A child is NULL\n");
         return;
     }
     update_grad_mul(self, self->child1, self->child2);
@@ -92,7 +92,7 @@ void backward_mul(tensor_t* self)
 void backward_pow(tensor_t* self)
 {   
     if (self->child1 == NULL) {
-        printf("A child is NULL\n");
+        log_warn("A child is NULL\n");
         return;
     }
     update_grad_pow(self, self->child1, self->child2);
@@ -105,7 +105,7 @@ void backward_pow(tensor_t* self)
 void backward_relu(tensor_t* self)
 {   
     if (self->child1 == NULL) {
-        printf("A child is NULL\n");
+        log_warn("A child is NULL\n");
         return;
     }
     update_grad_relu(self, self->child1);
@@ -116,7 +116,7 @@ void backward_relu(tensor_t* self)
 void backward_sum(tensor_t* self)
 {   
     if (self->child1 == NULL) {
-        printf("A child is NULL\n");
+        log_warn("A child is NULL\n");
         return;
     }
     for (int i = 0; i < self->child1->size; i++)

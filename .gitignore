@@ -1,3 +1,10 @@
 .vscode
-*.o
+
 main
+
+src/*
+!src/*.c
+!src/*.h
+
+tests/*
+!tests/*.c
