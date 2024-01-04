@@ -6,32 +6,23 @@
 int main() {
     log_set_level(LOG_INFO);
 
-    tensor_t* t1 = tensor((float[]){2., 4., 6.}, (int[]){3}, 1, true);
-    tensor_t* t2 = tensor((float[]){1., 2., 0.}, (int[]){3}, 1, true);
+    tensor_t* a = tensor((float[]){2., 4., 6.}, (int[]){3}, 1, true);
+    tensor_t* b = tensor((float[]){1., 2., 0.}, (int[]){3}, 1, true);
+    // c = a + b
+    tensor_t* c = tensor_add(a, b);
+    // d = c ** 3
+    tensor_t* d = tensor_pow_tf(c, 3.);
+    // e = relu(d)
+    tensor_t* e = tensor_relu(d);
+    // f = sum(e)
+    tensor_t* f = tensor_sum(e);
 
-    printf("t1\n");
-    tensor_print(t1);
-
-    printf("t2\n");
-    tensor_print(t2);
-
-    tensor_t* y = tensor_div(t1, t2);
-    printf("y\n");
-    tensor_print(y);
-
-    tensor_t* loss = tensor_sum(y);
-    tensor_backward(loss);
-
-    printf("y backward\n");
-    tensor_print(y);
-
-    printf("t1 backward\n");
-    tensor_print(t1);
-
-    printf("t2 backward\n");
-    tensor_print(t2);
+    tensor_backward(f); // compute gradients
+    
+    tensor_print(a); // print tensors a.data and a.grad = d(f)/d(a)
+    tensor_print(b); // print tensors b.data and b.grad = d(f)/d(b)
 
     // recursively free all tensors in the graph
-    tensor_free(loss, true); 
+    tensor_free(f, true);
     return 0;
 }
