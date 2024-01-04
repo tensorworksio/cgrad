@@ -18,6 +18,15 @@ void update_grad_add(tensor_t* self, tensor_t* child)
     }
 }
 
+void update_grad_relu(tensor_t* self, tensor_t* child)
+{
+    if (!child->requires_grad) return;
+    for (int i = 0; i < self->size; i++)
+    {   
+        child->grad[i] += self->grad[i] * (self->data[i] > 0);
+    }
+}
+
 void update_grad_mul(tensor_t* self, tensor_t* child, tensor_t* other)
 {
     if (!child->requires_grad) return;
@@ -91,6 +100,17 @@ void backward_pow(tensor_t* self)
 
     backward(self->child1);
     backward(self->child2);
+}
+
+void backward_relu(tensor_t* self)
+{   
+    if (self->child1 == NULL) {
+        printf("A child is NULL\n");
+        return;
+    }
+    update_grad_relu(self, self->child1);
+
+    backward(self->child1);
 }
 
 void backward_sum(tensor_t* self)

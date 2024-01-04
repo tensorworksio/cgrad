@@ -5,6 +5,10 @@
 
 void backward(tensor_t* self);
 
+// UNARY OPS
+void backward_relu(tensor_t* self);
+void update_grad_relu(tensor_t* self, tensor_t* child);
+
 // BINARY OPS
 void backward_add(tensor_t* self);
 void update_grad_add(tensor_t* self, tensor_t* child);

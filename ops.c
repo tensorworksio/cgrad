@@ -149,6 +149,18 @@ tensor_t* tensor_neg(tensor_t* a) {
     return tensor_mul_tf(a, -1.0);
 }
 
+tensor_t* tensor_relu(tensor_t* a) {
+    tensor_t* out = tensor_create(a->shape, a->ndim, a->requires_grad);
+    for (int i = 0; i < a->size; i++)
+    {
+        out->data[i] = (a->data[i] > 0.0) ? a->data[i] : 0.0;
+    }
+    out->child1 = a;
+    if (out->requires_grad) out->backward = backward_relu;
+
+    return out;
+}
+
 tensor_t* tensor_sub(tensor_t* a, tensor_t* b)
 {
    return tensor_sub_tt(a, b);

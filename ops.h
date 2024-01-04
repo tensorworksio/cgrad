@@ -8,6 +8,7 @@
 // UNARY OPS
 tensor_t* tensor_neg(tensor_t* a);
 tensor_t* tensor_exp(tensor_t* a);
+tensor_t* tensor_relu(tensor_t* a);
 
 // BINARY OPS
 tensor_t* tensor_add(tensor_t* a, tensor_t* b);
