@@ -194,9 +194,6 @@ Test(sum, sum_t)
     tensor_t* a = tensor((float[]){1., -2., 3., -4.}, (int[]){4}, 1, false);
     tensor_t* res = tensor_sum(a);
     tensor_t* expected = tensor((float[]){-2.}, (int[]){1}, 1, false);
-    tensor_print(a);
-    tensor_print(res);
-    tensor_print(expected);
     cr_assert(tensor_equals(res, expected, true), "sum_t failed");
     tensor_free(res, true);
     tensor_free(expected, true);

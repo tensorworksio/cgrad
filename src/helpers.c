@@ -21,6 +21,7 @@ bool is_same_shape(int shape_a[], int shape_b[], int ndim_a, int ndim_b) {
 }
 
 bool is_equal_data(float* data_a, float* data_b, int size) {
+    if(data_a == NULL || data_b == NULL) return false;
     for (int i = 0; i < size; i++)
     {
         if (fabs(data_a[i] - data_b[i]) > EPSILON) return false;
@@ -28,14 +29,7 @@ bool is_equal_data(float* data_a, float* data_b, int size) {
     return true;
 }
 
-void set_data(float* data_dst, int size_dst, float* data_src, int size_src)
-{   
-    assert(size_src == size_dst && "Size mismatch");
-    memcpy(data_dst, data_src, size_src * sizeof(float));
-}
-
-void set_cst_data(float* data, int size, float value)
-{
+void set_data(float* data, float value, int size) {
     for (int i = 0; i < size; i++)
     {
         data[i] = value;

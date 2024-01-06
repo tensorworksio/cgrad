@@ -5,7 +5,7 @@
 tensor_t* tensor_alloc(int size)
 {   
     tensor_t* tensor = (tensor_t*)malloc(sizeof(tensor_t));
-    tensor->data = (float*)malloc(sizeof(float) * size);
+    tensor->data = (float*)calloc(size, sizeof(float));
     tensor->grad = NULL; // grad is only allocated if needed
     tensor->size = size;
     tensor->child1 = NULL;
@@ -22,11 +22,7 @@ tensor_t* tensor_create(int shape[], int ndim, bool requires_grad)
     tensor->requires_grad = requires_grad;
     tensor->shape = (int*)malloc(sizeof(int) * ndim);
     memcpy(tensor->shape, shape, sizeof(int) * ndim);
-    if (requires_grad)
-    {
-        tensor->grad = (float*)malloc(sizeof(float) * size);
-        tensor_zero_grad(tensor);
-    }
+    if (requires_grad) tensor->grad = (float*)calloc(size, sizeof(float));
     return tensor;
 }
 
@@ -50,35 +46,37 @@ tensor_t* tensor_rand(int shape[], int ndim, bool requires_grad)
 tensor_t* tensor_zeros(int shape[], int ndim, bool requires_grad)
 {
     tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
-    set_cst_data(tensor->data, tensor->size, 0.0);
+    set_data(tensor->data, 0., tensor->size);
     return tensor;
 }
 
 void tensor_zero_grad(tensor_t* tensor)
 {
-    set_cst_data(tensor->grad, tensor->size, 0.0);
+    set_data(tensor->grad, 0., tensor->size);
 }
 
 tensor_t* tensor_ones(int shape[], int ndim, bool requires_grad)
 {
     tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
-    set_cst_data(tensor->data, tensor->size, 1.0);
+    set_data(tensor->data, 1., tensor->size);
     return tensor;
 }
 
 void tensor_init_grad(tensor_t* tensor)
 {
-    set_cst_data(tensor->grad, tensor->size, 1.0);
+    set_data(tensor->grad, 1., tensor->size);
 }
 
 void tensor_set_data(tensor_t* tensor, float data[], int size)
-{
-    set_data(tensor->data, tensor->size, data, size);
+{   
+    assert(size == tensor->size && "Size mismatch");
+    memcpy(tensor->data, data, size * sizeof(float));
 }
 
 void tensor_set_grad(tensor_t* tensor, float grad[], int size)
 {
-    set_data(tensor->grad, tensor->size, grad, size);
+    assert(size == tensor->size && "Size mismatch");
+    memcpy(tensor->grad, grad, size * sizeof(float));
 }
 
 bool tensor_same_shape(tensor_t* a, tensor_t* b)
