@@ -54,7 +54,6 @@ make test
 ## TODO
 
 ### Bug
-- tensor_sum has undefined behaviour: sometimes test works, sometimes not
 - Anonymous tensor Segfault when using recursive tensor_free
 
 ### Features
