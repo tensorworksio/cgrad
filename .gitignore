@@ -3,9 +3,5 @@
 main
 *.o
 
-src/*
-!src/*.c
-!src/*.h
-
 tests/*
 !tests/*.c

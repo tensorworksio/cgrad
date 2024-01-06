@@ -10,23 +10,31 @@ int get_size(int shape[], int ndim)
     return size;
 }
 
-bool same_shape(tensor_t* a, tensor_t* b)
-{
-    if (a->ndim != b->ndim)
+bool is_same_shape(int shape_a[], int shape_b[], int ndim_a, int ndim_b) {
+    if (ndim_a != ndim_b) return false;
+
+    for (int i = 0; i < ndim_a; i++)
     {
-        return false;
-    }
-    for (int i = 0; i < a->ndim; i++)
-    {
-        if (a->shape[i] != b->shape[i])
-        {
-            return false;
-        }
+        if (shape_a[i] != shape_b[i]) return false;
     }
     return true;
 }
 
-void set_tensor_data(float* data, int size, float value)
+bool is_equal_data(float* data_a, float* data_b, int size) {
+    for (int i = 0; i < size; i++)
+    {
+        if (fabs(data_a[i] - data_b[i]) > EPSILON) return false;
+    }
+    return true;
+}
+
+void set_data(float* data_dst, int size_dst, float* data_src, int size_src)
+{   
+    assert(size_src == size_dst && "Size mismatch");
+    memcpy(data_dst, data_src, size_src * sizeof(float));
+}
+
+void set_cst_data(float* data, int size, float value)
 {
     for (int i = 0; i < size; i++)
     {
@@ -34,7 +42,7 @@ void set_tensor_data(float* data, int size, float value)
     }
 }
 
-void print_tensor_data(float* data, int shape[], int ndim)
+void print_data(float* data, int shape[], int ndim)
 {
     int size = get_size(shape, ndim);
     int EOD[ndim];

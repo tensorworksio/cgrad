@@ -3,8 +3,6 @@
 #include "backops.h"
 #include "helpers.h"
 
-#define E 2.718281828459045
-
 // UNARY OPS
 tensor_t* tensor_neg(tensor_t* a);
 tensor_t* tensor_exp(tensor_t* a);

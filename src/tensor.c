@@ -25,7 +25,7 @@ tensor_t* tensor_create(int shape[], int ndim, bool requires_grad)
     if (requires_grad)
     {
         tensor->grad = (float*)malloc(sizeof(float) * size);
-        tensor_set_grad(tensor, 0.0);
+        tensor_zero_grad(tensor);
     }
     return tensor;
 }
@@ -50,15 +50,49 @@ tensor_t* tensor_rand(int shape[], int ndim, bool requires_grad)
 tensor_t* tensor_zeros(int shape[], int ndim, bool requires_grad)
 {
     tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
-    tensor_set_data(tensor, 0.0);
+    set_cst_data(tensor->data, tensor->size, 0.0);
     return tensor;
+}
+
+void tensor_zero_grad(tensor_t* tensor)
+{
+    set_cst_data(tensor->grad, tensor->size, 0.0);
 }
 
 tensor_t* tensor_ones(int shape[], int ndim, bool requires_grad)
 {
     tensor_t* tensor = tensor_create(shape, ndim, requires_grad);
-    tensor_set_data(tensor, 1.0);
+    set_cst_data(tensor->data, tensor->size, 1.0);
     return tensor;
+}
+
+void tensor_init_grad(tensor_t* tensor)
+{
+    set_cst_data(tensor->grad, tensor->size, 1.0);
+}
+
+void tensor_set_data(tensor_t* tensor, float data[], int size)
+{
+    set_data(tensor->data, tensor->size, data, size);
+}
+
+void tensor_set_grad(tensor_t* tensor, float grad[], int size)
+{
+    set_data(tensor->grad, tensor->size, grad, size);
+}
+
+bool tensor_same_shape(tensor_t* a, tensor_t* b)
+{
+    return is_same_shape(a->shape, b->shape, a->ndim, b->ndim);
+}
+
+bool tensor_equals(tensor_t* a, tensor_t* b, bool with_grad)
+{
+    if (!tensor_same_shape(a, b)) return false;
+    if (!is_equal_data(a->data, b->data, a->size)) return false;
+    if (with_grad && a->requires_grad != b->requires_grad) return false;
+    if (a->requires_grad && b->requires_grad && !is_equal_data(a->grad, b->grad, a->size)) return false;
+    return true;
 }
 
 void tensor_free(tensor_t* tensor, bool recursive)
@@ -84,23 +118,13 @@ void tensor_free(tensor_t* tensor, bool recursive)
 void tensor_print(tensor_t* tensor)
 {   
     printf("DATA\n");
-    print_tensor_data(tensor->data, tensor->shape, tensor->ndim);
+    print_data(tensor->data, tensor->shape, tensor->ndim);
     printf("\n");
     if (tensor->requires_grad) {
         printf("GRAD\n");
-        print_tensor_data(tensor->grad, tensor->shape, tensor->ndim);
+        print_data(tensor->grad, tensor->shape, tensor->ndim);
         printf("\n");
     }
-}
-
-void tensor_set_data(tensor_t* tensor, float value)
-{
-    set_tensor_data(tensor->data, tensor->size, value);
-}
-
-void tensor_set_grad(tensor_t* tensor, float value) 
-{
-    set_tensor_data(tensor->grad, tensor->size, value);
 }
 
 void tensor_backward(tensor_t* tensor)
@@ -115,6 +139,6 @@ void tensor_backward(tensor_t* tensor)
         tensor_free(tensor, true);
         exit(EXIT_FAILURE);
     }
-    tensor_set_grad(tensor, 1.0);
+    tensor_init_grad(tensor);
     backward(tensor);
 }

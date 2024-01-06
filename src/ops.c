@@ -12,7 +12,7 @@ tensor_t* tensor_add_ft(float a,  tensor_t* b)
 
 tensor_t* tensor_add_tt(tensor_t* a,  tensor_t* b)
 {   
-    assert(same_shape(a, b) && "Shape mismatch");
+    assert(tensor_same_shape(a, b) && "Shape mismatch");
     tensor_t* out = tensor_create(a->shape, a->ndim, a->requires_grad || b->requires_grad);
     for (int i = 0; i < a->size; i++)
     {
@@ -52,7 +52,7 @@ tensor_t* tensor_mul_ft(float a,  tensor_t* b)
 
 tensor_t* tensor_mul_tt(tensor_t* a,  tensor_t* b)
 {   
-    assert(same_shape(a, b) && "Shape mismatch");
+    assert(tensor_same_shape(a, b) && "Shape mismatch");
     tensor_t* out = tensor_create(a->shape, a->ndim, a->requires_grad || b->requires_grad);
     for (int i = 0; i < a->size; i++)
     {
@@ -86,7 +86,7 @@ tensor_t* tensor_pow(tensor_t* a, tensor_t* b)
 
 tensor_t* tensor_pow_tt(tensor_t* a, tensor_t* b)
 {   
-    assert(same_shape(a, b) && "Shape mismatch");
+    assert(tensor_same_shape(a, b) && "Shape mismatch");
     tensor_t* out = tensor_create(a->shape, a->ndim, a->requires_grad || b->requires_grad);
     for (int i = 0; i < a->size; i++)
     {
@@ -142,7 +142,15 @@ tensor_t* tensor_sum(tensor_t* a)
 
 tensor_t* tensor_exp(tensor_t* a)
 {   
-    return tensor_pow_ft(E, a);
+    tensor_t* out = tensor_create(a->shape, a->ndim, a->requires_grad);
+    for (int i = 0; i < a->size; i++)
+    {
+        out->data[i] = expf(a->data[i]);
+    }
+    out->child1 = a;
+    if (out->requires_grad) out->backward = backward_pow;
+
+    return out;
 }
 
 tensor_t* tensor_neg(tensor_t* a) {

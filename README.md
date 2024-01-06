@@ -2,6 +2,11 @@
 
 Intended to be a Torch-like autograd engine, inspired by [micrograd](https://github.com/karpathy/micrograd/tree/master)
 
+## Dependencies
+Install criterion to run tests:
+```bash
+apt-get install libcriterion-dev
+```
 ## How to use it
 ```C
 #include <stdio.h>
@@ -41,6 +46,7 @@ make && ./main
 ```
 
 ## Run test
+
 ```bash
 make test
 ```
@@ -48,6 +54,7 @@ make test
 ## TODO
 
 ### Bug
+- tensor_sum has undefined behaviour: sometimes test works, sometimes not
 - Anonymous tensor Segfault when using recursive tensor_free
 
 ### Features
