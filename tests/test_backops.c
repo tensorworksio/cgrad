@@ -170,7 +170,6 @@ Test(mul, backward_mul_tf)
     log_set_level(LOG_INFO);
 
     tensor_t* a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, true);
-
     tensor_t* c = tensor_mul_tf(a, 5.);
     tensor_t* y = tensor_sum(c);
 
@@ -191,7 +190,6 @@ Test(mul, backward_mul_ft)
     log_set_level(LOG_INFO);
 
     tensor_t* a = tensor((float[]){5., 6., 7., 8.}, (int[]){4}, 1, true);
-
     tensor_t* c = tensor_mul_ft(5., a);
     tensor_t* y = tensor_sum(c);
 
@@ -239,7 +237,6 @@ Test(div, backward_div_tf)
     log_set_level(LOG_INFO);
 
     tensor_t* a = tensor((float[]){5., 6., 9., 8.}, (int[]){4}, 1, true);
-
     tensor_t* c = tensor_div_tf(a, 5.);
     tensor_t* y = tensor_sum(c);
 
@@ -260,7 +257,6 @@ Test(div, backward_div_ft)
     log_set_level(LOG_INFO);
 
     tensor_t* a = tensor((float[]){5., 6., 9., 8.}, (int[]){4}, 1, true);
-
     tensor_t* c = tensor_div_ft(5., a);
     tensor_t* y = tensor_sum(c);
 
@@ -308,7 +304,6 @@ Test (pow, backward_pow_tf)
     log_set_level(LOG_INFO);
 
     tensor_t* a = tensor((float[]){4., 3., 2., 1.}, (int[]){4}, 1, true);
-
     tensor_t* c = tensor_pow_tf(a, 5.);
     tensor_t* y = tensor_sum(c);
 
@@ -329,7 +324,6 @@ Test(pow, backward_pow_ft)
     log_set_level(LOG_INFO);
 
     tensor_t* a = tensor((float[]){4., 3., 2., 1.}, (int[]){4}, 1, true);
-
     tensor_t* c = tensor_pow_ft(5., a);
     tensor_t* y = tensor_sum(c);
 
@@ -343,6 +337,27 @@ Test(pow, backward_pow_ft)
 
     tensor_free(y, true);
     tensor_free(a_grad, true);
+}
+
+Test(exp, backward_exp)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t* a = tensor((float[]){logf(1.), logf(2.), logf(3.), logf(4.)}, (int[]){4}, 1, true);
+    tensor_t* c = tensor_exp(a);
+    tensor_t* y = tensor_sum(c);
+
+    tensor_backward(y);
+
+    tensor_t* a_grad = tensor_create(a->shape, a->ndim, true);
+    tensor_set_data(a_grad, a->data, a->size);
+    tensor_set_grad(a_grad, (float[]){1., 2., 3., 4.}, a->size);
+
+    cr_assert(tensor_equals(a, a_grad, true), "backward_exp failed");
+
+    tensor_free(y, true);
+    tensor_free(a_grad, true);
+
 }
 
 Test(relu, backward_relu) 

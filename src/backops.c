@@ -142,7 +142,7 @@ void backward_sum(tensor_t* self)
     backward(self->child1);
 }
 
-void backward_copy(tensor_t* self)
+void backward_reshape(tensor_t* self)
 {   
     if (self->child1 == NULL) {
         log_warn("A child is NULL\n");

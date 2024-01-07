@@ -161,9 +161,9 @@ Test(pow, pow_ft)
 
 Test(exp, exp_t)
 {
-    tensor_t* a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
+    tensor_t* a = tensor((float[]){logf(1.), logf(2.), logf(3.), logf(4.)}, (int[]){4}, 1, false);
     tensor_t* res = tensor_exp(a);
-    tensor_t* expected = tensor((float[]){expf(1.), expf(2.), expf(3.), expf(4.)}, (int[]){4}, 1, false);
+    tensor_t* expected = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     cr_assert(tensor_equals(res, expected, true), "exp_t failed");
     tensor_free(res, true);
     tensor_free(expected, true);
