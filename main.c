@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "tensor.h"
 #include "ops.h"
 #include "log.h"
@@ -10,6 +9,8 @@ int main() {
     tensor_t* b = tensor((float[]){1., 2., 0.}, (int[]){3}, 1, true);
     // c = a + b
     tensor_t* c = tensor_add(a, b);
+    // c = c - 1
+    c = tensor_sub_tf(c, 1.);
     // d = c ** 3
     tensor_t* d = tensor_pow_tf(c, 3.);
     // e = relu(d)
