@@ -63,6 +63,24 @@ void update_grad_exp(tensor_t* self, tensor_t* child, tensor_t* other)
     }
 }
 
+void update_grad_sum(tensor_t* self, tensor_t* child)
+{
+    if (!child->requires_grad) return;
+    for (int i = 0; i < child->size; i++)
+    {   
+        child->grad[i] += self->grad[0];
+    }
+}
+
+void update_grad_copy(tensor_t* self, tensor_t* child)
+{
+    if (!child->requires_grad) return;
+    for (int i = 0; i < self->size; i++)
+    {   
+        child->grad[i] += self->grad[i];
+    }
+}
+
 void backward_add(tensor_t* self)
 {   
     if (self->child1 == NULL || self->child2 == NULL) {
@@ -119,9 +137,18 @@ void backward_sum(tensor_t* self)
         log_warn("A child is NULL\n");
         return;
     }
-    for (int i = 0; i < self->child1->size; i++)
-    {   
-        if (self->child1->requires_grad) self->child1->grad[i] += self->grad[0];
+    update_grad_sum(self, self->child1);
+
+    backward(self->child1);
+}
+
+void backward_copy(tensor_t* self)
+{   
+    if (self->child1 == NULL) {
+        log_warn("A child is NULL\n");
+        return;
     }
+    update_grad_copy(self, self->child1);
+
     backward(self->child1);
 }

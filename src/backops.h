@@ -22,3 +22,7 @@ void update_grad_exp(tensor_t* self, tensor_t* child, tensor_t* other);
 
 // REDUCE OPS
 void backward_sum(tensor_t* self);
+
+// MOVEMENT OPS
+void backward_copy(tensor_t* self);
+void update_grad_copy(tensor_t* self, tensor_t* child);
