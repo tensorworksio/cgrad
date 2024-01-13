@@ -10,6 +10,37 @@ int get_size(int shape[], int ndim)
     return size;
 }
 
+int get_index(int shape[], int coords[], int ndim) {
+    int index = 0;
+    int multiplier = 1;
+    for (int i = ndim - 1; i >= 0; i--) {
+        index += coords[i] * multiplier;
+        multiplier *= shape[i];
+    }
+    return index;
+}
+
+void set_shape(int shape[], slice_t ranges[], int ndim)
+{   
+    int range;
+    for (int d = 0; d < ndim; d++)
+    {   
+        assert(ranges[d].start >= 0);
+        assert(ranges[d].step > 0);
+        assert(ranges[d].start <= ranges[d].stop);
+
+        range = ranges[d].stop - ranges[d].start;
+        shape[d] = range / ranges[d].step + (range % ranges[d].step != 0 ? 1 : 0);
+    }
+}
+
+void set_data(float* data, float value, int size) {
+    for (int i = 0; i < size; i++)
+    {
+        data[i] = value;
+    }
+}
+
 bool is_same_shape(int shape_a[], int shape_b[], int ndim_a, int ndim_b) {
     if (ndim_a != ndim_b) return false;
 
@@ -27,13 +58,6 @@ bool is_equal_data(float* data_a, float* data_b, int size) {
         if (fabs(data_a[i] - data_b[i]) > EPSILON) return false;
     }
     return true;
-}
-
-void set_data(float* data, float value, int size) {
-    for (int i = 0; i < size; i++)
-    {
-        data[i] = value;
-    }
 }
 
 void print_data(float* data, int shape[], int ndim)

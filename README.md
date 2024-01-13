@@ -58,7 +58,11 @@ make test
 - Anonymous tensor Segfault when using recursive tensor_free
 
 ### Features
-- build list of required operator 
-- radd, rmul, rsub, rdiv, rpow ops
-- adding some movement and reduce ops
-- test for each forward/backward op
+- Slice operator for tensor: 
+    - needs more testing 
+    - needs some logic to handle negative indexing
+    - needs some logic to get default start, end and step
+- Reduce operator for specific axes (require slices)
+- Matmul operator as a combination of sum, add and reshape ideally
+- Pooling operators
+- Conv operator as a specific case of pool operator

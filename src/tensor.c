@@ -119,6 +119,31 @@ void tensor_print(tensor_t* tensor)
     }
 }
 
+void tensor_fill(tensor_t* dst, tensor_t* src, int* dst_idx, int* src_idx, slice_t* ranges, int dim) {
+    if (dim == src->ndim) {
+        dst->data[(*dst_idx)++] = src->data[get_index(src->shape, src_idx, src->ndim)];
+    } else {
+        for (int i = ranges[dim].start; i < ranges[dim].stop; i += ranges[dim].step) {
+            src_idx[dim] = i;
+            tensor_fill(dst, src, dst_idx, src_idx, ranges, dim + 1);
+        }
+    }
+}
+
+tensor_t* tensor_slice(tensor_t* tensor, slice_t ranges[], int ndim)
+{
+    assert(ndim == tensor->ndim && "Number of ranges must be equal to the number of dimensions");
+    // Compute the shape and size of the new tensor
+    int shape[ndim];
+    set_shape(shape, ranges, ndim);
+    // Create the new tensor
+    tensor_t* out = tensor_create(shape, ndim, tensor->requires_grad);
+    // Fill the new tensor with the sliced data
+    int idx[ndim]; int out_idx = 0;
+    tensor_fill(out, tensor, &out_idx, idx, ranges, 0);
+    return out;
+}
+
 void tensor_backward(tensor_t* tensor)
 {   
     if (!tensor->requires_grad) {
