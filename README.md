@@ -61,7 +61,6 @@ make test
 - Slice operator for tensor: 
     - needs more testing 
     - needs some logic to handle negative indexing
-    - needs some logic to get default start, end and step
 - Reduce operator for specific axes (require slices)
 - Matmul operator as a combination of sum, add and reshape ideally
 - Pooling operators
