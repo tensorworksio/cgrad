@@ -58,6 +58,7 @@ make test
 - Anonymous tensor Segfault when using recursive tensor_free
 
 ### Features
+- Transpose oprertor: done but print_data is an indexing nightmare
 - Slice operator for tensor: 
     - needs more testing 
     - needs some logic to handle negative indexing

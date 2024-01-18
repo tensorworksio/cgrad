@@ -8,6 +8,7 @@ tensor_t *tensor_alloc(int size)
     tensor->data = (float *)calloc(size, sizeof(float));
     tensor->grad = NULL; // grad is only allocated if needed
     tensor->size = size;
+    tensor->stride = 1;
     tensor->child1 = NULL;
     tensor->child2 = NULL;
     tensor->backward = NULL;
@@ -117,12 +118,12 @@ void tensor_free(tensor_t *tensor, bool recursive)
 void tensor_print(tensor_t *tensor)
 {
     printf("DATA\n");
-    print_data(tensor->data, tensor->shape, tensor->ndim);
+    print_data(tensor->data, tensor->shape, tensor->ndim, tensor->stride);
     printf("\n");
     if (tensor->requires_grad)
     {
         printf("GRAD\n");
-        print_data(tensor->grad, tensor->shape, tensor->ndim);
+        print_data(tensor->grad, tensor->shape, tensor->ndim, tensor->stride);
         printf("\n");
     }
 }
@@ -143,6 +144,29 @@ void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice
     }
 }
 
+tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
+{
+    assert(tensor->size == get_size(shape, ndim) && "Size mismatch");
+    tensor_t *reshaped = tensor_create(shape, ndim, tensor->requires_grad);
+    reshaped->data = tensor->data;
+    reshaped->grad = tensor->grad;
+
+    return reshaped;
+}
+
+tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
+{
+    int shape[tensor->ndim];
+    memcpy(shape, tensor->shape, sizeof(shape));
+    shape[axis1] = tensor->shape[axis2];
+    shape[axis2] = tensor->shape[axis1];
+
+    tensor_t *transposed = tensor_reshape(tensor, shape, tensor->ndim);
+    transposed->stride = shape[axis1];
+
+    return transposed;
+}
+
 tensor_t *tensor_slice(tensor_t *tensor, slice_t ranges[], int ndim)
 {
     assert(ndim == tensor->ndim && "Number of ranges must be equal to the number of dimensions");
@@ -158,6 +182,35 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t ranges[], int ndim)
     int out_idx = 0;
     tensor_fill(out, tensor, &out_idx, idx, ranges, 0);
     return out;
+}
+
+tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
+{
+    // only works when we concateneta along axis 0
+    // we should simply transpose the tensors and concatenate along axis 0 then transpose back
+    int ndim = tensors[0]->ndim;
+    int shape[ndim];
+    memcpy(shape, tensors[0]->shape, sizeof(shape));
+    for (int i = 1; i < num_tensors; i++)
+    {
+        shape[axis] += tensors[i]->shape[axis];
+    }
+
+    tensor_t *c = tensor_create(shape, ndim, false);
+    int dst_idx = 0;
+    int src_idx[ndim];
+
+    for (int i = 0; i < num_tensors; i++)
+    {
+        slice_t ranges[ndim];
+        for (int j = 0; j < ndim; j++)
+        {
+            ranges[j] = (slice_t){0, tensors[i]->shape[j], 1};
+        }
+        tensor_fill(c, tensors[i], &dst_idx, src_idx, ranges, axis);
+    }
+
+    return c;
 }
 
 void tensor_backward(tensor_t *tensor)

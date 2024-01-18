@@ -136,21 +136,6 @@ tensor_t *tensor_relu(tensor_t *a)
     return out;
 }
 
-tensor_t *tensor_reshape(tensor_t *a, int shape[], int ndim)
-{
-    assert(a->size == get_size(shape, ndim) && "Size mismatch");
-    tensor_t *out = tensor_create(shape, ndim, a->requires_grad);
-    for (int i = 0; i < a->size; i++)
-    {
-        out->data[i] = a->data[i];
-    }
-    out->child1 = a;
-    if (out->requires_grad)
-        out->backward = backward_reshape;
-
-    return out;
-}
-
 tensor_t *tensor_add(tensor_t *a, tensor_t *b)
 {
     return tensor_add_tt(a, b);

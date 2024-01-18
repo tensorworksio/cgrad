@@ -27,11 +27,15 @@ void set_ranges(slice_t ranges[], int shape[], int ndim)
     for (int d = 0; d < ndim; d++)
     {
         // if start/stop is negative, add shape to it
-        while (ranges[d].start < 0) ranges[d].start += shape[d];
-        while (ranges[d].stop < 0) ranges[d].stop += shape[d];
+        while (ranges[d].start < 0)
+            ranges[d].start += shape[d];
+        while (ranges[d].stop < 0)
+            ranges[d].stop += shape[d];
         // if start/stop is greater than shape, set it to shape
-        if (ranges[d].start > shape[d]) ranges[d].start = shape[d];
-        if (ranges[d].stop > shape[d]) ranges[d].stop = shape[d];
+        if (ranges[d].start > shape[d])
+            ranges[d].start = shape[d];
+        if (ranges[d].stop > shape[d])
+            ranges[d].stop = shape[d];
     }
 }
 
@@ -78,10 +82,14 @@ bool is_equal_data(float *data_a, float *data_b, int size)
     return true;
 }
 
-void print_data(float *data, int shape[], int ndim)
+void print_data(float *data, int shape[], int ndim, int stride)
 {
-    int size = get_size(shape, ndim);
+    int idx = 0;
+    int count = 0;
+    int offset = 0;
     int EOD[ndim];
+    bool EOL = false;
+    int size = get_size(shape, ndim);
     for (int d = ndim - 1; d >= 0; --d)
     {
         if (d == ndim - 1)
@@ -93,28 +101,34 @@ void print_data(float *data, int shape[], int ndim)
             EOD[d] = EOD[d + 1] * shape[d];
         }
     }
-    int idx = 0;
-    while (idx < size)
+    while (count < size)
     {
-        for (int d = 0; d < ndim; ++d)
-        {
-            if (idx % EOD[d] == 0)
-                printf("[");
-        }
+        // TODO: This bracket logic is driving me crazy
+        // for (int d = 0; d < ndim; ++d)
+        // {
+        //     if ((stride * idx) % EOD[d] == offset)
+        //         printf("[");
+        // }
         printf("%f ", data[idx]);
         for (int d = 0; d < ndim; ++d)
         {
-            if ((idx + 1) % EOD[d] == 0)
-                printf("]");
-        }
-        for (int d = 0; d < ndim; ++d)
-        {
-            if ((idx + 1) % EOD[d] == 0)
+            if ((idx + 1) % EOD[d] == offset)
             {
-                printf("\n");
-                break;
+                EOL = true;
+                // printf("]");
             }
         }
-        idx++;
-    }
+        if (EOL)
+        {
+            printf("\n");
+            EOL = false;
+        }
+        count++;
+        idx += stride;
+        if (idx >= size)
+        {
+            offset++;
+            idx = offset;
+        }
+    };
 }

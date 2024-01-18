@@ -9,7 +9,6 @@ tensor_t *tensor_exp(tensor_t *a);
 tensor_t *tensor_relu(tensor_t *a);
 
 // BINARY OPS
-
 tensor_t *tensor_add(tensor_t *a, tensor_t *b);
 tensor_t *tensor_add_tt(tensor_t *a, tensor_t *b);
 tensor_t *tensor_add_tf(tensor_t *a, float b);
@@ -37,6 +36,3 @@ tensor_t *tensor_div_ft(float a, tensor_t *b);
 
 // REDUCE OPS
 tensor_t *tensor_sum(tensor_t *a);
-
-// MOVEMENT OPS
-tensor_t *tensor_reshape(tensor_t *a, int shape[], int ndim);

@@ -3,13 +3,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <limits.h>
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
 
-#define SLICE_ALL (slice_t){0, INT_MAX, 1}
-#define SLICE_ONE(start) (slice_t){(start), (start) + 1, 1}
+#define SLICE_ALL \
+    (slice_t) { 0, INT_MAX, 1 }
+#define SLICE_ONE(start) \
+    (slice_t) { (start), (start) + 1, 1 }
 
 typedef struct
 {
@@ -32,6 +35,7 @@ typedef struct tensor
 
     int size;
     int ndim;
+    int stride;
     int *shape;
     bool requires_grad;
 
@@ -48,7 +52,10 @@ tensor_t *tensor_rand(int shape[], int ndim, bool requires_grad);
 tensor_t *tensor_zeros(int shape[], int ndim, bool requires_grad);
 tensor_t *tensor_ones(int shape[], int ndim, bool requires_grad);
 
+tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim);
+tensor_t *tensor_transpose(tensor_t *self, int axis1, int axis2);
 tensor_t *tensor_slice(tensor_t *self, slice_t ranges[], int ndim);
+tensor_t *tensor_cat(tensor_t *tensors[], int n_tensors, int axis);
 
 void tensor_zero_grad(tensor_t *tensor);
 void tensor_init_grad(tensor_t *tensor);
