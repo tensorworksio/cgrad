@@ -82,75 +82,38 @@ bool is_equal_data(float *data_a, float *data_b, int size)
     return true;
 }
 
-void print_data_ndim(float *data, int dim, int shape[], int indices[], int ndim, int stride) {
-    if (dim == ndim - 1) {
-        for (int i = 0; i < shape[dim]; i++) {
-            indices[dim] = i;
-            int idx = 0;
-            for (int j = 0; j < ndim; j++) {
-                idx += indices[j] * stride;
-            }
-            printf("%f ", data[idx]);
+void print_data_ndim(float *data, int shape[], int stride[], int indices[], int ndim, int current_dim)
+{
+    if (current_dim == ndim)
+    {
+        // Compute the index in the flat data array
+        int index = 0;
+        for (int i = 0; i < ndim; i++)
+        {
+            index += stride[i] * indices[i];
         }
-    } else {
-        for (int i = 0; i < shape[dim]; i++) {
-            indices[dim] = i;
-            printf("[");
-            print_data_ndim(data, dim + 1, shape, indices, ndim, stride);
-            printf("]");
-            if (i < shape[dim] - 1) {
-                printf(", ");
-            }
+
+        // Print the data at this index
+        printf("%f ", data[index]);
+    }
+    else
+    {
+        // Iterate over the current dimension
+        for (indices[current_dim] = 0; indices[current_dim] < shape[current_dim]; indices[current_dim]++)
+        {
+            print_data_ndim(data, shape, stride, indices, ndim, current_dim + 1);
+        }
+
+        // Print a newline for each dimension (except the first one)
+        if (current_dim != 0)
+        {
+            printf("\n");
         }
     }
 }
 
-void print_data(float *data, int shape[], int ndim, int stride)
+void print_data(float *data, int shape[], int stride[], int ndim)
 {
-    int idx = 0;
-    int count = 0;
-    int offset = 0;
-    int EOD[ndim];
-    bool EOL = false;
-    int size = get_size(shape, ndim);
-    for (int d = ndim - 1; d >= 0; --d)
-    {
-        if (d == ndim - 1)
-        {
-            EOD[d] = shape[d];
-        }
-        else
-        {
-            EOD[d] = EOD[d + 1] * shape[d];
-        }
-    }
-    while (count < size)
-    {
-        for (int d = 0; d < ndim; ++d)
-        {
-            if (count % EOD[d] == 0)
-                printf("[");
-        }
-        printf("%f ", data[idx]);
-        for (int d = 0; d < ndim; ++d)
-        {
-            if ((count + 1) % EOD[d] == 0)
-            {
-                EOL = true;
-                printf("]");
-            }
-        }
-        if (EOL)
-        {
-            printf("\n");
-            EOL = false;
-        }
-        count++;
-        idx += stride;
-        if (idx >= size)
-        {
-            offset++;
-            idx = offset;
-        }
-    };
+    int indices[ndim];
+    print_data_ndim(data, shape, stride, indices, ndim, 0);
 }

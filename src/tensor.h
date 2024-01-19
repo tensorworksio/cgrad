@@ -35,8 +35,8 @@ typedef struct tensor
 
     int size;
     int ndim;
-    int stride;
     int *shape;
+    int *stride;
     bool requires_grad;
 
     struct tensor *child1;
@@ -46,6 +46,7 @@ typedef struct tensor
 
 tensor_t *tensor_alloc(int size);
 tensor_t *tensor_create(int shape[], int ndim, bool requires_grad);
+tensor_t *tensor_init(int shape[], int ndim, bool requires_grad);
 
 tensor_t *tensor(const float data[], int shape[], int ndim, bool requires_grad);
 tensor_t *tensor_rand(int shape[], int ndim, bool requires_grad);

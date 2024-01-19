@@ -5,10 +5,13 @@
 tensor_t *tensor_alloc(int size)
 {
     tensor_t *tensor = (tensor_t *)malloc(sizeof(tensor_t));
-    tensor->data = (float *)calloc(size, sizeof(float));
-    tensor->grad = NULL; // grad is only allocated if needed
     tensor->size = size;
-    tensor->stride = 1;
+
+    // data & grad are only allocated if needed
+    tensor->data = NULL;
+    tensor->grad = NULL;
+
+    // no children by default
     tensor->child1 = NULL;
     tensor->child2 = NULL;
     tensor->backward = NULL;
@@ -19,25 +22,41 @@ tensor_t *tensor_create(int shape[], int ndim, bool requires_grad)
 {
     int size = get_size(shape, ndim);
     tensor_t *tensor = tensor_alloc(size);
+
+    // tensor skeleton
     tensor->ndim = ndim;
     tensor->requires_grad = requires_grad;
     tensor->shape = (int *)malloc(sizeof(int) * ndim);
-    memcpy(tensor->shape, shape, sizeof(int) * ndim);
+    tensor->stride = (int *)malloc(sizeof(int) * ndim);
+
+    for (int i = ndim - 1; i >= 0; i--)
+    {
+        tensor->shape[i] = shape[i];
+        tensor->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
+    }
+
+    return tensor;
+}
+
+tensor_t *tensor_init(int shape[], int ndim, bool requires_grad)
+{
+    tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
+    tensor->data = (float *)calloc(tensor->size, sizeof(float));
     if (requires_grad)
-        tensor->grad = (float *)calloc(size, sizeof(float));
+        tensor->grad = (float *)calloc(tensor->size, sizeof(float));
     return tensor;
 }
 
 tensor_t *tensor(const float data[], int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
-    memcpy(tensor->data, data, sizeof(float) * tensor->size);
+    tensor_t *tensor = tensor_init(shape, ndim, requires_grad);
+    memcpy(tensor->data, data, tensor->size * sizeof(float));
     return tensor;
 }
 
 tensor_t *tensor_rand(int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
+    tensor_t *tensor = tensor_init(shape, ndim, requires_grad);
     for (int i = 0; i < tensor->size; ++i)
     {
         tensor->data[i] = (float)rand() / (float)RAND_MAX;
@@ -47,21 +66,21 @@ tensor_t *tensor_rand(int shape[], int ndim, bool requires_grad)
 
 tensor_t *tensor_zeros(int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
+    tensor_t *tensor = tensor_init(shape, ndim, requires_grad);
     set_data(tensor->data, 0., tensor->size);
+    return tensor;
+}
+
+tensor_t *tensor_ones(int shape[], int ndim, bool requires_grad)
+{
+    tensor_t *tensor = tensor_init(shape, ndim, requires_grad);
+    set_data(tensor->data, 1., tensor->size);
     return tensor;
 }
 
 void tensor_zero_grad(tensor_t *tensor)
 {
     set_data(tensor->grad, 0., tensor->size);
-}
-
-tensor_t *tensor_ones(int shape[], int ndim, bool requires_grad)
-{
-    tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
-    set_data(tensor->data, 1., tensor->size);
-    return tensor;
 }
 
 void tensor_init_grad(tensor_t *tensor)
@@ -112,18 +131,19 @@ void tensor_free(tensor_t *tensor, bool recursive)
     free(tensor->data);
     free(tensor->grad);
     free(tensor->shape);
+    free(tensor->stride);
     free(tensor);
 }
 
 void tensor_print(tensor_t *tensor)
 {
     printf("DATA\n");
-    print_data(tensor->data, tensor->shape, tensor->ndim, tensor->stride);
+    print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
     printf("\n");
     if (tensor->requires_grad)
     {
         printf("GRAD\n");
-        print_data(tensor->grad, tensor->shape, tensor->ndim, tensor->stride);
+        print_data(tensor->grad, tensor->shape, tensor->stride, tensor->ndim);
         printf("\n");
     }
 }
@@ -147,27 +167,30 @@ void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice
 tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
 {
     assert(tensor->size == get_size(shape, ndim) && "Size mismatch");
-    tensor_t *reshaped = tensor_create(shape, ndim, tensor->requires_grad);
+    tensor_t *reshaped = tensor_alloc(tensor->size);
     reshaped->data = tensor->data;
     reshaped->grad = tensor->grad;
-
+    for (int i = ndim - 1; i >= 0; i--)
+    {
+        reshaped->shape[i] = shape[i];
+        reshaped->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
+    };
     return reshaped;
 }
 
 tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
 {
     int shape[tensor->ndim];
+    // set shape
     memcpy(shape, tensor->shape, sizeof(shape));
     shape[axis1] = tensor->shape[axis2];
     shape[axis2] = tensor->shape[axis1];
 
     tensor_t *transposed = tensor_reshape(tensor, shape, tensor->ndim);
-
-    int max_axis = axis1 > axis2 ? axis1 : axis2;
-    for (int i = 0; i < max_axis; ++i) {
-        transposed->stride *= shape[i];
-        transposed->stride %= transposed->size;
-    }
+    // set stride
+    memcpy(transposed->stride, tensor->stride, tensor->ndim * sizeof(int));
+    transposed->stride[axis1] = tensor->stride[axis2];
+    transposed->stride[axis2] = tensor->stride[axis1];
 
     return transposed;
 }
@@ -181,7 +204,7 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t ranges[], int ndim)
     // set the shape of the new tensor
     set_shape(shape, ranges, ndim);
     // Create the new tensor
-    tensor_t *out = tensor_create(shape, ndim, tensor->requires_grad);
+    tensor_t *out = tensor_init(shape, ndim, tensor->requires_grad);
     // Fill the new tensor with the sliced data
     int idx[ndim];
     int out_idx = 0;
@@ -201,7 +224,7 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
         shape[axis] += tensors[i]->shape[axis];
     }
 
-    tensor_t *c = tensor_create(shape, ndim, false);
+    tensor_t *c = tensor_init(shape, ndim, false);
     int dst_idx = 0;
     int src_idx[ndim];
 
