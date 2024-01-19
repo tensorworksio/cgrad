@@ -162,7 +162,12 @@ tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
     shape[axis2] = tensor->shape[axis1];
 
     tensor_t *transposed = tensor_reshape(tensor, shape, tensor->ndim);
-    transposed->stride = shape[axis1];
+
+    int max_axis = axis1 > axis2 ? axis1 : axis2;
+    for (int i = 0; i < max_axis; ++i) {
+        transposed->stride *= shape[i];
+        transposed->stride %= transposed->size;
+    }
 
     return transposed;
 }

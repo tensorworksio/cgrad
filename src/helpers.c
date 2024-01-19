@@ -82,6 +82,29 @@ bool is_equal_data(float *data_a, float *data_b, int size)
     return true;
 }
 
+void print_data_ndim(float *data, int dim, int shape[], int indices[], int ndim, int stride) {
+    if (dim == ndim - 1) {
+        for (int i = 0; i < shape[dim]; i++) {
+            indices[dim] = i;
+            int idx = 0;
+            for (int j = 0; j < ndim; j++) {
+                idx += indices[j] * stride;
+            }
+            printf("%f ", data[idx]);
+        }
+    } else {
+        for (int i = 0; i < shape[dim]; i++) {
+            indices[dim] = i;
+            printf("[");
+            print_data_ndim(data, dim + 1, shape, indices, ndim, stride);
+            printf("]");
+            if (i < shape[dim] - 1) {
+                printf(", ");
+            }
+        }
+    }
+}
+
 void print_data(float *data, int shape[], int ndim, int stride)
 {
     int idx = 0;
@@ -103,19 +126,18 @@ void print_data(float *data, int shape[], int ndim, int stride)
     }
     while (count < size)
     {
-        // TODO: This bracket logic is driving me crazy
-        // for (int d = 0; d < ndim; ++d)
-        // {
-        //     if ((stride * idx) % EOD[d] == offset)
-        //         printf("[");
-        // }
+        for (int d = 0; d < ndim; ++d)
+        {
+            if (count % EOD[d] == 0)
+                printf("[");
+        }
         printf("%f ", data[idx]);
         for (int d = 0; d < ndim; ++d)
         {
-            if ((idx + 1) % EOD[d] == offset)
+            if ((count + 1) % EOD[d] == 0)
             {
                 EOL = true;
-                // printf("]");
+                printf("]");
             }
         }
         if (EOL)
