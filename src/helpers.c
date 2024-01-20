@@ -93,12 +93,10 @@ void print_data_ndim(float *data, int shape[], int stride[], int indices[], int 
         return;
     }
 
-    printf("[");
     for (indices[dim] = 0; indices[dim] < shape[dim]; indices[dim]++) {
-        if (indices[dim] > 0) printf(" ");
         print_data_ndim(data, shape, stride, indices, ndim, dim + 1);
     }
-    printf("]");
+    printf("\n");
 }
 
 void print_data(float *data, int shape[], int stride[], int ndim)
