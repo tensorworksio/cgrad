@@ -13,6 +13,7 @@ void set_data(float *data, float value, int size);
 void set_shape(int shape[], slice_t ranges[], int ndim);
 void set_ranges(slice_t ranges[], int shape[], int ndim);
 
+void print_metadata(int data[], int ndim);
 void print_data(float *data, int shape[], int stride[], int ndim);
 
 bool is_equal_data(float *data_a, float *data_b, int size);

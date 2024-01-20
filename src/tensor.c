@@ -139,18 +139,34 @@ void tensor_free(tensor_t *tensor, bool recursive)
     free(tensor);
 }
 
-void tensor_print(tensor_t *tensor)
+void tensor_print(tensor_t *tensor, flag_t flags)
 {   
-    // print other info (shape, stride, ndim, requires_grad) as optional
-    printf("DATA\n");
-    print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
-    printf("\n");
-    if (tensor->requires_grad)
+    printf("Tensor %p\n", (void*) tensor);
+    printf("SHAPE:\t");
+    print_metadata(tensor->shape, tensor->ndim);
+
+    if (flags & PRINT_STRIDE)
     {
-        printf("GRAD\n");
-        print_data(tensor->grad, tensor->shape, tensor->stride, tensor->ndim);
-        printf("\n");
+        printf("STRIDE:\t");
+        print_metadata(tensor->stride, tensor->ndim);
     }
+
+    if (flags & PRINT_DATA)
+    {
+        printf("DATA:\n");
+        print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
+    }
+
+    if (flags & PRINT_GRAD) {
+        if (tensor->requires_grad)
+        {
+            printf("GRAD:\n");
+            print_data(tensor->grad, tensor->shape, tensor->stride, tensor->ndim);
+        } else {
+            printf("GRAD: None\n");
+        }
+    }
+    printf("\n");
 }
 
 void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *ranges, int dim)

@@ -31,8 +31,8 @@ int main() {
 
     tensor_backward(f); // compute gradients
     
-    tensor_print(a); // print tensors a.data and a.grad = d(f)/d(a)
-    tensor_print(b); // print tensors b.data and b.grad = d(f)/d(b)
+    tensor_print(a, PRINT_DATA | PRINT_GRAD); // print tensors a.data and a.grad = d(f)/d(a)
+    tensor_print(b, PRINT_DATA | PRINT_GRAD); // print tensors b.data and b.grad = d(f)/d(b)
 
     // recursively free all tensors in the graph
     tensor_free(f, true);

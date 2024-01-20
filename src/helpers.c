@@ -82,6 +82,16 @@ bool is_equal_data(float *data_a, float *data_b, int size)
     return true;
 }
 
+void print_metadata(int data[], int ndim)
+{   
+    printf("[");
+    for (int i = 0; i < ndim-1; i++)
+    {
+        printf("%d, ", data[i]);
+    }
+    printf("%d]\n", data[ndim-1]);
+}
+
 void print_data_ndim(float *data, int shape[], int stride[], int indices[], int ndim, int dim)
 {
     if (dim == ndim) {

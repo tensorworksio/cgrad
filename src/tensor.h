@@ -14,6 +14,13 @@
 #define SLICE_ONE(start) \
     (slice_t) { (start), (start) + 1, 1 }
 
+typedef enum {
+    PRINT_SHAPE = 0,
+    PRINT_STRIDE = (1 << 0),
+    PRINT_DATA = (1 << 1),
+    PRINT_GRAD = (1 << 2),
+} flag_t;
+
 typedef struct
 {
     int start;
@@ -69,7 +76,7 @@ void tensor_set_data(tensor_t *self, float data[], int size);
 void tensor_set_grad(tensor_t *self, float grad[], int size);
 void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *ranges, int dim);
 
-void tensor_print(tensor_t *tensor);
+void tensor_print(tensor_t *tensor, flag_t flags);
 
 void tensor_backward(tensor_t *self);
 
