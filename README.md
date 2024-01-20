@@ -55,10 +55,10 @@ make test
 ## TODO
 
 ### Bug
+- print_data misses the \n logic: stupid problem I swear
 - Anonymous tensor Segfault when using recursive tensor_free
 
 ### Features
-- Transpose oprertor: striding logic for nd arrays (n > 2)
 - Slice operator for tensor: 
     - needs more testing 
     - needs some logic to handle negative indexing

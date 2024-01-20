@@ -82,38 +82,28 @@ bool is_equal_data(float *data_a, float *data_b, int size)
     return true;
 }
 
-void print_data_ndim(float *data, int shape[], int stride[], int indices[], int ndim, int current_dim)
+void print_data_ndim(float *data, int shape[], int stride[], int indices[], int ndim, int dim)
 {
-    if (current_dim == ndim)
-    {
-        // Compute the index in the flat data array
+    if (dim == ndim) {
         int index = 0;
-        for (int i = 0; i < ndim; i++)
-        {
+        for (int i = 0; i < ndim; i++) {
             index += stride[i] * indices[i];
         }
-
-        // Print the data at this index
         printf("%f ", data[index]);
+        return;
     }
-    else
-    {
-        // Iterate over the current dimension
-        for (indices[current_dim] = 0; indices[current_dim] < shape[current_dim]; indices[current_dim]++)
-        {
-            print_data_ndim(data, shape, stride, indices, ndim, current_dim + 1);
-        }
 
-        // Print a newline for each dimension (except the first one)
-        if (current_dim != 0)
-        {
-            printf("\n");
-        }
+    printf("[");
+    for (indices[dim] = 0; indices[dim] < shape[dim]; indices[dim]++) {
+        if (indices[dim] > 0) printf(" ");
+        print_data_ndim(data, shape, stride, indices, ndim, dim + 1);
     }
+    printf("]");
 }
 
 void print_data(float *data, int shape[], int stride[], int ndim)
 {
     int indices[ndim];
+    for (int i = 0; i < ndim; i++) indices[i] = 0;
     print_data_ndim(data, shape, stride, indices, ndim, 0);
 }

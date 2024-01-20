@@ -7,11 +7,15 @@ tensor_t *tensor_alloc(int size)
     tensor_t *tensor = (tensor_t *)malloc(sizeof(tensor_t));
     tensor->size = size;
 
-    // data & grad are only allocated if needed
+    // data & grad
     tensor->data = NULL;
     tensor->grad = NULL;
 
-    // no children by default
+    // shape & stride 
+    tensor->shape = NULL;
+    tensor->stride = NULL;
+
+    // children & backward
     tensor->child1 = NULL;
     tensor->child2 = NULL;
     tensor->backward = NULL;
@@ -136,7 +140,8 @@ void tensor_free(tensor_t *tensor, bool recursive)
 }
 
 void tensor_print(tensor_t *tensor)
-{
+{   
+    // print other info (shape, stride, ndim, requires_grad) as optional
     printf("DATA\n");
     print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
     printf("\n");
@@ -167,7 +172,7 @@ void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice
 tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
 {
     assert(tensor->size == get_size(shape, ndim) && "Size mismatch");
-    tensor_t *reshaped = tensor_alloc(tensor->size);
+    tensor_t *reshaped = tensor_create(shape, ndim, tensor->requires_grad);
     reshaped->data = tensor->data;
     reshaped->grad = tensor->grad;
     for (int i = ndim - 1; i >= 0; i--)
