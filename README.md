@@ -1,8 +1,7 @@
 # CGRAD
+![logo](docs/logo.png)
 
 Intended to be a Torch-like autograd engine, inspired by [micrograd](https://github.com/karpathy/micrograd/tree/master)
-
-![alt text](docs/logo.png)
 
 ## Dependencies
 Install criterion to run tests:
