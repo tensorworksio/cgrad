@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Isrc -Wall -Wextra -g
-LDFLAGS = -lm -lcriterion
+LDFLAGS = -lm -lcriterion -lcsptr
 SRC = $(wildcard src/*.c)
 OBJ = $(SRC:.c=.o)
 TEST_SRC = $(wildcard tests/*.c)

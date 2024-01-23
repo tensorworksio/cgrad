@@ -7,7 +7,7 @@ tensor_t *tensor_alloc(int size)
     tensor_t *tensor = (tensor_t *)malloc(sizeof(tensor_t));
     tensor->size = size;
 
-    // data & grad
+    // shared pointers data & grad
     tensor->data = NULL;
     tensor->grad = NULL;
 
@@ -45,9 +45,12 @@ tensor_t *tensor_create(int shape[], int ndim, bool requires_grad)
 tensor_t *tensor_init(int shape[], int ndim, bool requires_grad)
 {
     tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
-    tensor->data = (float *)calloc(tensor->size, sizeof(float));
-    if (requires_grad)
-        tensor->grad = (float *)calloc(tensor->size, sizeof(float));
+    tensor->data = smalloc(.size = tensor->size, .nmemb = sizeof(float), .kind = SHARED);
+    set_data(tensor->data, 0., tensor->size);
+    if (requires_grad) {
+        tensor->grad = smalloc(.size = tensor->size, .nmemb = sizeof(float), .kind = SHARED);
+        set_data(tensor->grad, 0., tensor->size);
+    }
     return tensor;
 }
 
@@ -132,8 +135,8 @@ void tensor_free(tensor_t *tensor, bool recursive)
             tensor_free(tensor->child2, recursive);
     }
 
-    free(tensor->data);
-    free(tensor->grad);
+    sfree(tensor->data);
+    sfree(tensor->grad);
     free(tensor->shape);
     free(tensor->stride);
     free(tensor);
@@ -141,29 +144,43 @@ void tensor_free(tensor_t *tensor, bool recursive)
 
 void tensor_print(tensor_t *tensor, flag_t flags)
 {   
-    printf("Tensor %p\n", (void*) tensor);
-    printf("SHAPE:\t");
+    printf("Tensor @ %p\n", (void*) tensor);
+    printf("Shape:\t");
     print_metadata(tensor->shape, tensor->ndim);
 
     if (flags & PRINT_STRIDE)
     {
-        printf("STRIDE:\t");
+        printf("Stride:\t");
         print_metadata(tensor->stride, tensor->ndim);
     }
 
     if (flags & PRINT_DATA)
     {
-        printf("DATA:\n");
+        printf("Data @ %p:\n", (void*) tensor->data);
         print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
     }
 
     if (flags & PRINT_GRAD) {
         if (tensor->requires_grad)
         {
-            printf("GRAD:\n");
+            printf("Grad @ %p:\n", (void*) tensor->grad);
             print_data(tensor->grad, tensor->shape, tensor->stride, tensor->ndim);
         } else {
-            printf("GRAD: None\n");
+            printf("Grad: NULL\n");
+        }
+    }
+
+    if (flags & PRINT_CHILDREN) {
+        printf("Children:\n");
+        if (tensor->child1) {
+            printf("\tChild 1: Tensor @ %p\n", (void*) tensor->child1);
+        } else {
+            printf("\tChild 1: NULL\n");
+        }
+        if (tensor->child2) {
+            printf("\tChild 2: Tensor @ %p\n", (void*) tensor->child2);
+        } else {
+            printf("\tChild 2: NULL\n");
         }
     }
     printf("\n");
@@ -189,13 +206,14 @@ tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
 {
     assert(tensor->size == get_size(shape, ndim) && "Size mismatch");
     tensor_t *reshaped = tensor_create(shape, ndim, tensor->requires_grad);
-    reshaped->data = tensor->data;
-    reshaped->grad = tensor->grad;
+    reshaped->data = sref(tensor->data);
+    reshaped->grad = sref(tensor->grad);
     for (int i = ndim - 1; i >= 0; i--)
     {
         reshaped->shape[i] = shape[i];
         reshaped->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
     };
+    tensor->child1 = reshaped;
     return reshaped;
 }
 

@@ -5,8 +5,12 @@ Intended to be a Torch-like autograd engine, inspired by [micrograd](https://git
 ## Dependencies
 Install criterion to run tests:
 ```bash
+add-apt-repository ppa:snaipewastaken/ppa
+apt-get update
 apt-get install libcriterion-dev
+apt-get install libcsptr-dev
 ```
+
 ## How to use it
 ```C
 #include "tensor.h"

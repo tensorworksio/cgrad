@@ -11,9 +11,11 @@ int main()
     tensor_t *c = tensor_sum(a);
     tensor_backward(c);
 
-    tensor_print(a, PRINT_DATA | PRINT_GRAD);
-    tensor_print(b, PRINT_DATA | PRINT_GRAD);
-    tensor_print(c, PRINT_DATA | PRINT_GRAD);
+    tensor_print(a, PRINT_ALL);
+    tensor_print(b, PRINT_ALL);
+    tensor_print(c, PRINT_ALL);
+
+    tensor_free(c, true);
     
     return 0;
 }

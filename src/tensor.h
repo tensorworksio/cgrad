@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
+#include <csptr/smart_ptr.h>
 
 #define SLICE_ALL \
     (slice_t) { 0, INT_MAX, 1 }
@@ -19,6 +20,8 @@ typedef enum {
     PRINT_STRIDE = (1 << 0),
     PRINT_DATA = (1 << 1),
     PRINT_GRAD = (1 << 2),
+    PRINT_CHILDREN = (1 << 3),
+    PRINT_ALL = PRINT_SHAPE | PRINT_STRIDE | PRINT_DATA | PRINT_GRAD | PRINT_CHILDREN
 } flag_t;
 
 typedef struct
@@ -27,13 +30,6 @@ typedef struct
     int stop;
     int step;
 } slice_t;
-
-typedef struct
-{
-    bool requires_grad;
-    int *shape;
-    int ndim;
-} tensor_params_t;
 
 typedef struct tensor
 {
