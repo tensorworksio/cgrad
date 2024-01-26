@@ -4,14 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <limits.h>
-#include <assert.h>
 #include <string.h>
 #include <stdbool.h>
 #include <csptr/smart_ptr.h>
 
 #define SLICE_ALL \
-    (slice_t) { 0, INT_MAX, 1 }
+    (slice_t) { 0, -1, 1 }
 #define SLICE_ONE(start) \
     (slice_t) { (start), (start) + 1, 1 }
 
@@ -58,13 +56,13 @@ tensor_t *tensor_ones(int shape[], int ndim, bool requires_grad);
 
 tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim);
 tensor_t *tensor_transpose(tensor_t *self, int axis1, int axis2);
-tensor_t *tensor_slice(tensor_t *self, slice_t ranges[], int ndim);
+tensor_t *tensor_slice(tensor_t *self, slice_t ranges[]);
 tensor_t *tensor_cat(tensor_t *tensors[], int n_tensors, int axis);
 
 void tensor_zero_grad(tensor_t *tensor);
 void tensor_init_grad(tensor_t *tensor);
 
-bool tensor_same_shape(tensor_t *a, tensor_t *b);
+bool tensor_same_shape(tensor_t *a, tensor_t *b, bool debug);
 bool tensor_equals(tensor_t *a, tensor_t *b, bool with_grad);
 
 void tensor_free(tensor_t *tensor, bool recursive);

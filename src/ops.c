@@ -1,8 +1,8 @@
 #include "ops.h"
 
 tensor_t *tensor_add_tt(tensor_t *a, tensor_t *b)
-{
-    assert(tensor_same_shape(a, b) && "Shape mismatch");
+{   
+    ASSERT(tensor_same_shape(a, b, true), "Add error :: Shape mismatch");
     tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad);
     for (int i = 0; i < a->size; i++)
     {
@@ -33,7 +33,7 @@ tensor_t *tensor_add_tf(tensor_t *a, float b)
 
 tensor_t *tensor_mul_tt(tensor_t *a, tensor_t *b)
 {
-    assert(tensor_same_shape(a, b) && "Shape mismatch");
+    ASSERT(tensor_same_shape(a, b, true), "Mul error :: Shape mismatch");
     tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad);
     for (int i = 0; i < a->size; i++)
     {
@@ -64,7 +64,7 @@ tensor_t *tensor_mul_tf(tensor_t *a, float b)
 
 tensor_t *tensor_pow_tt(tensor_t *a, tensor_t *b)
 {
-    assert(tensor_same_shape(a, b) && "Shape mismatch");
+    ASSERT(tensor_same_shape(a, b, true), "Pow error :: Shape mismatch");
     tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad);
     for (int i = 0; i < a->size; i++)
     {

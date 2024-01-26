@@ -97,24 +97,32 @@ void tensor_init_grad(tensor_t *tensor)
 
 void tensor_set_data(tensor_t *tensor, float data[], int size)
 {
-    assert(size == tensor->size && "Size mismatch");
+    ASSERT(size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
     memcpy(tensor->data, data, size * sizeof(float));
 }
 
 void tensor_set_grad(tensor_t *tensor, float grad[], int size)
 {
-    assert(size == tensor->size && "Size mismatch");
+    ASSERT(size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
     memcpy(tensor->grad, grad, size * sizeof(float));
 }
 
-bool tensor_same_shape(tensor_t *a, tensor_t *b)
+bool tensor_same_shape(tensor_t *a, tensor_t *b, bool debug)
 {
-    return is_same_shape(a->shape, b->shape, a->ndim, b->ndim);
+    bool same = is_same_shape(a->shape, b->shape, a->ndim, b->ndim);
+    if (debug && !same)
+    {
+        print_metadata(a->shape, a->ndim);
+        printf(" != ");
+        print_metadata(b->shape, b->ndim);
+        printf("\n");
+    }
+    return same;
 }
 
 bool tensor_equals(tensor_t *a, tensor_t *b, bool with_grad)
 {
-    if (!tensor_same_shape(a, b))
+    if (!tensor_same_shape(a, b, false))
         return false;
     if (!is_equal_data(a->data, b->data, a->size))
         return false;
@@ -147,11 +155,27 @@ void tensor_print(tensor_t *tensor, flag_t flags)
     printf("Tensor @ %p\n", (void*) tensor);
     printf("Shape:\t");
     print_metadata(tensor->shape, tensor->ndim);
+    printf("\n");
 
     if (flags & PRINT_STRIDE)
     {
         printf("Stride:\t");
         print_metadata(tensor->stride, tensor->ndim);
+        printf("\n");
+    }
+
+    if (flags & PRINT_CHILDREN) {
+        printf("Children:\n");
+        if (tensor->child1) {
+            printf("\tChild 1: Tensor @ %p\n", (void*) tensor->child1);
+        } else {
+            printf("\tChild 1: NULL\n");
+        }
+        if (tensor->child2) {
+            printf("\tChild 2: Tensor @ %p\n", (void*) tensor->child2);
+        } else {
+            printf("\tChild 2: NULL\n");
+        }
     }
 
     if (flags & PRINT_DATA)
@@ -169,42 +193,13 @@ void tensor_print(tensor_t *tensor, flag_t flags)
             printf("Grad: NULL\n");
         }
     }
-
-    if (flags & PRINT_CHILDREN) {
-        printf("Children:\n");
-        if (tensor->child1) {
-            printf("\tChild 1: Tensor @ %p\n", (void*) tensor->child1);
-        } else {
-            printf("\tChild 1: NULL\n");
-        }
-        if (tensor->child2) {
-            printf("\tChild 2: Tensor @ %p\n", (void*) tensor->child2);
-        } else {
-            printf("\tChild 2: NULL\n");
-        }
-    }
     printf("\n");
-}
-
-void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *ranges, int dim)
-{
-    if (dim == src->ndim)
-    {
-        dst->data[(*dst_idx)++] = src->data[get_index(src->shape, src_idx, src->ndim)];
-    }
-    else
-    {
-        for (int i = ranges[dim].start; i < ranges[dim].stop; i += ranges[dim].step)
-        {
-            src_idx[dim] = i;
-            tensor_fill(dst, src, dst_idx, src_idx, ranges, dim + 1);
-        }
-    }
 }
 
 tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
 {
-    assert(tensor->size == get_size(shape, ndim) && "Size mismatch");
+    int size = get_size(shape, ndim);
+    ASSERT(size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
     tensor_t *reshaped = tensor_create(shape, ndim, tensor->requires_grad);
     reshaped->data = sref(tensor->data);
     reshaped->grad = sref(tensor->grad);
@@ -234,21 +229,34 @@ tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
     return transposed;
 }
 
-tensor_t *tensor_slice(tensor_t *tensor, slice_t ranges[], int ndim)
+void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *ranges, int dim)
 {
-    assert(ndim == tensor->ndim && "Number of ranges must be equal to the number of dimensions");
-    int shape[ndim];
-    // set the range for each dimension
-    set_ranges(ranges, tensor->shape, ndim);
-    // set the shape of the new tensor
-    set_shape(shape, ranges, ndim);
-    // Create the new tensor
-    tensor_t *out = tensor_init(shape, ndim, tensor->requires_grad);
+    if (dim == src->ndim)
+    {
+        dst->data[(*dst_idx)++] = src->data[get_index(src_idx, src->shape, src->ndim)];
+    }
+    else
+    {
+        for (int i = ranges[dim].start; i < ranges[dim].stop; i += ranges[dim].step)
+        {
+            src_idx[dim] = i;
+            tensor_fill(dst, src, dst_idx, src_idx, ranges, dim + 1);
+        }
+    }
+}
+
+tensor_t *tensor_slice(tensor_t *tensor, slice_t ranges[])
+{
+    int shape[tensor->ndim];
+    // Compute the shape of the sliced tensor
+    normalize_ranges(ranges, tensor->shape, tensor->ndim);
+    compute_shape(shape, ranges, tensor->ndim);
+    tensor_t *sliced = tensor_init(shape, tensor->ndim, tensor->requires_grad);
     // Fill the new tensor with the sliced data
-    int idx[ndim];
+    int idx[tensor->ndim];
     int out_idx = 0;
-    tensor_fill(out, tensor, &out_idx, idx, ranges, 0);
-    return out;
+    tensor_fill(sliced, tensor, &out_idx, idx, ranges, 0);
+    return sliced;
 }
 
 tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)

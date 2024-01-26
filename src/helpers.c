@@ -10,7 +10,7 @@ int get_size(int shape[], int ndim)
     return size;
 }
 
-int get_index(int shape[], int coords[], int ndim)
+int get_index(int coords[], int shape[], int ndim)
 {
     int index = 0;
     int multiplier = 1;
@@ -20,33 +20,6 @@ int get_index(int shape[], int coords[], int ndim)
         multiplier *= shape[i];
     }
     return index;
-}
-
-void set_ranges(slice_t ranges[], int shape[], int ndim)
-{
-    for (int d = 0; d < ndim; d++)
-    {
-        // if start/stop is negative, add shape to it
-        while (ranges[d].start < 0)
-            ranges[d].start += shape[d];
-        while (ranges[d].stop < 0)
-            ranges[d].stop += shape[d];
-        // if start/stop is greater than shape, set it to shape
-        if (ranges[d].start > shape[d])
-            ranges[d].start = shape[d];
-        if (ranges[d].stop > shape[d])
-            ranges[d].stop = shape[d];
-    }
-}
-
-void set_shape(int shape[], slice_t ranges[], int ndim)
-{
-    int range;
-    for (int d = 0; d < ndim; d++)
-    {
-        range = abs(ranges[d].stop - ranges[d].start);
-        shape[d] = range / ranges[d].step + (range % ranges[d].step != 0 ? 1 : 0);
-    }
 }
 
 void set_data(float *data, float value, int size)
@@ -82,6 +55,37 @@ bool is_equal_data(float *data_a, float *data_b, int size)
     return true;
 }
 
+void normalize_ranges(slice_t ranges[], int shape[], int ndim)
+{   
+    for (int d = 0; d < ndim; d++)
+    {   
+        ASSERT(ranges[d].step > 0, "Slice step must be positive: got %d", ranges[d].step);
+        ASSERT(-shape[d] <= ranges[d].start && ranges[d].start < shape[d],
+               "Index %d is out of bounds for dimension %d with size %d", ranges[d].start, d, shape[d]);
+        ASSERT(-shape[d] < ranges[d].stop && ranges[d].stop <= shape[d],
+               "Index %d is out of bounds for dimension %d with size %d", ranges[d].stop, d, shape[d]);
+
+        // if start/stop is negative, add shape to it
+        if (ranges[d].start < 0)
+            ranges[d].start += (shape[d] + 1);
+        if (ranges[d].stop < 0)
+            ranges[d].stop += (shape[d] + 1);
+
+        ASSERT(ranges[d].start <= ranges[d].stop, "Slice start must be less than or equal to slice stop");
+    }
+}
+
+void compute_shape(int shape[], slice_t ranges[], int ndim)
+{   
+    // Compute shape from ranges
+    int range;
+    for (int d = 0; d < ndim; d++)
+    {
+        range = abs(ranges[d].stop - ranges[d].start);
+        shape[d] = range / ranges[d].step + (range % ranges[d].step != 0 ? 1 : 0);
+    }
+}
+
 void print_metadata(int data[], int ndim)
 {   
     printf("[");
@@ -89,7 +93,7 @@ void print_metadata(int data[], int ndim)
     {
         printf("%d, ", data[i]);
     }
-    printf("%d]\n", data[ndim-1]);
+    printf("%d]", data[ndim-1]);
 }
 
 void print_data_ndim(float *data, int shape[], int stride[], int indices[], int ndim, int dim)

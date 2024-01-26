@@ -1,3 +1,4 @@
+#include "log.h"
 #include "tensor.h"
 #include <math.h>
 #include <stdbool.h>
@@ -5,13 +6,21 @@
 #define EPSILON 1e-6
 #define MAX_PRINT_SIZE 10
 
+#define ASSERT(condition, format, ...) \
+    do { \
+        if (!(condition)) { \
+            log_error(format, ##__VA_ARGS__); \
+            exit(EXIT_FAILURE); \
+        } \
+    } while (0)
+
 // tensor helpers
 int get_size(int shape[], int ndim);
-int get_index(int shape[], int coords[], int ndim);
+int get_index(int coords[], int shape[], int ndim);
 
 void set_data(float *data, float value, int size);
-void set_shape(int shape[], slice_t ranges[], int ndim);
-void set_ranges(slice_t ranges[], int shape[], int ndim);
+void compute_shape(int shape[], slice_t ranges[], int ndim);
+void normalize_ranges(slice_t ranges[], int shape[], int ndim);
 
 void print_metadata(int data[], int ndim);
 void print_data(float *data, int shape[], int stride[], int ndim);
