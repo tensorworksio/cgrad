@@ -63,9 +63,7 @@ make test
 - Anonymous tensor Segfault when using recursive tensor_free
 
 ### Features
-- Slice operator for tensor: 
-    - needs more testing 
-    - needs some logic to handle negative indexing
+- Concat operator: handle axis != 0
 - Reduce operator for specific axes (require slices)
 - Matmul operator as a combination of sum, add and reshape ideally
 - Pooling operators
