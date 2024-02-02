@@ -53,34 +53,31 @@ bool is_equal_data(float *data_a, float *data_b, int size)
     return true;
 }
 
-void normalize_ranges(slice_t ranges[], int shape[], int ndim)
+void normalize_range(slice_t range[], int shape[], int ndim)
 {   
     for (int d = 0; d < ndim; d++)
     {   
-        ASSERT(ranges[d].step > 0, "Slice step must be positive: got %d", ranges[d].step);
-        ASSERT(-shape[d] <= ranges[d].start && ranges[d].start < shape[d],
-               "Index %d is out of bounds for dimension %d with size %d", ranges[d].start, d, shape[d]);
-        ASSERT(-shape[d] < ranges[d].stop && ranges[d].stop <= shape[d],
-               "Index %d is out of bounds for dimension %d with size %d", ranges[d].stop, d, shape[d]);
+        ASSERT(range[d].step > 0, "Slice step must be positive: got %d", range[d].step);
+        ASSERT(abs(range[d].start) <= shape[d],
+               "Index %d is out of bounds for dimension %d with size %d", range[d].start, d, shape[d]);
+        ASSERT(abs(range[d].stop) <= shape[d],
+               "Index %d is out of bounds for dimension %d with size %d", range[d].stop, d, shape[d]);
 
         // if start/stop is negative, add shape to it
-        if (ranges[d].start < 0)
-            ranges[d].start += (shape[d] + 1);
-        if (ranges[d].stop < 0)
-            ranges[d].stop += (shape[d] + 1);
+        range[d].start = (range[d].start < 0) ? range[d].start + shape[d] : range[d].start;
+        range[d].stop = (range[d].stop < 0) ? range[d].stop + shape[d] : range[d].stop;
 
-        ASSERT(ranges[d].start <= ranges[d].stop, "Slice start must be less than or equal to slice stop");
+        ASSERT(range[d].start <= range[d].stop, "Slice start must be less than or equal to slice stop");
     }
 }
 
-void compute_shape(int shape[], slice_t ranges[], int ndim)
+void compute_shape(int shape[], slice_t range[], int ndim)
 {   
-    // Compute shape from ranges
-    int range;
+    int dist;
     for (int d = 0; d < ndim; d++)
     {
-        range = abs(ranges[d].stop - ranges[d].start);
-        shape[d] = range / ranges[d].step + (range % ranges[d].step != 0 ? 1 : 0);
+        dist = abs(range[d].stop - range[d].start);
+        shape[d] = dist / range[d].step + (dist % range[d].step != 0 ? 1 : 0);
     }
 }
 
