@@ -11,9 +11,10 @@ tensor_t *tensor_alloc(int size)
     tensor->data = NULL;
     tensor->grad = NULL;
 
-    // shape & stride 
+    // shape & stride & range
     tensor->shape = NULL;
     tensor->stride = NULL;
+    tensor->range = NULL;
 
     // children & backward
     tensor->child1 = NULL;
@@ -32,10 +33,12 @@ tensor_t *tensor_create(int shape[], int ndim, bool requires_grad)
     tensor->requires_grad = requires_grad;
     tensor->shape = (int *)malloc(sizeof(int) * ndim);
     tensor->stride = (int *)malloc(sizeof(int) * ndim);
+    tensor->range = (slice_t *)malloc(sizeof(slice_t) * ndim);
 
-    for (int i = ndim - 1; i >= 0; i--)
+    for (int i = ndim; i-- > 0; )
     {
         tensor->shape[i] = shape[i];
+        tensor->range[i] = (slice_t) { 0, shape[i], 1 };
         tensor->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
     }
 
@@ -146,6 +149,7 @@ void tensor_free(tensor_t *tensor, bool recursive)
     sfree(tensor->data);
     sfree(tensor->grad);
     free(tensor->shape);
+    free(tensor->range);
     free(tensor->stride);
     free(tensor);
 }
@@ -181,14 +185,14 @@ void tensor_print(tensor_t *tensor, flag_t flags)
     if (flags & PRINT_DATA)
     {
         printf("Data @ %p:\n", (void*) tensor->data);
-        print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
+        print_data(tensor->data, tensor->range, tensor->stride, tensor->ndim);
     }
 
     if (flags & PRINT_GRAD) {
         if (tensor->requires_grad)
         {
             printf("Grad @ %p:\n", (void*) tensor->grad);
-            print_data(tensor->grad, tensor->shape, tensor->stride, tensor->ndim);
+            print_data(tensor->grad, tensor->range, tensor->stride, tensor->ndim);
         } else {
             printf("Grad: NULL\n");
         }
@@ -233,7 +237,7 @@ void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice
 {
     if (dim == src->ndim)
     {
-        dst->data[(*dst_idx)++] = src->data[get_index(src_idx, src->shape, src->ndim)];
+        dst->data[(*dst_idx)++] = src->data[get_index(src_idx, src->stride, src->ndim)];
     }
     else
     {
@@ -271,21 +275,31 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
         shape[axis] += tensors[i]->shape[axis];
     }
 
-    tensor_t *c = tensor_init(shape, ndim, false);
+    tensor_t *cated = tensor_init(shape, ndim, false);
     int dst_idx = 0;
     int src_idx[ndim];
+    slice_t ranges[ndim];
 
-    for (int i = 0; i < num_tensors; i++)
-    {
-        slice_t ranges[ndim];
-        for (int j = 0; j < ndim; j++)
+    if (axis == 0) {
+        for (int i = 0; i < num_tensors; i++)
         {
-            ranges[j] = (slice_t){0, tensors[i]->shape[j], 1};
+            for (int j = 0; j < ndim; j++)
+            {
+                ranges[j] = (slice_t){0, tensors[i]->shape[j], 1};
+            }
+            tensor_fill(cated, tensors[i], &dst_idx, src_idx, ranges, 0);
         }
-        tensor_fill(c, tensors[i], &dst_idx, src_idx, ranges, axis);
+    } if (axis == 1) {
+        for (int i = 0; shape[0]; i++) {
+            for (int j = 0; j < num_tensors; j++) {
+                
+                ranges[j] = (slice_t){0, tensors[i]->shape[j], 1};
+                tensor_fill(cated, tensors[j], &dst_idx, src_idx, ranges, 0);
+            }
+        }
     }
 
-    return c;
+    return cated;
 }
 
 void tensor_backward(tensor_t *tensor)

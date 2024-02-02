@@ -1,17 +1,13 @@
 #ifndef TENSOR_H
 #define TENSOR_H
 
+#include "slice.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdbool.h>
 #include <csptr/smart_ptr.h>
-
-#define SLICE_ALL \
-    (slice_t) { 0, -1, 1 }
-#define SLICE_ONE(start) \
-    (slice_t) { (start), (start) + 1, 1 }
 
 typedef enum {
     PRINT_SHAPE = 0,
@@ -22,23 +18,17 @@ typedef enum {
     PRINT_ALL = PRINT_SHAPE | PRINT_STRIDE | PRINT_DATA | PRINT_GRAD | PRINT_CHILDREN
 } flag_t;
 
-typedef struct
-{
-    int start;
-    int stop;
-    int step;
-} slice_t;
-
 typedef struct tensor
 {
     float *data;
     float *grad;
+    bool requires_grad;
 
     int size;
     int ndim;
     int *shape;
+    slice_t *range;
     int *stride;
-    bool requires_grad;
 
     struct tensor *child1;
     struct tensor *child2;

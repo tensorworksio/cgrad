@@ -10,14 +10,12 @@ int get_size(int shape[], int ndim)
     return size;
 }
 
-int get_index(int coords[], int shape[], int ndim)
+int get_index(int coords[], int stride[], int ndim)
 {
     int index = 0;
-    int multiplier = 1;
-    for (int i = ndim - 1; i >= 0; i--)
+    for (int i = 0; i < ndim; i++)
     {
-        index += coords[i] * multiplier;
-        multiplier *= shape[i];
+        index += coords[i] * stride[i];
     }
     return index;
 }
@@ -96,26 +94,23 @@ void print_metadata(int data[], int ndim)
     printf("%d]", data[ndim-1]);
 }
 
-void print_data_ndim(float *data, int shape[], int stride[], int indices[], int ndim, int dim)
+void print_data_ndim(float *data, slice_t range[], int stride[], int indices[], int ndim, int dim)
 {
     if (dim == ndim) {
-        int index = 0;
-        for (int i = 0; i < ndim; i++) {
-            index += stride[i] * indices[i];
-        }
+        int index = get_index(indices, stride, ndim);
         printf("%f ", data[index]);
         return;
     }
 
-    for (indices[dim] = 0; indices[dim] < shape[dim]; indices[dim]++) {
-        print_data_ndim(data, shape, stride, indices, ndim, dim + 1);
+    for (indices[dim] = range[dim].start; indices[dim] < range[dim].stop; indices[dim] += range[dim].step) {
+        print_data_ndim(data, range, stride, indices, ndim, dim + 1);
     }
     printf("\n");
 }
 
-void print_data(float *data, int shape[], int stride[], int ndim)
+void print_data(float *data, slice_t range[], int stride[], int ndim)
 {
     int indices[ndim];
     for (int i = 0; i < ndim; i++) indices[i] = 0;
-    print_data_ndim(data, shape, stride, indices, ndim, 0);
+    print_data_ndim(data, range, stride, indices, ndim, 0);
 }
