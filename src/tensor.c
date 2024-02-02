@@ -235,22 +235,6 @@ tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
     return transposed;
 }
 
-void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *range, int dim)
-{
-    if (dim == src->ndim)
-    {
-        dst->data[(*dst_idx)++] = src->data[get_index(src_idx, src->stride, src->ndim)];
-    }
-    else
-    {
-        for (int i = range[dim].start; i < range[dim].stop; i += range[dim].step)
-        {
-            src_idx[dim] = i;
-            tensor_fill(dst, src, dst_idx, src_idx, range, dim + 1);
-        }
-    }
-}
-
 tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
 {   
     // Compute new shape
@@ -270,8 +254,6 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
 
 tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
 {
-    // only works when we concateneta along axis 0
-    // we should simply transpose the tensors and concatenate along axis 0 then transpose back
     int ndim = tensors[0]->ndim;
     int shape[ndim];
     memcpy(shape, tensors[0]->shape, sizeof(shape));
@@ -281,30 +263,48 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
     }
 
     tensor_t *cated = tensor_init(shape, ndim, false);
-    int dst_idx = 0;
+    tensor_t *slice;
+    int idx = 0;
     int src_idx[ndim];
     slice_t range[ndim];
 
-    if (axis == 0) {
+    if (axis > 0) {
+        for (int i = 0; i < shape[axis - 1]; i++)
+        {   
+            for (int j = 0; j < num_tensors; j++)
+            {   
+                memcpy(range, tensors[j]->range, ndim * sizeof(slice_t));
+                range[axis - 1] = SLICE_ONE(i);
+                slice = tensor_slice(tensors[j], range);
+                tensor_fill(cated, slice, &idx, src_idx, range, 0);
+            }
+        }
+    } else {
         for (int i = 0; i < num_tensors; i++)
         {
-            for (int j = 0; j < ndim; j++)
-            {
-                range[j] = (slice_t){0, tensors[i]->shape[j], 1};
-            }
-            tensor_fill(cated, tensors[i], &dst_idx, src_idx, range, 0);
-        }
-    } if (axis == 1) {
-        for (int i = 0; shape[0]; i++) {
-            for (int j = 0; j < num_tensors; j++) {
-                
-                range[j] = (slice_t){0, tensors[i]->shape[j], 1};
-                tensor_fill(cated, tensors[j], &dst_idx, src_idx, range, 0);
-            }
+            memcpy(range, tensors[i]->range, ndim * sizeof(slice_t));
+            slice = tensor_slice(tensors[i], range);
+            tensor_fill(cated, slice, &idx, src_idx, range, 0);
         }
     }
-
+    tensor_free(slice, false);
     return cated;
+}
+
+void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *range, int dim)
+{
+    if (dim == src->ndim)
+    {
+        dst->data[(*dst_idx)++] = src->data[get_index(src_idx, src->stride, src->ndim)];
+    }
+    else
+    {
+        for (int i = range[dim].start; i < range[dim].stop; i += range[dim].step)
+        {
+            src_idx[dim] = i;
+            tensor_fill(dst, src, dst_idx, src_idx, range, dim + 1);
+        }
+    }
 }
 
 void tensor_backward(tensor_t *tensor)

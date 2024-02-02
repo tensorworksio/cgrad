@@ -63,7 +63,7 @@ make test
 - Anonymous tensor Segfault when using recursive tensor_free
 
 ### Features
-- Concat operator: handle axis != 0
+- Concat operator: fails when axis > 1
 - Reduce operator for specific axes (require slices)
 - Matmul operator as a combination of sum, add and reshape ideally
 - Pooling operators
