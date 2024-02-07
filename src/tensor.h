@@ -27,7 +27,6 @@ typedef struct tensor
     int size;
     int ndim;
     int *shape;
-    slice_t *range;
     int *stride;
 
     struct tensor *child1;
@@ -49,6 +48,9 @@ tensor_t *tensor_transpose(tensor_t *self, int axis1, int axis2);
 tensor_t *tensor_slice(tensor_t *self, slice_t ranges[]);
 tensor_t *tensor_cat(tensor_t *tensors[], int n_tensors, int axis);
 
+void tensor_copy(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *ranges, int dim);
+void tensor_copy2(tensor_t *dst, tensor_t *src, int offset, int axis);
+
 void tensor_zero_grad(tensor_t *tensor);
 void tensor_init_grad(tensor_t *tensor);
 
@@ -58,7 +60,6 @@ bool tensor_equals(tensor_t *a, tensor_t *b, bool with_grad);
 void tensor_free(tensor_t *tensor, bool recursive);
 void tensor_set_data(tensor_t *self, float data[], int size);
 void tensor_set_grad(tensor_t *self, float grad[], int size);
-void tensor_fill(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *ranges, int dim);
 
 void tensor_print(tensor_t *tensor, flag_t flags);
 
