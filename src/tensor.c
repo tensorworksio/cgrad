@@ -236,8 +236,13 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
     // Compute new shape
     int shape[tensor->ndim];
     normalize_range(range, tensor->shape, tensor->ndim);
-    compute_shape(shape, range, tensor->ndim);
+    for (int d = 0; d < tensor->ndim; d++)
+    {
+        shape[d] = abs(range[d].stop - range[d].start) / range[d].step + 
+                  (abs(range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
+    }
 
+    // TODO: what about grad ?
     tensor_t *sliced = tensor_init(shape, tensor->ndim, tensor->requires_grad);
 
     // Fill sliced tensor with data
@@ -249,28 +254,43 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
 }
 
 tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
-{
+{   
     int ndim = tensors[0]->ndim;
+    ASSERT(axis >= 0 && axis < ndim, "Axis out of bounds: got %d", axis);
+
+    // Compute new shape
     int shape[ndim];
     memcpy(shape, tensors[0]->shape, sizeof(shape));
     for (int i = 1; i < num_tensors; i++)
-    {
+    {   
+        ASSERT(tensors[i]->ndim == ndim, 
+            "Number of dimensions must be the same for all tensors. Got %d and %d", ndim, tensors[i]->ndim);
+        for (int d = 0; d < ndim; d++)
+        {
+            if (d != axis)
+            {
+                ASSERT(tensors[i]->shape[d] == shape[d], 
+                    "Shape mismatch at axis %d: %d != %d", d, tensors[i]->shape[d], shape[d]);
+            }
+        }
         shape[axis] += tensors[i]->shape[axis];
     }
 
+    // TODO: what about grad ?
     tensor_t *cated = tensor_init(shape, ndim, false);
 
     // Fill cated tensor with data
-    
+    int offset = 0;
     for (int i = 0; i < num_tensors; i++)
     {   
+        int step = 0;
         int size = (axis == 0) ? tensors[i]->size : tensors[i]->stride[axis-1];
-        int offset = i * size;
         int n = tensors[i]->size / size;
         for (int j = 0; j < n; j++) {
-            memcpy(cated->data + offset, tensors[i]->data + j * size, size * sizeof(float));
-            offset += size * num_tensors;
+            memcpy(cated->data + offset + step, tensors[i]->data + j * size, size * sizeof(float));
+            step += cated->stride[axis - 1];
         }
+        offset += size;
     }
     return cated;
 }

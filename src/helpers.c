@@ -70,17 +70,6 @@ void normalize_range(slice_t range[], int shape[], int ndim)
         ASSERT(range[d].start <= range[d].stop, "Slice start must be less than or equal to slice stop");
     }
 }
-
-void compute_shape(int shape[], slice_t range[], int ndim)
-{   
-    int dist;
-    for (int d = 0; d < ndim; d++)
-    {
-        dist = abs(range[d].stop - range[d].start);
-        shape[d] = dist / range[d].step + (dist % range[d].step != 0 ? 1 : 0);
-    }
-}
-
 void print_metadata(int data[], int ndim)
 {   
     printf("[");

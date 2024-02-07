@@ -49,7 +49,6 @@ tensor_t *tensor_slice(tensor_t *self, slice_t ranges[]);
 tensor_t *tensor_cat(tensor_t *tensors[], int n_tensors, int axis);
 
 void tensor_copy(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *ranges, int dim);
-void tensor_copy2(tensor_t *dst, tensor_t *src, int offset, int axis);
 
 void tensor_zero_grad(tensor_t *tensor);
 void tensor_init_grad(tensor_t *tensor);

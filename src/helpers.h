@@ -19,7 +19,6 @@ int get_size(int shape[], int ndim);
 int get_index(int coords[], int shape[], int ndim);
 
 void set_data(float *data, float value, int size);
-void compute_shape(int shape[], slice_t range[], int ndim);
 void normalize_range(slice_t range[], int shape[], int ndim);
 
 void print_metadata(int data[], int ndim);
