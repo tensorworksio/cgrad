@@ -1,57 +1,47 @@
 #include "ops.h"
 
-tensor_t *tensor_add(tensor_t *a, tensor_t *b)
-{
-    ASSERT(tensor_same_shape(a, b, true), "Add error :: Shape mismatch");
-    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad, tensor_add_tt);
-    out->child1 = a;
-    out->child2 = b;
-    if (out->requires_grad)
-        out->backward = backward_add;
+// TODO:
+// before any operation, check if full range is used
+// if so, iterate over data contiguous memory
+// if not, use iterator to iterate over data
 
-    return out;
-}
-
-float *tensor_add_tt(tensor_t *a, tensor_t *b)
+float *addt(tensor_t *a, tensor_t *b)
 {   
+    int k;
     float *data = smalloc(.size = a->size, .nmemb = sizeof(float), .kind = SHARED);
     for (int i = 0; i < a->size; i++)
-    {
-        data[i] = a->data[i] + b->data[i];
+    {   
+        k = (b->size == 1) ? 0 : i;
+        data[i] = a->data[i] + b->data[k];
     }
     return data;
 }
 
-// tensor_t *tensor_add_tf(tensor_t *a, float b)
-// {
-//     tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad);
-//     for (int i = 0; i < a->size; i++)
-//     {
-//         out->data[i] = a->data[i] + b;
-//     }
-//     out->child1 = a;
-//     out->child2 = tensor((float[]){b}, (int[]){1}, 1, false);
-//     if (out->requires_grad)
-//         out->backward = backward_add;
+float *mult(tensor_t *a, tensor_t *b)
+{   
+    int k;
+    float *data = smalloc(.size = a->size, .nmemb = sizeof(float), .kind = SHARED);
+    for (int i = 0; i < a->size; i++)
+    {   
+        k = (b->size == 1) ? 0 : i;
+        data[i] = a->data[i] * b->data[k];
+    }
+    return data;
+}
 
-//     return out;
-// }
-
-// tensor_t *tensor_mul_tt(tensor_t *a, tensor_t *b)
-// {
-//     ASSERT(tensor_same_shape(a, b, true), "Mul error :: Shape mismatch");
-//     tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad);
-//     for (int i = 0; i < a->size; i++)
-//     {
-//         out->data[i] = a->data[i] * b->data[i];
-//     }
-//     out->child1 = a;
-//     out->child2 = b;
-//     if (out->requires_grad)
-//         out->backward = backward_mul;
-
-//     return out;
-// }
+float *powt(tensor_t *a, tensor_t *b)
+{   
+    int j, k;
+    int size = (a->size > b->size) ? a->size : b->size;
+    float *data = smalloc(.size = size, .nmemb = sizeof(float), .kind = SHARED);
+    for (int i = 0; i < a->size; i++)
+    {   
+        j = (a->size == 1) ? 0 : i;
+        k = (b->size == 1) ? 0 : i;
+        data[i] = powf(a->data[j], b->data[k]);
+    }
+    return data;
+}
 
 // tensor_t *tensor_mul_tf(tensor_t *a, float b)
 // {
@@ -64,22 +54,6 @@ float *tensor_add_tt(tensor_t *a, tensor_t *b)
 //     out->child2 = tensor((float[]){b}, (int[]){1}, 1, false);
 //     if (out->requires_grad)
 //         out->backward = backward_mul;
-
-//     return out;
-// }
-
-// tensor_t *tensor_pow_tt(tensor_t *a, tensor_t *b)
-// {
-//     ASSERT(tensor_same_shape(a, b, true), "Pow error :: Shape mismatch");
-//     tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad);
-//     for (int i = 0; i < a->size; i++)
-//     {
-//         out->data[i] = powf(a->data[i], b->data[i]);
-//     }
-//     out->child1 = a;
-//     out->child2 = b;
-//     if (out->requires_grad)
-//         out->backward = backward_pow;
 
 //     return out;
 // }
@@ -145,11 +119,6 @@ float *tensor_add_tt(tensor_t *a, tensor_t *b)
 // tensor_t *tensor_add_ft(float a, tensor_t *b)
 // {
 //     return tensor_add_tf(b, a);
-// }
-
-// tensor_t *tensor_mul(tensor_t *a, tensor_t *b)
-// {
-//     return tensor_mul_tt(a, b);
 // }
 
 // tensor_t *tensor_mul_ft(float a, tensor_t *b)

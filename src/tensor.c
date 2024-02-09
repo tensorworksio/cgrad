@@ -1,3 +1,4 @@
+#include "ops.h"
 #include "tensor.h"
 #include "backops.h"
 #include "helpers.h"
@@ -209,6 +210,100 @@ void tensor_print(tensor_t *tensor, flag_t flags)
     printf("\n");
 }
 
+// BINARY OPS
+
+tensor_t *tensor_add_tt(tensor_t *a, tensor_t *b)
+{
+    ASSERT(tensor_same_shape(a, b, true), "Add error :: Shape mismatch");
+    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad, addt);
+    out->child1 = a;
+    out->child2 = b;
+    if (out->requires_grad)
+        out->backward = backward_add;
+
+    return out;
+}
+
+tensor_t *tensor_add_tf(tensor_t *a, float b)
+{
+    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad, addt);
+    out->child1 = a;
+    out->child2 = tensor((float[]){b}, (int[]){1}, 1, false);
+    if (out->requires_grad)
+        out->backward = backward_add;
+
+    return out;
+}
+
+tensor_t *tensor_add_ft(float a, tensor_t *b)
+{
+    return tensor_add_tf(b, a);
+}
+
+tensor_t *tensor_mul_tt(tensor_t *a, tensor_t *b)
+{
+    ASSERT(tensor_same_shape(a, b, true), "Mul error :: Shape mismatch");
+    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad, mult);
+    out->child1 = a;
+    out->child2 = b;
+    if (out->requires_grad)
+        out->backward = backward_mul;
+
+    return out;
+}
+
+tensor_t *tensor_mul_tf(tensor_t *a, float b)
+{
+    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad, mult);
+    out->child1 = a;
+    out->child2 = tensor((float[]){b}, (int[]){1}, 1, false);
+    if (out->requires_grad)
+        out->backward = backward_mul;
+
+    return out;
+}
+
+tensor_t *tensor_mul_ft(float a, tensor_t *b)
+{
+    return tensor_mul_tf(b, a);
+}
+
+tensor_t *tensor_pow_tt(tensor_t *a, tensor_t *b)
+{
+    ASSERT(tensor_same_shape(a, b, true), "Pow error :: Shape mismatch");
+    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad, powt);
+    out->child1 = a;
+    out->child2 = b;
+    if (out->requires_grad)
+        out->backward = backward_pow;
+
+    return out;
+}
+
+tensor_t *tensor_pow_tf(tensor_t *a, float b)
+{
+    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad, powt);
+    out->child1 = a;
+    out->child2 = tensor((float[]){b}, (int[]){1}, 1, false);
+    if (out->requires_grad)
+        out->backward = backward_pow;
+
+    return out;
+}
+
+tensor_t *tensor_pow_ft(float a, tensor_t *b)
+{
+    tensor_t *out = tensor_init(b->shape, b->ndim, b->requires_grad, powt);
+    out->child1 = tensor((float[]){a}, (int[]){1}, 1, false);
+    out->child2 = b;
+    if (out->requires_grad)
+        out->backward = backward_pow;
+
+    return out;
+}
+
+
+
 tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
 {
     int size = get_size(shape, ndim);
@@ -323,9 +418,11 @@ void tensor_copy(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice
 }
 
 void tensor_forward(tensor_t *tensor)
-{
+{   
     if (tensor->forward && tensor->data == NULL)
-    {
+    {   
+        tensor_forward(tensor->child1);
+        tensor_forward(tensor->child2);
         tensor->data = tensor->forward(tensor->child1, tensor->child2);
     }
 }
