@@ -7,7 +7,9 @@ void backward(tensor_t *self)
         log_debug("No backward function implemented for that node.\n");
         return;
     }
+    // malloc grad here as you only need it for backward
     self->backward(self);
+    // We could free grad memory here because its not a leaf tensor
 }
 
 void update_grad_add(tensor_t *self, tensor_t *child)

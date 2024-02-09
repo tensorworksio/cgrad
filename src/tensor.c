@@ -15,9 +15,12 @@ tensor_t *tensor_alloc(int size)
     tensor->shape = NULL;
     tensor->stride = NULL;
 
-    // children & backward
+    // children
     tensor->child1 = NULL;
     tensor->child2 = NULL;
+
+    // backward & forward
+    tensor->forward = NULL;
     tensor->backward = NULL;
     return tensor;
 }
@@ -42,28 +45,31 @@ tensor_t *tensor_create(int shape[], int ndim, bool requires_grad)
     return tensor;
 }
 
-tensor_t *tensor_init(int shape[], int ndim, bool requires_grad)
+tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float* (*op) (tensor_t*, tensor_t*))
 {
     tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
-    tensor->data = smalloc(.size = tensor->size, .nmemb = sizeof(float), .kind = SHARED);
-    set_data(tensor->data, 0., tensor->size);
-    if (requires_grad) {
-        tensor->grad = smalloc(.size = tensor->size, .nmemb = sizeof(float), .kind = SHARED);
-        set_data(tensor->grad, 0., tensor->size);
+    tensor->forward = op;
+    if (op == NULL) {
+        tensor->data = smalloc(.size = tensor->size, .nmemb = sizeof(float), .kind = SHARED);
+        set_data(tensor->data, 0., tensor->size);
     }
+    // if (requires_grad) {
+    //     tensor->grad = smalloc(.size = tensor->size, .nmemb = sizeof(float), .kind = SHARED);
+    //     set_data(tensor->grad, 0., tensor->size);
+    // }
     return tensor;
 }
 
 tensor_t *tensor(const float data[], int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_init(shape, ndim, requires_grad);
+    tensor_t *tensor = tensor_init(shape, ndim, requires_grad, NULL);
     memcpy(tensor->data, data, tensor->size * sizeof(float));
     return tensor;
 }
 
 tensor_t *tensor_rand(int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_init(shape, ndim, requires_grad);
+    tensor_t *tensor = tensor_init(shape, ndim, requires_grad, NULL);
     for (int i = 0; i < tensor->size; ++i)
     {
         tensor->data[i] = (float)rand() / (float)RAND_MAX;
@@ -73,14 +79,14 @@ tensor_t *tensor_rand(int shape[], int ndim, bool requires_grad)
 
 tensor_t *tensor_zeros(int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_init(shape, ndim, requires_grad);
+    tensor_t *tensor = tensor_init(shape, ndim, requires_grad, NULL);
     set_data(tensor->data, 0., tensor->size);
     return tensor;
 }
 
 tensor_t *tensor_ones(int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_init(shape, ndim, requires_grad);
+    tensor_t *tensor = tensor_init(shape, ndim, requires_grad, NULL);
     set_data(tensor->data, 1., tensor->size);
     return tensor;
 }
@@ -182,12 +188,17 @@ void tensor_print(tensor_t *tensor, flag_t flags)
 
     if (flags & PRINT_DATA)
     {
-        printf("Data @ %p:\n", (void*) tensor->data);
-        print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
+        if (tensor->data)
+        {
+            printf("Data @ %p:\n", (void*) tensor->data);
+            print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
+        } else {
+            printf("Data: NULL\n");
+        }
     }
 
     if (flags & PRINT_GRAD) {
-        if (tensor->requires_grad)
+        if (tensor->grad)
         {
             printf("Grad @ %p:\n", (void*) tensor->grad);
             print_data(tensor->grad, tensor->shape, tensor->stride, tensor->ndim);
@@ -243,7 +254,7 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
     }
 
     // TODO: what about grad ?
-    tensor_t *sliced = tensor_init(shape, tensor->ndim, tensor->requires_grad);
+    tensor_t *sliced = tensor_init(shape, tensor->ndim, tensor->requires_grad, NULL);
 
     // Fill sliced tensor with data
     int idx = 0;
@@ -277,7 +288,7 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
     }
 
     // TODO: what about grad ?
-    tensor_t *cated = tensor_init(shape, ndim, false);
+    tensor_t *cated = tensor_init(shape, ndim, false, NULL);
 
     // Fill cated tensor with data
     int offset = 0;
@@ -308,6 +319,14 @@ void tensor_copy(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice
             src_idx[dim] = i;
             tensor_copy(dst, src, dst_idx, src_idx, range, dim + 1);
         }
+    }
+}
+
+void tensor_forward(tensor_t *tensor)
+{
+    if (tensor->forward && tensor->data == NULL)
+    {
+        tensor->data = tensor->forward(tensor->child1, tensor->child2);
     }
 }
 

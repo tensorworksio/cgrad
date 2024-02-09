@@ -31,12 +31,15 @@ typedef struct tensor
 
     struct tensor *child1;
     struct tensor *child2;
+
     void (*backward)(struct tensor *self);
+    float* (*forward)(struct tensor *child1, struct tensor *child2);
+
 } tensor_t;
 
 tensor_t *tensor_alloc(int size);
 tensor_t *tensor_create(int shape[], int ndim, bool requires_grad);
-tensor_t *tensor_init(int shape[], int ndim, bool requires_grad);
+tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float* (*op) (tensor_t*, tensor_t*));
 
 tensor_t *tensor(const float data[], int shape[], int ndim, bool requires_grad);
 tensor_t *tensor_rand(int shape[], int ndim, bool requires_grad);
@@ -62,6 +65,7 @@ void tensor_set_grad(tensor_t *self, float grad[], int size);
 
 void tensor_print(tensor_t *tensor, flag_t flags);
 
-void tensor_backward(tensor_t *self);
+void tensor_backward(tensor_t *tensor);
+void tensor_forward(tensor_t *tensor);
 
 #endif
