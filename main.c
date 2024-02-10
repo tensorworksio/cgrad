@@ -7,17 +7,15 @@ int main()
 {
     log_set_level(LOG_INFO);
 
-    tensor_t *a = tensor_rand((int[]){5, 10}, 2, false);
-    tensor_t *b = tensor_rand((int[]){5, 10}, 2, false);
+    tensor_t *a = tensor((float[]){1., -2., 3., -4.}, (int[]){4}, 1, false);
+    tensor_t *res = tensor_sum(a);
+    tensor_print(res, PRINT_ALL);
 
-    tensor_t *c = tensor_add(a, b);
-    tensor_forward(c);
+    tensor_t *expected = tensor((float[]){-2.}, (int[]){1}, 1, false);
+    ASSERT(tensor_equals(res, expected, true), "sum_t failed");
 
-    tensor_print(a, PRINT_ALL);
-    tensor_print(b, PRINT_ALL);
-    tensor_print(c, PRINT_ALL);
-
-    tensor_free(c, true);
+    tensor_free(res, true);
+    tensor_free(expected, true);
 
     return 0;
 }
