@@ -1,7 +1,6 @@
 #include <criterion/criterion.h>
+#include <math.h>
 #include "tensor.h"
-#include "helpers.h"
-#include "ops.h"
 #include "log.h"
 
 Test(add, backward_add)
@@ -15,11 +14,11 @@ Test(add, backward_add)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1., 1., 1., 1.}, a->size);
 
-    tensor_t *b_grad = tensor_init(b->shape, b->ndim, true);
+    tensor_t *b_grad = tensor_create(b->shape, b->ndim, true);
     tensor_set_data(b_grad, b->data, b->size);
     tensor_set_grad(b_grad, (float[]){1., 1., 1., 1.}, b->size);
 
@@ -41,7 +40,7 @@ Test(add, backward_add_tf)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1., 1., 1., 1.}, a->size);
 
@@ -61,7 +60,7 @@ Test(add, backward_add_ft)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1., 1., 1., 1.}, a->size);
 
@@ -82,11 +81,11 @@ Test(sub, backward_sub)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1., 1., 1., 1.}, a->size);
 
-    tensor_t *b_grad = tensor_init(b->shape, b->ndim, true);
+    tensor_t *b_grad = tensor_create(b->shape, b->ndim, true);
     tensor_set_data(b_grad, b->data, b->size);
     tensor_set_grad(b_grad, (float[]){-1., -1., -1., -1.}, b->size);
 
@@ -108,7 +107,7 @@ Test(sub, backward_sub_tf)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1., 1., 1., 1.}, a->size);
 
@@ -128,7 +127,7 @@ Test(sub, backward_sub_ft)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){-1., -1., -1., -1.}, a->size);
 
@@ -149,11 +148,11 @@ Test(mul, backward_mul)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, b->data, b->size);
 
-    tensor_t *b_grad = tensor_init(b->shape, b->ndim, true);
+    tensor_t *b_grad = tensor_create(b->shape, b->ndim, true);
     tensor_set_data(b_grad, b->data, b->size);
     tensor_set_grad(b_grad, a->data, a->size);
 
@@ -175,7 +174,7 @@ Test(mul, backward_mul_tf)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){5., 5., 5., 5.}, a->size);
 
@@ -195,7 +194,7 @@ Test(mul, backward_mul_ft)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){5., 5., 5., 5.}, a->size);
 
@@ -216,11 +215,11 @@ Test(div, backward_div_tt)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1., 0.5, 1. / 3, 0.25}, a->size);
 
-    tensor_t *b_grad = tensor_init(b->shape, b->ndim, true);
+    tensor_t *b_grad = tensor_create(b->shape, b->ndim, true);
     tensor_set_data(b_grad, b->data, b->size);
     tensor_set_grad(b_grad, (float[]){-5., -1.5, -1., -0.5}, b->size);
 
@@ -242,7 +241,7 @@ Test(div, backward_div_tf)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){0.2, 0.2, 0.2, 0.2}, a->size);
 
@@ -262,7 +261,7 @@ Test(div, backward_div_ft)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){-0.2, -0.1388889, -0.0617284, -0.078125}, a->size);
 
@@ -283,11 +282,11 @@ Test(pow, backward_pow_tt)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, b->size);
     tensor_set_grad(a_grad, (float[]){1., 6., 12., 4.}, a->size);
 
-    tensor_t *b_grad = tensor_init(b->shape, b->ndim, true);
+    tensor_t *b_grad = tensor_create(b->shape, b->ndim, true);
     tensor_set_data(b_grad, b->data, a->size);
     tensor_set_grad(b_grad, (float[]){5.545177, 9.88751, 5.545177, 0.}, b->size);
 
@@ -309,7 +308,7 @@ Test(pow, backward_pow_tf)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1280., 405., 80., 5.}, a->size);
 
@@ -329,7 +328,7 @@ Test(pow, backward_pow_ft)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1005.898743, 201.179749, 40.235947, 8.047190}, a->size);
 
@@ -349,7 +348,7 @@ Test(exp, backward_exp)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1., 2., 3., 4.}, a->size);
 
@@ -369,7 +368,7 @@ Test(relu, backward_relu)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){0., 1., 0., 1.}, a->size);
 
@@ -388,7 +387,7 @@ Test(sum, backward_sum)
 
     tensor_backward(y);
 
-    tensor_t *a_grad = tensor_init(a->shape, a->ndim, true);
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
     tensor_set_data(a_grad, a->data, a->size);
     tensor_set_grad(a_grad, (float[]){1., 1., 1., 1.}, a->size);
 
