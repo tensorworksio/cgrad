@@ -1,21 +1,29 @@
 #include "tensor.h"
 #include "ops.h"
 #include "log.h"
-#include "iterator.h"
 
-int main()
-{
+int main() {
     log_set_level(LOG_INFO);
 
-    tensor_t *a = tensor((float[]){1., -2., 3., -4.}, (int[]){4}, 1, false);
-    tensor_t *res = tensor_sum(a);
-    tensor_print(res, PRINT_ALL);
+    tensor_t* a = tensor((float[]){2., 4., 6.}, (int[]){3}, 1, true);
+    tensor_t* b = tensor((float[]){1., 2., 0.}, (int[]){3}, 1, true);
+    // c = a + b
+    tensor_t* c = tensor_add(a, b);
+    // c = c - 1
+    c = tensor_sub_tf(c, 1.);
+    // d = c ** 3
+    tensor_t* d = tensor_pow_tf(c, 3.);
+    // e = relu(d)
+    tensor_t* e = tensor_relu(d);
+    // f = sum(e)
+    tensor_t* f = tensor_sum(e);
 
-    tensor_t *expected = tensor((float[]){-2.}, (int[]){1}, 1, false);
-    ASSERT(tensor_equals(res, expected, true), "sum_t failed");
+    tensor_backward(f); // compute gradients
+    
+    tensor_print(a, PRINT_ALL); // print tensors a.data and a.grad = d(f)/d(a)
+    tensor_print(b, PRINT_ALL); // print tensors b.data and b.grad = d(f)/d(b)
 
-    tensor_free(res, true);
-    tensor_free(expected, true);
-
+    // recursively free all tensors in the graph
+    tensor_free(f, true);
     return 0;
 }

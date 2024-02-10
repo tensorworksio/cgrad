@@ -4,7 +4,7 @@ void backward(tensor_t *self)
 {
     if (self->backward == NULL)
     {
-        log_warn("No backward function implemented for node %p.\n", (void*) self);
+        log_debug("Node %p has no backward.", (void*) self);
         return;
     }
 
@@ -94,7 +94,7 @@ void backward_relu(tensor_t *self)
 {
     if (self->child1 == NULL)
     {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.\n", (void *)self);
+        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
         return;
     }
     init_grad(self->child1);
@@ -107,7 +107,7 @@ void backward_add(tensor_t *self)
 {
     if (self->child1 == NULL || self->child2 == NULL)
     {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.\n", (void *)self);
+        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
         return;
     }
     init_grad(self->child1);
@@ -124,7 +124,7 @@ void backward_mul(tensor_t *self)
 {
     if (self->child1 == NULL || self->child2 == NULL)
     {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.\n", (void *)self);
+        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
         return;
     }
     init_grad(self->child1);
@@ -141,7 +141,7 @@ void backward_pow(tensor_t *self)
 {
     if (self->child1 == NULL)
     {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.\n", (void *)self);
+        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
         return;
     }
     init_grad(self->child1);
@@ -159,7 +159,7 @@ void backward_sum(tensor_t *self)
 {
     if (self->child1 == NULL)
     {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.\n", (void *)self);
+        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
         return;
     }
     init_grad(self->child1);
