@@ -6,12 +6,14 @@
 #define EPSILON 1e-6
 #define MAX_PRINT_SIZE 10
 
-#define ASSERT(condition, format, ...) \
-    do { \
-        if (!(condition)) { \
+#define ASSERT(condition, format, ...)        \
+    do                                        \
+    {                                         \
+        if (!(condition))                     \
+        {                                     \
             log_error(format, ##__VA_ARGS__); \
-            exit(EXIT_FAILURE); \
-        } \
+            exit(EXIT_FAILURE);               \
+        }                                     \
     } while (0)
 
 // tensor helpers

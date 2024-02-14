@@ -54,9 +54,9 @@ bool is_equal_data(float *data_a, float *data_b, int size)
 }
 
 void normalize_range(slice_t range[], int shape[], int ndim)
-{   
+{
     for (int d = 0; d < ndim; d++)
-    {   
+    {
         ASSERT(range[d].step > 0, "Slice step must be positive: got %d", range[d].step);
         ASSERT(abs(range[d].start) <= shape[d],
                "Index %d is out of bounds for dimension %d with size %d", range[d].start, d, shape[d]);
@@ -71,24 +71,26 @@ void normalize_range(slice_t range[], int shape[], int ndim)
     }
 }
 void print_metadata(int data[], int ndim)
-{   
+{
     printf("[");
-    for (int i = 0; i < ndim-1; i++)
+    for (int i = 0; i < ndim - 1; i++)
     {
         printf("%d, ", data[i]);
     }
-    printf("%d]", data[ndim-1]);
+    printf("%d]", data[ndim - 1]);
 }
 
 void print_data_ndim(float *data, int shape[], int stride[], int indices[], int ndim, int dim)
 {
-    if (dim == ndim) {
+    if (dim == ndim)
+    {
         int index = get_index(indices, stride, ndim);
         printf("%f ", data[index]);
         return;
     }
 
-    for (indices[dim] = 0; indices[dim] < shape[dim]; indices[dim]++) {
+    for (indices[dim] = 0; indices[dim] < shape[dim]; indices[dim]++)
+    {
         print_data_ndim(data, shape, stride, indices, ndim, dim + 1);
     }
     printf("\n");
@@ -97,7 +99,8 @@ void print_data_ndim(float *data, int shape[], int stride[], int indices[], int 
 void print_data(float *data, int shape[], int stride[], int ndim)
 {
     int indices[ndim];
-    for (int i = 0; i < ndim; i++) indices[i] = 0;
+    for (int i = 0; i < ndim; i++)
+        indices[i] = 0;
     print_data_ndim(data, shape, stride, indices, ndim, 0);
 }
 

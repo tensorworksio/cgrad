@@ -9,7 +9,8 @@
 #include <stdbool.h>
 #include <csptr/smart_ptr.h>
 
-typedef enum {
+typedef enum
+{
     PRINT_SHAPE = 0,
     PRINT_STRIDE = (1 << 0),
     PRINT_DATA = (1 << 1),
@@ -29,18 +30,20 @@ typedef struct tensor
     int *shape;
     int *stride;
 
-    struct tensor *child1;
-    struct tensor *child2;
+    int n_children;
+    struct tensor **children;
 
     void (*backward)(struct tensor *self);
-    float* (*forward)(struct tensor *child1, struct tensor *child2);
+    float *(*forward)(int n_children, struct tensor **children);
 
 } tensor_t;
 
 // ALLOC OPS
 tensor_t *tensor_alloc(int size);
 tensor_t *tensor_create(int shape[], int ndim, bool requires_grad);
-tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float* (*op) (tensor_t*, tensor_t*));
+tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float *(*op)(int, tensor_t **));
+void tensor_child(tensor_t *parent, tensor_t *child);
+void tensor_free(tensor_t *tensor, bool recursive);
 
 // INIT OPS
 tensor_t *tensor(const float data[], int shape[], int ndim, bool requires_grad);
@@ -103,6 +106,5 @@ void tensor_copy(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice
 void tensor_forward(tensor_t *tensor);
 void tensor_backward(tensor_t *tensor);
 void tensor_print(tensor_t *tensor, flag_t flags);
-void tensor_free(tensor_t *tensor, bool recursive);
 
 #endif

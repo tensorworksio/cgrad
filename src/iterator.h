@@ -6,7 +6,8 @@
 #include "helpers.h"
 #include <stdbool.h>
 
-typedef struct {
+typedef struct
+{
     tensor_t *tensor;
     slice_t *range;
     int *indices;

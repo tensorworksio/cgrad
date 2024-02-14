@@ -4,16 +4,21 @@ void backward(tensor_t *self)
 {
     if (self->backward == NULL)
     {
-        log_debug("Node %p has no backward.", (void*) self);
+        log_debug("Node %p has no backward function.", (void *)self);
         return;
     }
-
+    if (self->children == NULL)
+    {
+        log_debug("Node %p has no children.", (void *)self);
+        return;
+    }
     self->backward(self);
 }
 
 void init_grad(tensor_t *self)
-{   
-    if (! self->requires_grad || self->grad) return;
+{
+    if (!self->requires_grad || self->grad)
+        return;
     self->grad = smalloc(.size = self->size, .nmemb = sizeof(float), .kind = SHARED);
     tensor_zero_grad(self);
 }
@@ -23,7 +28,7 @@ void update_grad_add(tensor_t *self, tensor_t *child)
 {
     if (!child->requires_grad)
         return;
-    
+
     for (int i = 0; i < self->size; i++)
     {
         child->grad[i] += self->grad[i];
@@ -92,77 +97,57 @@ void update_grad_sum(tensor_t *self, tensor_t *child)
 // UNARY OPS
 void backward_relu(tensor_t *self)
 {
-    if (self->child1 == NULL)
-    {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
-        return;
-    }
-    init_grad(self->child1);
-    update_grad_relu(self, self->child1);
-    backward(self->child1);
+    ASSERT(self->n_children == 1, "RELU Node %p expects 1 child, got %d", (void *)self, self->n_children);
+    init_grad(self->children[0]);
+    update_grad_relu(self, self->children[0]);
+    backward(self->children[0]);
 }
 
 // BINARY OPS
 void backward_add(tensor_t *self)
 {
-    if (self->child1 == NULL || self->child2 == NULL)
-    {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
-        return;
-    }
-    init_grad(self->child1);
-    init_grad(self->child2);
+    ASSERT(self->n_children == 2, "ADD Node %p expects 2 children, got %d", (void *)self, self->n_children);
+    init_grad(self->children[0]);
+    init_grad(self->children[1]);
 
-    update_grad_add(self, self->child1);
-    update_grad_add(self, self->child2);
+    update_grad_add(self, self->children[0]);
+    update_grad_add(self, self->children[1]);
 
-    backward(self->child1);
-    backward(self->child2);
+    backward(self->children[0]);
+    backward(self->children[1]);
 }
 
 void backward_mul(tensor_t *self)
 {
-    if (self->child1 == NULL || self->child2 == NULL)
-    {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
-        return;
-    }
-    init_grad(self->child1);
-    init_grad(self->child2);
+    ASSERT(self->n_children == 2, "MUL Node %p expects 2 children, got %d", (void *)self, self->n_children);
+    init_grad(self->children[0]);
+    init_grad(self->children[1]);
 
-    update_grad_mul(self, self->child1, self->child2);
-    update_grad_mul(self, self->child2, self->child1);
+    update_grad_mul(self, self->children[0], self->children[1]);
+    update_grad_mul(self, self->children[1], self->children[0]);
 
-    backward(self->child1);
-    backward(self->child2);
+    backward(self->children[0]);
+    backward(self->children[1]);
 }
 
 void backward_pow(tensor_t *self)
 {
-    if (self->child1 == NULL)
-    {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
-        return;
-    }
-    init_grad(self->child1);
-    init_grad(self->child2);
-    
-    update_grad_pow(self, self->child1, self->child2);
-    update_grad_exp(self, self->child2, self->child1);
+    ASSERT(self->n_children == 2, "POW Node %p expects 2 children, got %d", (void *)self, self->n_children);
+    init_grad(self->children[0]);
+    init_grad(self->children[1]);
 
-    backward(self->child1);
-    backward(self->child2);
+    update_grad_pow(self, self->children[0], self->children[1]);
+    update_grad_exp(self, self->children[1], self->children[0]);
+
+    backward(self->children[0]);
+    backward(self->children[1]);
 }
 
 // REDUCE OPS
 void backward_sum(tensor_t *self)
 {
-    if (self->child1 == NULL)
-    {
-        log_debug("Child of tensor %p is NULL. Reached end of tree.", (void *)self);
-        return;
-    }
-    init_grad(self->child1);
-    update_grad_sum(self, self->child1);
-    backward(self->child1);
+    ASSERT(self->n_children == 1, "SUM Node %p expects 1 child, got %d", (void *)self, self->n_children);
+    init_grad(self->children[0]);
+    update_grad_sum(self, self->children[0]);
+    backward(self->children[0]);
 }

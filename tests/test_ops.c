@@ -1,9 +1,12 @@
 #include <criterion/criterion.h>
 #include <math.h>
 #include "tensor.h"
+#include "log.h"
 
 Test(add, add_tt)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *b = tensor((float[]){5., 6., 7., 8.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_add(a, b);
@@ -17,6 +20,8 @@ Test(add, add_tt)
 
 Test(add, add_tf)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_add_tf(a, 5.);
     tensor_forward(res);
@@ -29,6 +34,8 @@ Test(add, add_tf)
 
 Test(add, add_ft)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_add_ft(5., a);
     tensor_forward(res);
@@ -41,6 +48,8 @@ Test(add, add_ft)
 
 Test(sub, sub_tt)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *b = tensor((float[]){5., 6., 7., 8.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_sub(a, b);
@@ -54,6 +63,8 @@ Test(sub, sub_tt)
 
 Test(sub, sub_tf)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_sub_tf(a, 5.);
     tensor_forward(res);
@@ -66,6 +77,8 @@ Test(sub, sub_tf)
 
 Test(sub, sub_ft)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_sub_ft(5., a);
     tensor_forward(res);
@@ -78,6 +91,8 @@ Test(sub, sub_ft)
 
 Test(mul, mul_tt)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *b = tensor((float[]){5., 6., 7., 8.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_mul(a, b);
@@ -91,6 +106,8 @@ Test(mul, mul_tt)
 
 Test(mul, mul_tf)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_mul_tf(a, 5.);
     tensor_forward(res);
@@ -103,6 +120,8 @@ Test(mul, mul_tf)
 
 Test(mul, mul_ft)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_mul_ft(5., a);
     tensor_forward(res);
@@ -115,6 +134,8 @@ Test(mul, mul_ft)
 
 Test(div, div_tt)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){5., 12., 21., 32.}, (int[]){4}, 1, false);
     tensor_t *b = tensor((float[]){5., 6., 7., 8.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_div(a, b);
@@ -128,6 +149,8 @@ Test(div, div_tt)
 
 Test(div, div_tf)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){5., 10., 15., 20.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_div_tf(a, 5.);
     tensor_forward(res);
@@ -140,6 +163,8 @@ Test(div, div_tf)
 
 Test(div, div_ft)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){5., 10., 15., 20.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_div_ft(5., a);
     tensor_forward(res);
@@ -152,6 +177,8 @@ Test(div, div_ft)
 
 Test(pow, pow_tt)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *b = tensor((float[]){2., 3., 4., 5.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_pow(a, b);
@@ -165,6 +192,8 @@ Test(pow, pow_tt)
 
 Test(pow, pow_tf)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_pow_tf(a, 2.);
     tensor_forward(res);
@@ -177,6 +206,8 @@ Test(pow, pow_tf)
 
 Test(pow, pow_ft)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_pow_ft(2., a);
     tensor_forward(res);
@@ -189,6 +220,8 @@ Test(pow, pow_ft)
 
 Test(exp, exp_t)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){logf(1.), logf(2.), logf(3.), logf(4.)}, (int[]){4}, 1, false);
     tensor_t *res = tensor_exp(a);
     tensor_forward(res);
@@ -201,6 +234,8 @@ Test(exp, exp_t)
 
 Test(neg, neg_t)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., -2., 3., -4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_neg(a);
     tensor_forward(res);
@@ -213,6 +248,8 @@ Test(neg, neg_t)
 
 Test(relu, relu_t)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., -2., 3., -4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_relu(a);
     tensor_forward(res);
@@ -225,6 +262,8 @@ Test(relu, relu_t)
 
 Test(sum, sum_t)
 {
+    log_set_level(LOG_INFO);
+
     tensor_t *a = tensor((float[]){1., -2., 3., -4.}, (int[]){4}, 1, false);
     tensor_t *res = tensor_sum(a);
     tensor_forward(res);
