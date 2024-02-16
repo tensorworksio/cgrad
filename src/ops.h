@@ -9,6 +9,7 @@ float *forward_add(int n_children, tensor_t **children);
 float *forward_mul(int n_children, tensor_t **children);
 float *forward_pow(int n_children, tensor_t **children);
 float *forward_sum(int n_children, tensor_t **children);
+float *forward_noop(int n_children, tensor_t **children);
 
 // UNARY OPS
 float *relut(tensor_t *a);

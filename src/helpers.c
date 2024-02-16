@@ -20,6 +20,13 @@ int get_index(int coords[], int stride[], int ndim)
     return index;
 }
 
+void swap(int *a, int *b)
+{
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
 void set_data(float *data, float value, int size)
 {
     for (int i = 0; i < size; i++)

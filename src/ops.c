@@ -31,6 +31,12 @@ float *forward_sum(int n_children, tensor_t **children)
     return sumt(children[0]);
 }
 
+float *forward_noop(int n_children, tensor_t **children)
+{
+    ASSERT(n_children == 1, "Noop forward must have 1 child, got %d", n_children);
+    return sref(children[0]->data);
+}
+
 // TODO:
 // before any operation, check if full range is used
 // if so, iterate over data contiguous memory

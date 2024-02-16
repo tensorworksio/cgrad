@@ -24,3 +24,6 @@ void backward_pow(tensor_t *self);
 
 // REDUCE OPS
 void backward_sum(tensor_t *self);
+
+// MOVEMENT OPS
+void backward_noop(tensor_t *self);

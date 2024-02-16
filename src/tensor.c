@@ -352,41 +352,33 @@ tensor_t *tensor_sum(tensor_t *a)
 }
 
 // MOVEMENT OPS
-// TODO: These ops should only share data and grad pointers
-// They don't need backward and forward functions
-
 tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
 {
     int size = get_size(shape, ndim);
     ASSERT(size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
-    tensor_t *reshaped = tensor_create(shape, ndim, tensor->requires_grad);
-    reshaped->data = sref(tensor->data);
-    if (tensor->grad)
-        reshaped->grad = sref(tensor->grad);
-    for (int i = ndim; i-- > 0;)
-    {
-        reshaped->shape[i] = shape[i];
-        reshaped->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
-    };
-    tensor_child(reshaped, tensor);
-    return reshaped;
+    tensor_t *out = tensor_init(shape, ndim, tensor->requires_grad, forward_noop);
+    tensor_child(out, tensor);
+    if (out->requires_grad)
+        out->backward = backward_noop;
+
+    return out;
 }
 
 tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
 {
-    int shape[tensor->ndim];
-    // set shape
-    memcpy(shape, tensor->shape, sizeof(shape));
-    shape[axis1] = tensor->shape[axis2];
-    shape[axis2] = tensor->shape[axis1];
+    // TODO: how to deal with negative axis ?
+    ASSERT(axis1 >= 0 && axis1 < tensor->ndim, "Axis1 out of bounds: got %d", axis1);
+    ASSERT(axis2 >= 0 && axis2 < tensor->ndim, "Axis2 out of bounds: got %d", axis2);
 
-    tensor_t *transposed = tensor_reshape(tensor, shape, tensor->ndim);
-    // set stride
-    memcpy(transposed->stride, tensor->stride, tensor->ndim * sizeof(int));
-    transposed->stride[axis1] = tensor->stride[axis2];
-    transposed->stride[axis2] = tensor->stride[axis1];
+    tensor_t *out = tensor_init(tensor->shape, tensor->ndim, tensor->requires_grad, forward_noop);
+    swap(&out->shape[axis1], &out->shape[axis2]);
+    swap(&out->stride[axis1], &out->stride[axis2]);
 
-    return transposed;
+    tensor_child(out, tensor);
+    if (out->requires_grad)
+        out->backward = backward_noop;
+
+    return out;
 }
 
 tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])

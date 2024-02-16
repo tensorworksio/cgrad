@@ -151,3 +151,11 @@ void backward_sum(tensor_t *self)
     update_grad_sum(self, self->children[0]);
     backward(self->children[0]);
 }
+
+// MOVEMENT OPS
+void backward_noop(tensor_t *self)
+{
+    ASSERT(self->n_children == 1, "NOOP Node %p expects 1 child, got %d", (void *)self, self->n_children);
+    self->children[0]->grad = sref(self->grad);
+    backward(self->children[0]);
+}
