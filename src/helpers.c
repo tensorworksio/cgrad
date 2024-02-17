@@ -65,14 +65,14 @@ void normalize_range(slice_t range[], int shape[], int ndim)
     for (int d = 0; d < ndim; d++)
     {
         ASSERT(range[d].step > 0, "Slice step must be positive: got %d", range[d].step);
-        ASSERT(abs(range[d].start) <= shape[d],
+        ASSERT(range[d].start < shape[d] && range[d].start >= -shape[d],
                "Index %d is out of bounds for dimension %d with size %d", range[d].start, d, shape[d]);
-        ASSERT(abs(range[d].stop) <= shape[d],
+        ASSERT(range[d].stop <= shape[d] && range[d].stop > -shape[d],
                "Index %d is out of bounds for dimension %d with size %d", range[d].stop, d, shape[d]);
 
         // if start/stop is negative, add shape to it
         range[d].start = (range[d].start < 0) ? range[d].start + shape[d] : range[d].start;
-        range[d].stop = (range[d].stop < 0) ? range[d].stop + shape[d] : range[d].stop;
+        range[d].stop = (range[d].stop < 0) ? range[d].stop + shape[d] + 1 : range[d].stop;
 
         ASSERT(range[d].start <= range[d].stop, "Slice start must be less than or equal to slice stop");
     }
@@ -87,7 +87,7 @@ void print_metadata(int data[], int ndim)
     printf("%d]", data[ndim - 1]);
 }
 
-void print_data_ndim(float *data, int shape[], int stride[], int indices[], int ndim, int dim)
+void print_data_ndim(float *data, slice_t range[], int stride[], int indices[], int ndim, int dim)
 {
     if (dim == ndim)
     {
@@ -96,25 +96,16 @@ void print_data_ndim(float *data, int shape[], int stride[], int indices[], int 
         return;
     }
 
-    for (indices[dim] = 0; indices[dim] < shape[dim]; indices[dim]++)
+    for (indices[dim] = range[dim].start; indices[dim] < range[dim].stop; indices[dim] += range[dim].step)
     {
-        print_data_ndim(data, shape, stride, indices, ndim, dim + 1);
+        print_data_ndim(data, range, stride, indices, ndim, dim + 1);
     }
     printf("\n");
 }
 
-void print_data(float *data, int shape[], int stride[], int ndim)
+void print_data(float *data, slice_t range[], int stride[], int ndim)
 {
     int indices[ndim];
-    for (int i = 0; i < ndim; i++)
-        indices[i] = 0;
-    print_data_ndim(data, shape, stride, indices, ndim, 0);
-}
-
-void copy_data(float *dst, float *src, int size)
-{
-    for (int i = 0; i < size; i++)
-    {
-        dst[i] = src[i];
-    }
+    memset(indices, 0, ndim * sizeof(int));
+    print_data_ndim(data, range, stride, indices, ndim, 0);
 }

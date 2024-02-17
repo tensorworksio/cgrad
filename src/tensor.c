@@ -12,8 +12,9 @@ tensor_t *tensor_alloc(int size)
     tensor->data = NULL;
     tensor->grad = NULL;
 
-    // shape & stride
+    // shape, range & stride
     tensor->shape = NULL;
+    tensor->range = NULL;
     tensor->stride = NULL;
 
     // children
@@ -36,17 +37,19 @@ tensor_t *tensor_create(int shape[], int ndim, bool requires_grad)
     tensor->requires_grad = requires_grad;
     tensor->shape = (int *)malloc(sizeof(int) * ndim);
     tensor->stride = (int *)malloc(sizeof(int) * ndim);
+    tensor->range = (slice_t *)malloc(sizeof(slice_t) * ndim);
 
     for (int i = ndim; i-- > 0;)
     {
         tensor->shape[i] = shape[i];
+        tensor->range[i] = (slice_t){0, shape[i], 1};
         tensor->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
     }
 
     return tensor;
 }
 
-tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float *(*op)(int, tensor_t **))
+tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float *(*op)(tensor_t *))
 {
     tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
     tensor->forward = op;
@@ -79,6 +82,7 @@ void tensor_free(tensor_t *tensor, bool recursive)
     sfree(tensor->grad);
     // free metadata
     free(tensor->shape);
+    free(tensor->range);
     free(tensor->stride);
     // free tensor
     free(tensor);
@@ -366,9 +370,11 @@ tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
 
 tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
 {
-    // TODO: how to deal with negative axis ?
-    ASSERT(axis1 >= 0 && axis1 < tensor->ndim, "Axis1 out of bounds: got %d", axis1);
-    ASSERT(axis2 >= 0 && axis2 < tensor->ndim, "Axis2 out of bounds: got %d", axis2);
+    ASSERT(tensor->ndim + axis1 >= 0 && axis1 < tensor->ndim, "Axis1 out of bounds: got %d", axis1);
+    ASSERT(tensor->ndim + axis2 >= 0 && axis2 < tensor->ndim, "Axis2 out of bounds: got %d", axis2);
+
+    axis1 = (axis1 < 0) ? tensor->ndim + axis1 : axis1;
+    axis2 = (axis2 < 0) ? tensor->ndim + axis2 : axis2;
 
     tensor_t *out = tensor_init(tensor->shape, tensor->ndim, tensor->requires_grad, forward_noop);
     swap(&out->shape[axis1], &out->shape[axis2]);
@@ -392,29 +398,32 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
                    (abs(range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
-    // TODO: what about grad ?
-    tensor_t *sliced = tensor_init(shape, tensor->ndim, tensor->requires_grad, NULL);
+    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_noop);
+    memcpy(out->range, range, sizeof(slice_t) * out->ndim);
+    memcpy(out->stride, tensor->stride, sizeof(int) * out->ndim);
 
-    // Fill sliced tensor with data
-    int idx = 0;
-    int src_idx[sliced->ndim];
-    tensor_copy(sliced, tensor, &idx, src_idx, range, 0);
+    tensor_child(out, tensor);
+    if (out->requires_grad)
+        out->backward = backward_noop;
 
-    return sliced;
+    return out;
 }
 
 tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
 {
     int ndim = tensors[0]->ndim;
-    ASSERT(axis >= 0 && axis < ndim, "Axis out of bounds: got %d", axis);
+    ASSERT(ndim + axis >= 0 && axis < ndim, "Axis out of bounds: got %d", axis);
 
     // Compute new shape
     int shape[ndim];
-    memcpy(shape, tensors[0]->shape, sizeof(shape));
+    axis = (axis < 0) ? ndim + axis : axis;
+    bool requires_grad = tensors[0]->requires_grad;
+    memcpy(shape, tensors[0]->shape, ndim * sizeof(int));
     for (int i = 1; i < num_tensors; i++)
     {
         ASSERT(tensors[i]->ndim == ndim,
                "Number of dimensions must be the same for all tensors. Got %d and %d", ndim, tensors[i]->ndim);
+        requires_grad = requires_grad || tensors[i]->requires_grad;
         for (int d = 0; d < ndim; d++)
         {
             if (d != axis)
@@ -426,24 +435,15 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
         shape[axis] += tensors[i]->shape[axis];
     }
 
-    // TODO: what about grad ?
-    tensor_t *cated = tensor_init(shape, ndim, false, NULL);
-
-    // Fill cated tensor with data
-    int offset = 0;
+    tensor_t *out = tensor_init(shape, ndim, requires_grad, forward_cat);
     for (int i = 0; i < num_tensors; i++)
     {
-        int step = 0;
-        int size = (axis == 0) ? tensors[i]->size : tensors[i]->stride[axis - 1];
-        int n = tensors[i]->size / size;
-        for (int j = 0; j < n; j++)
-        {
-            memcpy(cated->data + offset + step, tensors[i]->data + j * size, size * sizeof(float));
-            step += cated->stride[axis - 1];
-        }
-        offset += size;
+        tensor_child(out, tensors[i]);
     }
-    return cated;
+    if (out->requires_grad)
+        out->backward = backward_noop;
+
+    return out;
 }
 
 void tensor_copy(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *range, int dim)
@@ -478,7 +478,7 @@ void tensor_forward(tensor_t *tensor)
         {
             tensor_forward(tensor->children[i]);
         }
-        tensor->data = tensor->forward(tensor->n_children, tensor->children);
+        tensor->forward(tensor);
     }
 }
 
@@ -554,7 +554,7 @@ void tensor_print(tensor_t *tensor, flag_t flags)
         if (tensor->data)
         {
             printf("Data @ %p:\n", (void *)tensor->data);
-            print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
+            print_data(tensor->data, tensor->range, tensor->stride, tensor->ndim);
         }
         else
         {
@@ -567,7 +567,7 @@ void tensor_print(tensor_t *tensor, flag_t flags)
         if (tensor->grad)
         {
             printf("Grad @ %p:\n", (void *)tensor->grad);
-            print_data(tensor->grad, tensor->shape, tensor->stride, tensor->ndim);
+            print_data(tensor->grad, tensor->range, tensor->stride, tensor->ndim);
         }
         else
         {

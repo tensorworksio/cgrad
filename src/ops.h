@@ -3,21 +3,28 @@
 #include "backops.h"
 #include "helpers.h"
 
+void init_data(tensor_t *self);
+void free_data(tensor_t *self);
+
 // FORWARD
-float *forward_relu(int n_children, tensor_t **children);
-float *forward_add(int n_children, tensor_t **children);
-float *forward_mul(int n_children, tensor_t **children);
-float *forward_pow(int n_children, tensor_t **children);
-float *forward_sum(int n_children, tensor_t **children);
-float *forward_noop(int n_children, tensor_t **children);
+void forward_relu(tensor_t *self);
+void forward_add(tensor_t *self);
+void forward_mul(tensor_t *self);
+void forward_pow(tensor_t *self);
+void forward_sum(tensor_t *self);
+void forward_cat(tensor_t *self);
+void forward_noop(tensor_t *self);
 
 // UNARY OPS
-float *relut(tensor_t *a);
+void relut(tensor_t *self, tensor_t *child);
 
 // BINARY OPS
-float *addt(tensor_t *a, tensor_t *b);
-float *mult(tensor_t *a, tensor_t *b);
-float *powt(tensor_t *a, tensor_t *b);
+void addt(tensor_t *self, tensor_t *child, tensor_t *other);
+void mult(tensor_t *self, tensor_t *child, tensor_t *other);
+void powt(tensor_t *self, tensor_t *child, tensor_t *other);
 
 // REDUCE OPS
-float *sumt(tensor_t *a);
+void sumt(tensor_t *self, tensor_t *child);
+
+// MOVEMENT OPS
+void catt(tensor_t *self, tensor_t *children[], int n_children);

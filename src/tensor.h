@@ -29,19 +29,20 @@ typedef struct tensor
     int ndim;
     int *shape;
     int *stride;
+    slice_t *range;
 
     int n_children;
     struct tensor **children;
 
     void (*backward)(struct tensor *self);
-    float *(*forward)(int n_children, struct tensor **children);
+    void (*forward)(struct tensor *self);
 
 } tensor_t;
 
 // ALLOC OPS
 tensor_t *tensor_alloc(int size);
 tensor_t *tensor_create(int shape[], int ndim, bool requires_grad);
-tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float *(*op)(int, tensor_t **));
+tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, void (*op)(tensor_t *));
 void tensor_child(tensor_t *parent, tensor_t *child);
 void tensor_free(tensor_t *tensor, bool recursive);
 
