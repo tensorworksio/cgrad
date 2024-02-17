@@ -49,7 +49,7 @@ tensor_t *tensor_create(int shape[], int ndim, bool requires_grad)
     return tensor;
 }
 
-tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float *(*op)(tensor_t *))
+tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, void (*op)(tensor_t *))
 {
     tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
     tensor->forward = op;
