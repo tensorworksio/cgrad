@@ -84,6 +84,7 @@ void tensor_free(tensor_t *tensor, bool recursive)
     free(tensor->shape);
     free(tensor->range);
     free(tensor->stride);
+    free(tensor->children);
     // free tensor
     free(tensor);
 }
@@ -398,13 +399,14 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
                    (abs(range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
-    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_noop);
+    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_slice);
     memcpy(out->range, range, sizeof(slice_t) * out->ndim);
-    memcpy(out->stride, tensor->stride, sizeof(int) * out->ndim);
+    // uncomment if you choose to put forward_noop to share memory
+    // memcpy(out->stride, tensor->stride, sizeof(int) * out->ndim);
 
     tensor_child(out, tensor);
     if (out->requires_grad)
-        out->backward = backward_noop;
+        out->backward = backward_slice;
 
     return out;
 }
@@ -444,22 +446,6 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
         out->backward = backward_noop;
 
     return out;
-}
-
-void tensor_copy(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *range, int dim)
-{
-    if (dim == src->ndim)
-    {
-        dst->data[(*dst_idx)++] = src->data[get_index(src_idx, src->stride, src->ndim)];
-    }
-    else
-    {
-        for (int i = range[dim].start; i < range[dim].stop; i += range[dim].step)
-        {
-            src_idx[dim] = i;
-            tensor_copy(dst, src, dst_idx, src_idx, range, dim + 1);
-        }
-    }
 }
 
 // FORCING OPS

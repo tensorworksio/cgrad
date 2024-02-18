@@ -16,6 +16,11 @@ void free_data(tensor_t *self)
     }
 }
 
+void copy_data(tensor_t *dst, tensor_t *src)
+{
+    copy_forward(dst->data, src->data, dst->range, src->stride, src->ndim);
+}
+
 // FORWARD
 void forward_relu(tensor_t *self)
 {
@@ -50,6 +55,13 @@ void forward_sum(tensor_t *self)
     ASSERT(self->n_children == 1, "Sum forward must have 1 child, got %d", self->n_children);
     init_data(self);
     sumt(self, self->children[0]);
+}
+
+void forward_slice(tensor_t *self)
+{
+    ASSERT(self->n_children == 1, "Slice forward must have 1 child, got %d", self->n_children);
+    init_data(self);
+    copy_data(self, self->children[0]);
 }
 
 void forward_cat(tensor_t *self)

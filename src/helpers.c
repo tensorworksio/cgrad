@@ -77,6 +77,55 @@ void normalize_range(slice_t range[], int shape[], int ndim)
         ASSERT(range[d].start <= range[d].stop, "Slice start must be less than or equal to slice stop");
     }
 }
+
+void copy_forward_ndim(float *dst, float *src, int *idx, int indices[], slice_t range[], int stride[], int ndim, int dim)
+{
+    if (dim == ndim)
+    {
+        int index = get_index(indices, stride, ndim);
+        dst[(*idx)++] = src[index];
+        return;
+    }
+    else
+    {
+        for (indices[dim] = range[dim].start; indices[dim] < range[dim].stop; indices[dim] += range[dim].step)
+        {
+            copy_forward_ndim(dst, src, idx, indices, range, stride, ndim, dim + 1);
+        }
+    }
+}
+
+void copy_forward(float *dst, float *src, slice_t range[], int stride[], int ndim)
+{
+    int idx = 0;
+    int indices[ndim];
+    copy_forward_ndim(dst, src, &idx, indices, range, stride, ndim, 0);
+}
+
+void copy_backward_ndim(float *dst, float *src, int *idx, int indices[], slice_t range[], int stride[], int ndim, int dim)
+{
+    if (dim == ndim)
+    {
+        int index = get_index(indices, stride, ndim);
+        dst[index] = src[(*idx)++];
+        return;
+    }
+    else
+    {
+        for (indices[dim] = range[dim].start; indices[dim] < range[dim].stop; indices[dim] += range[dim].step)
+        {
+            copy_backward_ndim(dst, src, idx, indices, range, stride, ndim, dim + 1);
+        }
+    }
+}
+
+void copy_backward(float *dst, float *src, slice_t range[], int stride[], int ndim)
+{
+    int idx = 0;
+    int indices[ndim];
+    copy_backward_ndim(dst, src, &idx, indices, range, stride, ndim, 0);
+}
+
 void print_metadata(int data[], int ndim)
 {
     printf("[");
@@ -106,6 +155,5 @@ void print_data_ndim(float *data, slice_t range[], int stride[], int indices[], 
 void print_data(float *data, slice_t range[], int stride[], int ndim)
 {
     int indices[ndim];
-    memset(indices, 0, ndim * sizeof(int));
     print_data_ndim(data, range, stride, indices, ndim, 0);
 }
