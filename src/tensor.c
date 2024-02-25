@@ -12,7 +12,7 @@ tensor_t *tensor_alloc(int size)
     tensor->data = NULL;
     tensor->grad = NULL;
 
-    // shape, range & stride
+    // shape & stride
     tensor->shape = NULL;
     tensor->range = NULL;
     tensor->stride = NULL;
@@ -361,10 +361,10 @@ tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
 {
     int size = get_size(shape, ndim);
     ASSERT(size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
-    tensor_t *out = tensor_init(shape, ndim, tensor->requires_grad, forward_noop);
+    tensor_t *out = tensor_init(shape, ndim, tensor->requires_grad, forward_nop);
     tensor_child(out, tensor);
     if (out->requires_grad)
-        out->backward = backward_noop;
+        out->backward = backward_nop;
 
     return out;
 }
@@ -377,13 +377,13 @@ tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
     axis1 = (axis1 < 0) ? tensor->ndim + axis1 : axis1;
     axis2 = (axis2 < 0) ? tensor->ndim + axis2 : axis2;
 
-    tensor_t *out = tensor_init(tensor->shape, tensor->ndim, tensor->requires_grad, forward_noop);
+    tensor_t *out = tensor_init(tensor->shape, tensor->ndim, tensor->requires_grad, forward_nop);
     swap(&out->shape[axis1], &out->shape[axis2]);
     swap(&out->stride[axis1], &out->stride[axis2]);
 
     tensor_child(out, tensor);
     if (out->requires_grad)
-        out->backward = backward_noop;
+        out->backward = backward_nop;
 
     return out;
 }
@@ -399,12 +399,12 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
                    (abs(range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
-    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_slice);
-    memcpy(out->range, range, sizeof(slice_t) * out->ndim);
-    // uncomment if you choose to put forward_noop to share memory
-    // memcpy(out->stride, tensor->stride, sizeof(int) * out->ndim);
+    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_nop);
 
     tensor_child(out, tensor);
+    memcpy(out->range, range, sizeof(slice_t) * out->ndim);
+    memcpy(out->stride, tensor->stride, sizeof(int) * out->ndim);
+
     if (out->requires_grad)
         out->backward = backward_slice;
 
@@ -437,13 +437,24 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
         shape[axis] += tensors[i]->shape[axis];
     }
 
+    // Compute new range
+    int end;
+    int start = tensors[0]->shape[axis];
+    for (int i = 1; i < num_tensors; i++)
+    {
+        end = start + tensors[i]->shape[axis];
+        tensors[i]->range[axis] = (slice_t){start, end, 1};
+        start = end;
+    }
+
     tensor_t *out = tensor_init(shape, ndim, requires_grad, forward_cat);
     for (int i = 0; i < num_tensors; i++)
     {
         tensor_child(out, tensors[i]);
+        memcpy(tensors[i]->stride, out->stride, sizeof(int) * ndim);
     }
     if (out->requires_grad)
-        out->backward = backward_noop;
+        out->backward = backward_nop;
 
     return out;
 }

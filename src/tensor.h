@@ -19,6 +19,13 @@ typedef enum
     PRINT_ALL = PRINT_SHAPE | PRINT_STRIDE | PRINT_DATA | PRINT_GRAD | PRINT_CHILDREN
 } flag_t;
 
+typedef struct params
+{
+    int axis;
+    slice_t *range;
+
+} params_t;
+
 typedef struct tensor
 {
     float *data;

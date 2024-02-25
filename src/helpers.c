@@ -78,7 +78,7 @@ void normalize_range(slice_t range[], int shape[], int ndim)
     }
 }
 
-void copy_forward_ndim(float *dst, float *src, int *idx, int indices[], slice_t range[], int stride[], int ndim, int dim)
+void copy_from_range_ndim(float *dst, float *src, int *idx, int indices[], slice_t range[], int stride[], int ndim, int dim)
 {
     if (dim == ndim)
     {
@@ -90,19 +90,19 @@ void copy_forward_ndim(float *dst, float *src, int *idx, int indices[], slice_t 
     {
         for (indices[dim] = range[dim].start; indices[dim] < range[dim].stop; indices[dim] += range[dim].step)
         {
-            copy_forward_ndim(dst, src, idx, indices, range, stride, ndim, dim + 1);
+            copy_from_range_ndim(dst, src, idx, indices, range, stride, ndim, dim + 1);
         }
     }
 }
 
-void copy_forward(float *dst, float *src, slice_t range[], int stride[], int ndim)
+void copy_from_range(float *dst, float *src, slice_t range[], int stride[], int ndim)
 {
     int idx = 0;
     int indices[ndim];
-    copy_forward_ndim(dst, src, &idx, indices, range, stride, ndim, 0);
+    copy_from_range_ndim(dst, src, &idx, indices, range, stride, ndim, 0);
 }
 
-void copy_backward_ndim(float *dst, float *src, int *idx, int indices[], slice_t range[], int stride[], int ndim, int dim)
+void copy_to_range_ndim(float *dst, float *src, int *idx, int indices[], slice_t range[], int stride[], int ndim, int dim)
 {
     if (dim == ndim)
     {
@@ -114,16 +114,16 @@ void copy_backward_ndim(float *dst, float *src, int *idx, int indices[], slice_t
     {
         for (indices[dim] = range[dim].start; indices[dim] < range[dim].stop; indices[dim] += range[dim].step)
         {
-            copy_backward_ndim(dst, src, idx, indices, range, stride, ndim, dim + 1);
+            copy_to_range_ndim(dst, src, idx, indices, range, stride, ndim, dim + 1);
         }
     }
 }
 
-void copy_backward(float *dst, float *src, slice_t range[], int stride[], int ndim)
+void copy_to_range(float *dst, float *src, slice_t range[], int stride[], int ndim)
 {
     int idx = 0;
     int indices[ndim];
-    copy_backward_ndim(dst, src, &idx, indices, range, stride, ndim, 0);
+    copy_to_range_ndim(dst, src, &idx, indices, range, stride, ndim, 0);
 }
 
 void print_metadata(int data[], int ndim)

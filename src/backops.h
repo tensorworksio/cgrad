@@ -5,7 +5,6 @@
 
 void backward(tensor_t *self);
 void init_grad(tensor_t *self);
-void copy_grad(tensor_t *dst, tensor_t *src);
 
 // BACKWARD
 void update_grad_relu(tensor_t *self, tensor_t *child);
@@ -27,5 +26,6 @@ void backward_pow(tensor_t *self);
 void backward_sum(tensor_t *self);
 
 // MOVEMENT OPS
-void backward_noop(tensor_t *self);
+void backward_nop(tensor_t *self);
 void backward_slice(tensor_t *self);
+void backward_cat(tensor_t *self);

@@ -16,11 +16,6 @@ void free_data(tensor_t *self)
     }
 }
 
-void copy_data(tensor_t *dst, tensor_t *src)
-{
-    copy_forward(dst->data, src->data, dst->range, src->stride, src->ndim);
-}
-
 // FORWARD
 void forward_relu(tensor_t *self)
 {
@@ -61,7 +56,7 @@ void forward_slice(tensor_t *self)
 {
     ASSERT(self->n_children == 1, "Slice forward must have 1 child, got %d", self->n_children);
     init_data(self);
-    copy_data(self, self->children[0]);
+    copy_from_range(self->data, self->children[0]->data, self->range, self->stride, self->ndim);
 }
 
 void forward_cat(tensor_t *self)
@@ -71,9 +66,9 @@ void forward_cat(tensor_t *self)
     catt(self, self->children, self->n_children);
 }
 
-void forward_noop(tensor_t *self)
+void forward_nop(tensor_t *self)
 {
-    ASSERT(self->n_children == 1, "Noop forward must have 1 child, got %d", self->n_children);
+    ASSERT(self->n_children == 1, "Nop forward must have 1 child, got %d", self->n_children);
     self->data = sref(self->children[0]->data);
 }
 
@@ -137,38 +132,10 @@ void sumt(tensor_t *self, tensor_t *child)
 // MOVEMENT OPS
 void catt(tensor_t *self, tensor_t *children[], int n_children)
 {
-    int axis;
-    int step;
-    int size;
-    int n;
-    int offset = 0;
-
-    for (int d = 0; d < self->ndim; d++)
-    {
-        if (self->shape[d] > children[0]->shape[d])
-        {
-            axis = d;
-            break;
-        }
-    }
-
     for (int i = 0; i < n_children; i++)
     {
-        step = 0;
-        size = (axis == 0) ? children[i]->size : children[i]->stride[axis - 1];
-        n = children[i]->size / size;
-        for (int j = 0; j < n; j++)
-        {
-            memcpy(self->data + offset + step, children[i]->data + j * size, size * sizeof(float));
-            step += self->stride[axis - 1];
-        }
-        offset += size;
-
-        // assign child to self
-        // free_data(children[i]);
-        // children[i]->data = sref(self->data);
-        // memcpy(children[i]->stride, self->stride, self->ndim * sizeof(int));
-        // memcpy(children[i]->range, self->range, self->ndim * sizeof(slice_t));
-        // TODO set range[axis] to the correct value
+        copy_to_range(self->data, children[i]->data, children[i]->range, self->stride, self->ndim);
+        sfree(children[i]->data);
+        children[i]->data = sref(self->data);
     }
 }

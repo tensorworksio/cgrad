@@ -5,7 +5,6 @@
 
 void init_data(tensor_t *self);
 void free_data(tensor_t *self);
-void copy_data(tensor_t *dst, tensor_t *src);
 
 // FORWARD
 void forward_relu(tensor_t *self);
@@ -15,7 +14,7 @@ void forward_pow(tensor_t *self);
 void forward_sum(tensor_t *self);
 void forward_slice(tensor_t *self);
 void forward_cat(tensor_t *self);
-void forward_noop(tensor_t *self);
+void forward_nop(tensor_t *self);
 
 // UNARY OPS
 void relut(tensor_t *self, tensor_t *child);

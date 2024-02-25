@@ -23,11 +23,6 @@ void init_grad(tensor_t *self)
     tensor_zero_grad(self);
 }
 
-void copy_grad(tensor_t *dst, tensor_t *src)
-{
-    copy_backward(dst->grad, src->grad, src->range, dst->stride, dst->ndim);
-}
-
 // UPDATE OPS
 void update_grad_add(tensor_t *self, tensor_t *child)
 {
@@ -158,9 +153,9 @@ void backward_sum(tensor_t *self)
 }
 
 // MOVEMENT OPS
-void backward_noop(tensor_t *self)
+void backward_nop(tensor_t *self)
 {
-    ASSERT(self->n_children > 0, "NOOP Node %p expects at least 1 child, got %d", (void *)self, self->n_children);
+    ASSERT(self->n_children > 0, "NOP Node %p expects at least 1 child, got %d", (void *)self, self->n_children);
     for (int i = 0; i < self->n_children; i++)
     {
         self->children[i]->grad = sref(self->grad);
@@ -172,6 +167,8 @@ void backward_slice(tensor_t *self)
 {
     ASSERT(self->n_children == 1, "SLICE Node %p expects 1 child, got %d", (void *)self, self->n_children);
     init_grad(self->children[0]);
-    copy_grad(self->children[0], self);
+    copy_to_range(self->children[0]->grad, self->grad, self->range, self->stride, self->ndim);
+    sfree(self->grad);
+    self->grad = sref(self->children[0]->grad);
     backward(self->children[0]);
 }
