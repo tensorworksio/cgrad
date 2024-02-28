@@ -20,7 +20,9 @@
 int get_size(int shape[], int ndim);
 int get_index(int coords[], int shape[], int ndim);
 
-void swap(int *a, int *b);
+void swap_int(int *array, int index1, int index2);
+void swap_slice(slice_t *array, int index1, int index2);
+
 void set_data(float *data, float value, int size);
 void normalize_range(slice_t range[], int shape[], int ndim);
 

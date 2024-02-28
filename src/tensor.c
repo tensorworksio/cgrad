@@ -84,8 +84,8 @@ void tensor_free(tensor_t *tensor, bool recursive)
     free(tensor->shape);
     free(tensor->range);
     free(tensor->stride);
-    free(tensor->children);
     // free tensor
+    free(tensor->children);
     free(tensor);
 }
 
@@ -167,6 +167,9 @@ bool tensor_same_shape(tensor_t *a, tensor_t *b, bool debug)
 
 bool tensor_equals(tensor_t *a, tensor_t *b, bool with_grad)
 {
+    // TODO:
+    // is_equal_data should be aware of stride and range, not only shape
+    // the tensors are equal if they print the same data with tensor_print
     if (!tensor_same_shape(a, b, false))
         return false;
     if (!is_equal_data(a->data, b->data, a->size))
@@ -378,8 +381,9 @@ tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
     axis2 = (axis2 < 0) ? tensor->ndim + axis2 : axis2;
 
     tensor_t *out = tensor_init(tensor->shape, tensor->ndim, tensor->requires_grad, forward_nop);
-    swap(&out->shape[axis1], &out->shape[axis2]);
-    swap(&out->stride[axis1], &out->stride[axis2]);
+    swap_int(out->shape, axis1, axis2);
+    swap_int(out->stride, axis1, axis2);
+    swap_slice(out->range, axis1, axis2);
 
     tensor_child(out, tensor);
     if (out->requires_grad)

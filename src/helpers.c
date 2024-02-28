@@ -20,11 +20,18 @@ int get_index(int coords[], int stride[], int ndim)
     return index;
 }
 
-void swap(int *a, int *b)
+void swap_int(int *array, int index1, int index2)
 {
-    int temp = *a;
-    *a = *b;
-    *b = temp;
+    int temp = array[index1];
+    array[index1] = array[index2];
+    array[index2] = temp;
+}
+
+void swap_slice(slice_t *array, int index1, int index2)
+{
+    slice_t temp = array[index1];
+    array[index1] = array[index2];
+    array[index2] = temp;
 }
 
 void set_data(float *data, float value, int size)

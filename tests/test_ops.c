@@ -3,7 +3,8 @@
 #include "tensor.h"
 #include "log.h"
 
-Test(add, add_tt)
+// BINARY OPS
+Test(add, tensor_add)
 {
     log_set_level(LOG_INFO);
 
@@ -13,12 +14,12 @@ Test(add, add_tt)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){6., 8., 10., 12.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "add_tt failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_add failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(add, add_tf)
+Test(add, tensor_add_tf)
 {
     log_set_level(LOG_INFO);
 
@@ -27,12 +28,12 @@ Test(add, add_tf)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){6., 7., 8., 9.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "add_tf failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_add_tf failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(add, add_ft)
+Test(add, tensor_add_ft)
 {
     log_set_level(LOG_INFO);
 
@@ -41,12 +42,12 @@ Test(add, add_ft)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){6., 7., 8., 9.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "add_ft failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_add_ft failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(sub, sub_tt)
+Test(sub, tensor_sub)
 {
     log_set_level(LOG_INFO);
 
@@ -56,12 +57,12 @@ Test(sub, sub_tt)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){-4., -4., -4., -4.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "sub_tt failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_sub failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(sub, sub_tf)
+Test(sub, tensor_sub_tf)
 {
     log_set_level(LOG_INFO);
 
@@ -70,12 +71,12 @@ Test(sub, sub_tf)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){-4., -3., -2., -1.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "sub_tf failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_sub_tf failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(sub, sub_ft)
+Test(sub, tensor_sub_ft)
 {
     log_set_level(LOG_INFO);
 
@@ -84,12 +85,12 @@ Test(sub, sub_ft)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){4., 3., 2., 1.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "sub_ft failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_sub_ft failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(mul, mul_tt)
+Test(mul, tensor_mul)
 {
     log_set_level(LOG_INFO);
 
@@ -99,12 +100,12 @@ Test(mul, mul_tt)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){5., 12., 21., 32.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "mul_tt failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_mul failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(mul, mul_tf)
+Test(mul, tensor_mul_tf)
 {
     log_set_level(LOG_INFO);
 
@@ -113,12 +114,12 @@ Test(mul, mul_tf)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){5., 10., 15., 20.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "mul_tf failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_mul_tf failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(mul, mul_ft)
+Test(mul, tensor_mul_ft)
 {
     log_set_level(LOG_INFO);
 
@@ -127,12 +128,12 @@ Test(mul, mul_ft)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){5., 10., 15., 20.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "mul_ft failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_mul_ft failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(div, div_tt)
+Test(div, tensor_div)
 {
     log_set_level(LOG_INFO);
 
@@ -142,12 +143,12 @@ Test(div, div_tt)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "div_tt failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_div failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(div, div_tf)
+Test(div, tensor_div_tf)
 {
     log_set_level(LOG_INFO);
 
@@ -156,12 +157,12 @@ Test(div, div_tf)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "div_tf failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_div_tf failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(div, div_ft)
+Test(div, tensor_div_ft)
 {
     log_set_level(LOG_INFO);
 
@@ -170,12 +171,12 @@ Test(div, div_ft)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){1., 0.5, 0.333333, 0.25}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "div_ft failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_div_ft failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(pow, pow_tt)
+Test(pow, tensor_pow)
 {
     log_set_level(LOG_INFO);
 
@@ -185,12 +186,12 @@ Test(pow, pow_tt)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){1., 8., 81., 1024.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "pow_tt failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_pow failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(pow, pow_tf)
+Test(pow, tensor_pow_tf)
 {
     log_set_level(LOG_INFO);
 
@@ -199,12 +200,12 @@ Test(pow, pow_tf)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){1., 4., 9., 16.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "pow_tf failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_pow_tf failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(pow, pow_ft)
+Test(pow, tensor_pow_ft)
 {
     log_set_level(LOG_INFO);
 
@@ -213,12 +214,13 @@ Test(pow, pow_ft)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){2., 4., 8., 16.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "pow_ft failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_pow_ft failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(exp, exp_t)
+// UNARY OPS
+Test(exp, tensor_exp)
 {
     log_set_level(LOG_INFO);
 
@@ -227,12 +229,12 @@ Test(exp, exp_t)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "exp_t failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_exp failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(neg, neg_t)
+Test(neg, tensor_neg)
 {
     log_set_level(LOG_INFO);
 
@@ -241,12 +243,12 @@ Test(neg, neg_t)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){-1., 2., -3., 4.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "neg_t failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_neg failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(relu, relu_t)
+Test(relu, tensor_relu)
 {
     log_set_level(LOG_INFO);
 
@@ -255,12 +257,13 @@ Test(relu, relu_t)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){1., 0., 3., 0.}, (int[]){4}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "relu_t failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_relu failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
 
-Test(sum, sum_t)
+// REDUCE OPS
+Test(sum, tensor_sum)
 {
     log_set_level(LOG_INFO);
 
@@ -269,7 +272,50 @@ Test(sum, sum_t)
     tensor_forward(res);
 
     tensor_t *expected = tensor((float[]){-2.}, (int[]){1}, 1, false);
-    cr_assert(tensor_equals(res, expected, true), "sum_t failed");
+    cr_assert(tensor_equals(res, expected, true), "tensor_sum failed");
+    tensor_free(res, true);
+    tensor_free(expected, true);
+}
+
+// MOVEMENT OPS
+Test(reshape, tensor_reshape)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, false);
+    tensor_t *res = tensor_reshape(a, (int[]){2, 2}, 2);
+    tensor_forward(res);
+
+    tensor_t *expected = tensor((float[]){1., 2., 3., 4.}, (int[]){2, 2}, 2, false);
+    cr_assert(tensor_equals(res, expected, true), "tensor_reshape failed");
+    tensor_free(res, true);
+    tensor_free(expected, true);
+}
+
+Test(transpose, tensor_transpose)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t *a = tensor((float[]){1., 2., 3., 4., 5., 6.}, (int[]){3, 2}, 2, false);
+    tensor_t *res = tensor_transpose(a, 0, 1);
+    tensor_forward(res);
+
+    tensor_t *expected = tensor((float[]){1., 3., 5., 2., 4., 6.}, (int[]){2, 3}, 2, false);
+    cr_assert(tensor_equals(res, expected, false), "tensor_transpose failed");
+    tensor_free(res, true);
+    tensor_free(expected, true);
+}
+
+Test(slice, tensor_slice)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t *a = tensor((float[]){1., 2., 3., 4., 5., 6., 7., 8.}, (int[]){4, 2}, 2, false);
+    tensor_t *res = tensor_slice(a, (slice_t[]){(slice_t){1, 3, 1}, (slice_t){0, 2, 1}});
+    tensor_forward(res);
+
+    tensor_t *expected = tensor((float[]){3., 4., 5., 6.}, (int[]){2, 2}, 2, false);
+    cr_assert(tensor_equals(res, expected, true), "tensor_slice failed");
     tensor_free(res, true);
     tensor_free(expected, true);
 }
