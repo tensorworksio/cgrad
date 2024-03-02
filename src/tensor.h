@@ -17,7 +17,7 @@ typedef enum
     PRINT_GRAD = (1 << 2),
     PRINT_CHILDREN = (1 << 3),
     PRINT_ALL = PRINT_SHAPE | PRINT_STRIDE | PRINT_DATA | PRINT_GRAD | PRINT_CHILDREN
-} flag_t;
+} print_flag_t;
 
 typedef struct tensor
 {
@@ -101,11 +101,10 @@ tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim);
 tensor_t *tensor_transpose(tensor_t *self, int axis1, int axis2);
 tensor_t *tensor_slice(tensor_t *self, slice_t ranges[]);
 tensor_t *tensor_cat(tensor_t *tensors[], int n_tensors, int axis);
-void tensor_copy(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *ranges, int dim);
 
 // FORCING OPS
 void tensor_forward(tensor_t *tensor);
 void tensor_backward(tensor_t *tensor);
-void tensor_print(tensor_t *tensor, flag_t flags);
+void tensor_print(tensor_t *tensor, print_flag_t flags);
 
 #endif

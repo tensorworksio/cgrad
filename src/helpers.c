@@ -85,55 +85,29 @@ void normalize_range(slice_t range[], int shape[], int ndim)
     }
 }
 
-void copy_from_range_ndim(float *dst, float *src, int *idx, int indices[], slice_t range[], int stride[], int ndim, int dim)
-{
-    if (dim == ndim)
-    {
-        int index = get_index(indices, stride, ndim);
-        dst[(*idx)++] = src[index];
-        return;
-    }
-    else
-    {
-        for (indices[dim] = range[dim].start; indices[dim] < range[dim].stop; indices[dim] += range[dim].step)
-        {
-            copy_from_range_ndim(dst, src, idx, indices, range, stride, ndim, dim + 1);
-        }
-    }
-}
-
 void copy_from_range(float *dst, float *src, slice_t range[], int stride[], int ndim)
 {
     int idx = 0;
-    int indices[ndim];
-    copy_from_range_ndim(dst, src, &idx, indices, range, stride, ndim, 0);
-}
-
-void copy_to_range_ndim(float *dst, float *src, int *idx, int indices[], slice_t range[], int stride[], int ndim, int dim)
-{
-    if (dim == ndim)
+    iterator_t it = iterator(range, stride, ndim);
+    while (iterator_has_next(&it))
     {
-        int index = get_index(indices, stride, ndim);
-        dst[index] = src[(*idx)++];
-        return;
+        dst[idx++] = src[iterator_next(&it)];
     }
-    else
-    {
-        for (indices[dim] = range[dim].start; indices[dim] < range[dim].stop; indices[dim] += range[dim].step)
-        {
-            copy_to_range_ndim(dst, src, idx, indices, range, stride, ndim, dim + 1);
-        }
-    }
+    iterator_free(&it);
 }
 
 void copy_to_range(float *dst, float *src, slice_t range[], int stride[], int ndim)
 {
     int idx = 0;
-    int indices[ndim];
-    copy_to_range_ndim(dst, src, &idx, indices, range, stride, ndim, 0);
+    iterator_t it = iterator(range, stride, ndim);
+    while (iterator_has_next(&it))
+    {
+        dst[iterator_next(&it)] = src[idx++];
+    }
+    iterator_free(&it);
 }
 
-void print_metadata(int data[], int ndim)
+void print_metadata(int *data, int ndim)
 {
     printf("[");
     for (int i = 0; i < ndim - 1; i++)
@@ -143,24 +117,21 @@ void print_metadata(int data[], int ndim)
     printf("%d]", data[ndim - 1]);
 }
 
-void print_data_ndim(float *data, slice_t range[], int stride[], int indices[], int ndim, int dim)
+void print_data(tensor_t *tensor, print_flag_t flag)
 {
-    if (dim == ndim)
+    int eod;
+    int index;
+    iterator_t it = iterator_tensor(tensor);
+    while (iterator_has_next(&it))
     {
-        int index = get_index(indices, stride, ndim);
-        printf("%f ", data[index]);
-        return;
+        eod = iterator_eod(&it);
+        index = iterator_next(&it);
+        if (flag & PRINT_GRAD)
+            printf("%f ", tensor->grad[index]);
+        else
+            printf("%f ", tensor->data[index]);
+        for (int i = 0; i < eod; i++)
+            printf("\n");
     }
-
-    for (indices[dim] = range[dim].start; indices[dim] < range[dim].stop; indices[dim] += range[dim].step)
-    {
-        print_data_ndim(data, range, stride, indices, ndim, dim + 1);
-    }
-    printf("\n");
-}
-
-void print_data(float *data, slice_t range[], int stride[], int ndim)
-{
-    int indices[ndim];
-    print_data_ndim(data, range, stride, indices, ndim, 0);
+    iterator_free(&it);
 }

@@ -52,18 +52,18 @@ void forward_sum(tensor_t *self)
     sumt(self, self->children[0]);
 }
 
-void forward_slice(tensor_t *self)
-{
-    ASSERT(self->n_children == 1, "Slice forward must have 1 child, got %d", self->n_children);
-    init_data(self);
-    copy_from_range(self->data, self->children[0]->data, self->range, self->stride, self->ndim);
-}
-
 void forward_cat(tensor_t *self)
 {
     ASSERT(self->n_children > 1, "Cat forward must have more than 1 child, got %d", self->n_children);
     init_data(self);
     catt(self, self->children, self->n_children);
+}
+
+void forward_copy(tensor_t *self)
+{
+    ASSERT(self->n_children == 1, "Copy forward must have 1 child, got %d", self->n_children);
+    init_data(self);
+    copy_from_range(self->data, self->children[0]->data, self->range, self->stride, self->ndim);
 }
 
 void forward_nop(tensor_t *self)

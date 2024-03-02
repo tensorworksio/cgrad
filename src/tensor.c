@@ -518,7 +518,7 @@ void tensor_backward(tensor_t *tensor)
     }
 }
 
-void tensor_print(tensor_t *tensor, flag_t flags)
+void tensor_print(tensor_t *tensor, print_flag_t flags)
 {
     tensor_forward(tensor);
 
@@ -555,7 +555,7 @@ void tensor_print(tensor_t *tensor, flag_t flags)
         if (tensor->data)
         {
             printf("Data @ %p:\n", (void *)tensor->data);
-            print_data(tensor->data, tensor->range, tensor->stride, tensor->ndim);
+            print_data(tensor, flags & PRINT_DATA);
         }
         else
         {
@@ -568,7 +568,7 @@ void tensor_print(tensor_t *tensor, flag_t flags)
         if (tensor->grad)
         {
             printf("Grad @ %p:\n", (void *)tensor->grad);
-            print_data(tensor->grad, tensor->range, tensor->stride, tensor->ndim);
+            print_data(tensor, flags & PRINT_GRAD);
         }
         else
         {
