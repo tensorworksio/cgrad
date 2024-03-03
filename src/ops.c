@@ -63,7 +63,9 @@ void forward_copy(tensor_t *self)
 {
     ASSERT(self->n_children == 1, "Copy forward must have 1 child, got %d", self->n_children);
     init_data(self);
-    copy_from_range(self->data, self->children[0]->data, self->range, self->stride, self->ndim);
+    iterator_t it = tensor_iterator(self);
+    copy_from_range(self->data, self->children[0]->data, &it);
+    iterator_free(&it);
 }
 
 void forward_nop(tensor_t *self)
@@ -134,7 +136,9 @@ void catt(tensor_t *self, tensor_t *children[], int n_children)
 {
     for (int i = 0; i < n_children; i++)
     {
-        copy_to_range(self->data, children[i]->data, children[i]->range, self->stride, self->ndim);
+        iterator_t it = tensor_iterator(children[i]);
+        copy_to_range(self->data, children[i]->data, &it);
+        iterator_free(&it);
         sfree(children[i]->data);
         children[i]->data = sref(self->data);
     }

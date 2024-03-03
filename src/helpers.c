@@ -10,16 +10,6 @@ int get_size(int shape[], int ndim)
     return size;
 }
 
-int get_index(int coords[], int stride[], int ndim)
-{
-    int index = 0;
-    for (int i = 0; i < ndim; i++)
-    {
-        index += coords[i] * stride[i];
-    }
-    return index;
-}
-
 void swap_int(int *array, int index1, int index2)
 {
     int temp = array[index1];
@@ -85,26 +75,22 @@ void normalize_range(slice_t range[], int shape[], int ndim)
     }
 }
 
-void copy_from_range(float *dst, float *src, slice_t range[], int stride[], int ndim)
+void copy_from_range(float *dst, float *src, iterator_t *it)
 {
     int idx = 0;
-    iterator_t it = iterator(range, stride, ndim);
-    while (iterator_has_next(&it))
+    while (iterator_has_next(it))
     {
-        dst[idx++] = src[iterator_next(&it)];
+        dst[idx++] = src[iterator_next(it)];
     }
-    iterator_free(&it);
 }
 
-void copy_to_range(float *dst, float *src, slice_t range[], int stride[], int ndim)
+void copy_to_range(float *dst, float *src, iterator_t *it)
 {
     int idx = 0;
-    iterator_t it = iterator(range, stride, ndim);
-    while (iterator_has_next(&it))
+    while (iterator_has_next(it))
     {
-        dst[iterator_next(&it)] = src[idx++];
+        dst[iterator_next(it)] = src[idx++];
     }
-    iterator_free(&it);
 }
 
 void print_metadata(int *data, int ndim)
@@ -117,21 +103,16 @@ void print_metadata(int *data, int ndim)
     printf("%d]", data[ndim - 1]);
 }
 
-void print_data(tensor_t *tensor, print_flag_t flag)
+void print_data(float *data, iterator_t *it)
 {
     int eod;
     int index;
-    iterator_t it = iterator_tensor(tensor);
-    while (iterator_has_next(&it))
+    while (iterator_has_next(it))
     {
-        eod = iterator_eod(&it);
-        index = iterator_next(&it);
-        if (flag & PRINT_GRAD)
-            printf("%f ", tensor->grad[index]);
-        else
-            printf("%f ", tensor->data[index]);
+        eod = iterator_eod(it);
+        index = iterator_next(it);
+        printf("%f ", data[index]);
         for (int i = 0; i < eod; i++)
             printf("\n");
     }
-    iterator_free(&it);
 }

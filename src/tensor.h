@@ -1,7 +1,9 @@
 #ifndef TENSOR_H
 #define TENSOR_H
 
+#include "assert.h"
 #include "slice.h"
+#include "iterator.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -106,5 +108,6 @@ tensor_t *tensor_cat(tensor_t *tensors[], int n_tensors, int axis);
 void tensor_forward(tensor_t *tensor);
 void tensor_backward(tensor_t *tensor);
 void tensor_print(tensor_t *tensor, print_flag_t flags);
+iterator_t tensor_iterator(tensor_t *tensor);
 
 #endif

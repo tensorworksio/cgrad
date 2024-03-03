@@ -555,7 +555,9 @@ void tensor_print(tensor_t *tensor, print_flag_t flags)
         if (tensor->data)
         {
             printf("Data @ %p:\n", (void *)tensor->data);
-            print_data(tensor, flags & PRINT_DATA);
+            iterator_t it = tensor_iterator(tensor);
+            print_data(tensor->data, &it);
+            iterator_free(&it);
         }
         else
         {
@@ -568,7 +570,9 @@ void tensor_print(tensor_t *tensor, print_flag_t flags)
         if (tensor->grad)
         {
             printf("Grad @ %p:\n", (void *)tensor->grad);
-            print_data(tensor, flags & PRINT_GRAD);
+            iterator_t it = tensor_iterator(tensor);
+            print_data(tensor->grad, &it);
+            iterator_free(&it);
         }
         else
         {
@@ -576,4 +580,9 @@ void tensor_print(tensor_t *tensor, print_flag_t flags)
         }
     }
     printf("\n");
+}
+
+iterator_t tensor_iterator(tensor_t *tensor)
+{
+    return iterator(tensor->range, tensor->stride, tensor->ndim);
 }

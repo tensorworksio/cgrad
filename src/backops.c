@@ -167,7 +167,9 @@ void backward_slice(tensor_t *self)
 {
     ASSERT(self->n_children == 1, "SLICE Node %p expects 1 child, got %d", (void *)self, self->n_children);
     init_grad(self->children[0]);
-    copy_to_range(self->children[0]->grad, self->grad, self->range, self->stride, self->ndim);
+    iterator_t it = tensor_iterator(self);
+    copy_to_range(self->children[0]->grad, self->grad, &it);
+    iterator_free(&it);
     sfree(self->grad);
     self->grad = sref(self->children[0]->grad);
     backward(self->children[0]);
