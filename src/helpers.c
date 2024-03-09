@@ -109,6 +109,7 @@ void print_metadata(int *data, int ndim)
 
 void print_data(float *data, iterator_t *it)
 {
+    int sod;
     int eod;
     int index;
     while (iterator_has_next(it))
@@ -117,6 +118,25 @@ void print_data(float *data, iterator_t *it)
         index = iterator_next(it);
         printf("%.4f ", data[index]);
         for (int i = 0; i < eod; i++)
+        {
             printf("\n");
+        }
+        for (int i = it->ndim; i-- > 0;)
+        {
+            if (it->shape[i] <= MAX_PRINT_SIZE)
+                continue;
+
+            if (it->indices[i] == MAX_PRINT_SIZE / 2)
+            {
+                it->indices[i] = it->shape[i] - MAX_PRINT_SIZE / 2;
+                printf("... ");
+                sod = iterator_sod(it);
+                for (int i = 0; i < sod; i++)
+                {
+                    printf("\n");
+                }
+                break;
+            }
+        }
     }
 }

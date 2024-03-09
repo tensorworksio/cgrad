@@ -17,4 +17,6 @@ typedef struct
     int step;
 } slice_t;
 
+int slice_size(slice_t range);
+
 #endif

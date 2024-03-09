@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 #define EPSILON 1e-6
-#define MAX_PRINT_SIZE 5
+#define MAX_PRINT_SIZE 6
 
 // tensor helpers
 int get_size(int shape[], int ndim);
