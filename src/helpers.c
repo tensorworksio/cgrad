@@ -45,13 +45,17 @@ bool is_same_shape(int shape_a[], int shape_b[], int ndim_a, int ndim_b)
     return true;
 }
 
-bool is_equal_data(float *data_a, float *data_b, int size)
+bool is_equal_data(float *data_a, float *data_b, iterator_t *it_a, iterator_t *it_b)
 {
+    int index_a, index_b;
     if (data_a == NULL || data_b == NULL)
         return false;
-    for (int i = 0; i < size; i++)
+
+    while (iterator_has_next(it_a) && iterator_has_next(it_b))
     {
-        if (fabs(data_a[i] - data_b[i]) > EPSILON)
+        index_a = iterator_next(it_a);
+        index_b = iterator_next(it_b);
+        if (fabs(data_a[index_a] - data_b[index_b]) > EPSILON)
             return false;
     }
     return true;
@@ -111,7 +115,7 @@ void print_data(float *data, iterator_t *it)
     {
         eod = iterator_eod(it);
         index = iterator_next(it);
-        printf("%f ", data[index]);
+        printf("%.4f ", data[index]);
         for (int i = 0; i < eod; i++)
             printf("\n");
     }

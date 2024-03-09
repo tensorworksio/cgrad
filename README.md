@@ -64,7 +64,6 @@ make test
 - Anonymous tensor Segfault when using recursive tensor_free
 
 ### Features
-- Rewrite tensor_equals with iterator to take stride into account
 - Change print_data to print ... when we exceed MAX_PRINT_SIZE per dim
 - Tests for movement ops
 - Reduce operator for specific axes

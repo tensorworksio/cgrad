@@ -109,3 +109,17 @@ int iterator_next(iterator_t *it)
 
     return index;
 }
+
+bool iterator_skip(iterator_t *it, int max_count)
+{
+    for (int i = it->ndim; i-- > 0;)
+    {
+        if (it->indices[i] + it->range[i].step > it->range[i].start + max_count * it->range[i].step)
+        {
+            it->indices[i] = it->range[i].stop - it->range[i].step;
+            it->count += (it->range[i].stop - max_count * it->range[i].step) / it->range[i].step;
+            return true;
+        }
+    }
+    return false;
+}

@@ -167,18 +167,38 @@ bool tensor_same_shape(tensor_t *a, tensor_t *b, bool debug)
 
 bool tensor_equals(tensor_t *a, tensor_t *b, bool with_grad)
 {
-    // TODO:
-    // is_equal_data should be aware of stride and range, not only shape
-    // the tensors are equal if they print the same data with tensor_print
-    if (!tensor_same_shape(a, b, false))
-        return false;
-    if (!is_equal_data(a->data, b->data, a->size))
-        return false;
-    if (with_grad && a->requires_grad != b->requires_grad)
-        return false;
-    if (a->requires_grad && b->requires_grad && !is_equal_data(a->grad, b->grad, a->size))
-        return false;
-    return true;
+    bool result = true;
+    iterator_t it_a = tensor_iterator(a);
+    iterator_t it_b = tensor_iterator(b);
+
+    do
+    {
+        if (!tensor_same_shape(a, b, false))
+        {
+            result = false;
+            break;
+        }
+        if (!is_equal_data(a->data, b->data, &it_a, &it_b))
+        {
+            result = false;
+            break;
+        }
+        if (with_grad && a->requires_grad != b->requires_grad)
+        {
+            result = false;
+            break;
+        }
+        if (a->requires_grad && b->requires_grad && !is_equal_data(a->grad, b->grad, &it_a, &it_b))
+        {
+            result = false;
+            break;
+        }
+    } while (0);
+
+    iterator_free(&it_a);
+    iterator_free(&it_b);
+
+    return result;
 }
 
 // UNARY OPS
