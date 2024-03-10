@@ -125,9 +125,10 @@ void powt(tensor_t *self, tensor_t *child, tensor_t *other)
 // REDUCE OPS
 void sumt(tensor_t *self, tensor_t *child)
 {
+    *self->data = 0.0;
     for (int i = 0; i < child->size; i++)
     {
-        self->data[0] += child->data[i];
+        *self->data += child->data[i];
     }
 }
 
