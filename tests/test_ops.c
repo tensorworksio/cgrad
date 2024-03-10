@@ -319,3 +319,33 @@ Test(slice, tensor_slice)
     tensor_free(res, true);
     tensor_free(expected, true);
 }
+
+Test(cat, tensor_cat_0)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){2, 2}, 2, false);
+    tensor_t *b = tensor((float[]){5., 6., 7., 8.}, (int[]){2, 2}, 2, false);
+    tensor_t *res = tensor_cat((tensor_t *[]){a, b}, 2, 0);
+    tensor_forward(res);
+
+    tensor_t *expected = tensor((float[]){1., 2., 3., 4., 5., 6., 7., 8.}, (int[]){4, 2}, 2, false);
+    cr_assert(tensor_equals(res, expected, true), "tensor_cat_0 failed");
+    tensor_free(res, true);
+    tensor_free(expected, true);
+}
+
+Test(cat, tensor_cat_1)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){2, 2}, 2, false);
+    tensor_t *b = tensor((float[]){5., 6., 7., 8.}, (int[]){2, 2}, 2, false);
+    tensor_t *res = tensor_cat((tensor_t *[]){a, b}, 2, 1);
+    tensor_forward(res);
+
+    tensor_t *expected = tensor((float[]){1., 2., 5., 6., 3., 4., 7., 8.}, (int[]){2, 4}, 2, false);
+    cr_assert(tensor_equals(res, expected, true), "tensor_cat_1 failed");
+    tensor_free(res, true);
+    tensor_free(expected, true);
+}

@@ -64,7 +64,6 @@ make test
 - Anonymous tensor Segfault when using recursive tensor_free
 
 ### Features
-- Tests for movement ops
 - Reduce operator for specific axes
 - Matmul operator as a combination of sum, add and reshape ideally
 - Pooling operators

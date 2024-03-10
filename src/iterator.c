@@ -10,15 +10,19 @@ iterator_t iterator(slice_t *range, int *stride, int ndim)
     it.shape = (int *)malloc(ndim * sizeof(int));
     it.indices = (int *)malloc(ndim * sizeof(int));
 
-    for (int i = 0; i < ndim; i++)
+    iterator_reset(&it);
+    return it;
+}
+
+void iterator_reset(iterator_t *it)
+{
+    for (int i = 0; i < it->ndim; i++)
     {
-        it.indices[i] = 0;
-        it.shape[i] = slice_size(range[i]);
+        it->indices[i] = 0;
+        it->shape[i] = slice_size(it->range[i]);
     }
 
-    it.has_next = (iterator_size(&it) > 0) ? true : false;
-
-    return it;
+    it->has_next = (iterator_size(it) > 0) ? true : false;
 }
 
 void iterator_free(iterator_t *it)
@@ -82,6 +86,7 @@ void iterator_update(iterator_t *it)
             it->indices[i] = 0;
             if (i == 0)
             {
+                // Reached the end of the iteration
                 it->has_next = false;
                 break;
             }
