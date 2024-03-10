@@ -262,7 +262,7 @@ Test(relu, tensor_relu)
     tensor_free(expected, true);
 }
 
-// REDUCE OPS
+// UNARY OPS
 Test(sum, tensor_sum)
 {
     log_set_level(LOG_INFO);

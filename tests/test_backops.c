@@ -3,6 +3,7 @@
 #include "tensor.h"
 #include "log.h"
 
+// BINARY OPS
 Test(add, backward_add)
 {
     log_set_level(LOG_INFO);
@@ -338,6 +339,7 @@ Test(pow, backward_pow_ft)
     tensor_free(a_grad, true);
 }
 
+// UNARY OPS
 Test(exp, backward_exp)
 {
     log_set_level(LOG_INFO);
@@ -378,6 +380,7 @@ Test(relu, backward_relu)
     tensor_free(a_grad, true);
 }
 
+// UNARY OPS
 Test(sum, backward_sum)
 {
     log_set_level(LOG_INFO);
@@ -395,4 +398,111 @@ Test(sum, backward_sum)
 
     tensor_free(y, true);
     tensor_free(a_grad, true);
+}
+
+// MOVEMENT OPS
+Test(reshape, backward_reshape)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){4}, 1, true);
+    tensor_t *b = tensor_reshape(a, (int[]){2, 2}, 2);
+    tensor_t *y = tensor_sum(b);
+
+    tensor_backward(y);
+
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
+    tensor_set_data(a_grad, a->data, a->size);
+    tensor_set_grad(a_grad, (float[]){1., 1., 1., 1.}, a->size);
+
+    tensor_t *b_grad = tensor((float[]){1., 2., 3., 4.}, (int[]){2, 2}, 2, true);
+    tensor_set_data(b_grad, b->data, b->size);
+    tensor_set_grad(b_grad, (float[]){1., 1, 1., 1.}, b->size);
+
+    cr_assert(tensor_equals(a, a_grad, true), "backward_reshape failed");
+    cr_assert(tensor_equals(b, b_grad, true), "backward_reshape failed");
+
+    tensor_free(y, true);
+    tensor_free(a_grad, true);
+    tensor_free(b_grad, true);
+}
+
+Test(transpose, backward_transpose)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){2, 2}, 2, true);
+    tensor_t *b = tensor_transpose(a, 0, 1);
+    tensor_t *y = tensor_sum(b);
+
+    tensor_backward(y);
+
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
+    tensor_set_data(a_grad, a->data, a->size);
+    tensor_set_grad(a_grad, (float[]){1., 1., 1., 1.}, a->size);
+
+    tensor_t *b_grad = tensor((float[]){1., 3., 2., 4.}, (int[]){2, 2}, 2, true);
+    tensor_set_grad(b_grad, (float[]){1., 1., 1., 1.}, b->size);
+
+    cr_assert(tensor_equals(a, a_grad, true), "backward_transpose failed");
+    cr_assert(tensor_equals(b, b_grad, true), "backward_transpose failed");
+
+    tensor_free(y, true);
+    tensor_free(a_grad, true);
+    tensor_free(b_grad, true);
+}
+
+Test(slice, backward_slice)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t *a = tensor((float[]){1., 2., 3., 4., 5., 6., 7., 8.}, (int[]){4, 2}, 2, true);
+    tensor_t *b = tensor_slice(a, (slice_t[]){(slice_t){1, 3, 1}, (slice_t){0, 2, 1}});
+    tensor_t *y = tensor_sum(b);
+
+    tensor_backward(y);
+
+    tensor_t *a_grad = tensor_create(a->shape, a->ndim, true);
+    tensor_set_data(a_grad, a->data, a->size);
+    tensor_set_grad(a_grad, (float[]){0., 0., 1., 1., 1., 1., 0., 0.}, a->size);
+
+    tensor_t *b_grad = tensor((float[]){3., 4., 5., 6.}, (int[]){2, 2}, 2, true);
+    tensor_set_grad(b_grad, (float[]){1., 1., 1., 1.}, b->size);
+
+    cr_assert(tensor_equals(a, a_grad, true), "backward_slice failed");
+    cr_assert(tensor_equals(b, b_grad, true), "backward_slice failed");
+
+    tensor_free(y, true);
+    tensor_free(a_grad, true);
+    tensor_free(b_grad, true);
+}
+
+Test(cat, backward_cat)
+{
+    log_set_level(LOG_INFO);
+
+    tensor_t *a = tensor((float[]){1., 2., 3., 4.}, (int[]){2, 2}, 2, true);
+    tensor_t *b = tensor((float[]){5., 6., 7., 8.}, (int[]){2, 2}, 2, true);
+    tensor_t *c = tensor_cat((tensor_t *[]){a, b}, 2, 0);
+    tensor_t *y = tensor_sum(c);
+
+    tensor_backward(y);
+
+    tensor_t *a_grad = tensor((float[]){1., 2., 3., 4.}, (int[]){2, 2}, 2, true);
+    tensor_set_grad(a_grad, (float[]){1., 1., 1., 1.}, a_grad->size);
+
+    tensor_t *b_grad = tensor((float[]){5., 6., 7., 8.}, (int[]){2, 2}, 2, true);
+    tensor_set_grad(b_grad, (float[]){1., 1., 1., 1.}, b_grad->size);
+
+    tensor_t *c_grad = tensor((float[]){1., 2., 3., 4., 5., 6., 7., 8.}, (int[]){4, 2}, 2, true);
+    tensor_set_grad(c_grad, (float[]){1., 1., 1., 1., 1., 1., 1., 1.}, c_grad->size);
+
+    cr_assert(tensor_equals(a, a_grad, true), "backward_cat failed");
+    cr_assert(tensor_equals(b, b_grad, true), "backward_cat failed");
+    cr_assert(tensor_equals(c, c_grad, true), "backward_cat failed");
+
+    tensor_free(y, true);
+    tensor_free(a_grad, true);
+    tensor_free(b_grad, true);
+    tensor_free(c_grad, true);
 }
