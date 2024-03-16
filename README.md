@@ -4,12 +4,12 @@
 Intended to be a Torch-like autograd engine, inspired by [micrograd](https://github.com/karpathy/micrograd/tree/master)
 
 ## Dependencies
-Install criterion to run tests:
 ```bash
 add-apt-repository ppa:snaipewastaken/ppa
 apt-get update
 apt-get install libcriterion-dev
 apt-get install libcsptr-dev
+apt-get install meson ninja-build
 ```
 
 ## How to use it
@@ -48,14 +48,18 @@ int main()
 
 ## Compile and run
 
+### With meson & ninja
 ```bash
-make && ./main
+mkdir build && cd build
+meson setup ..
+ninja && meson test
+./main
 ```
 
-## Run test
-
+### With Make
 ```bash
-make test
+make && make test
+./main
 ```
 
 ## TODO

@@ -1,6 +1,7 @@
 .vscode
 .DS_Store
 dev.txt
+build
 
 main
 *.o
