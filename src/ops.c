@@ -66,10 +66,12 @@ void powt(tensor_t *self, tensor_t *child, tensor_t *other)
 void sumt(tensor_t *self, tensor_t *child)
 {
     *self->data = 0.0;
-    for (int i = 0; i < child->size; i++)
+    iterator_t it = tensor_iterator(child);
+    while (iterator_has_next(&it))
     {
-        *self->data += child->data[i];
+        *self->data += child->data[iterator_next(&it)];
     }
+    iterator_free(&it);
 }
 
 void catt(tensor_t *self, tensor_t *children[], int n_children)
@@ -125,7 +127,7 @@ void forward_sum(tensor_t *self)
 // MOVEMENT OPS
 void forward_cat(tensor_t *self)
 {
-    ASSERT(self->n_children > 1, "forward_cat have more than 1 child, got %d", self->n_children);
+    ASSERT(self->n_children > 0, "forward_cat must have at least 1 child, got %d", self->n_children);
     init_data(self);
     catt(self, self->children, self->n_children);
 }

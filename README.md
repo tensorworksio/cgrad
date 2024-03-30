@@ -65,9 +65,10 @@ make && make test
 ## TODO
 
 ### Bug
-- Anonymous tensor Segfault when using recursive tensor_free
+- tensor with > 1 parent segfault when using recursive tensor_free -> use smalloc for tensor as well
 
 ### Features
+- polymorphic iterator range_iterator >< array_iterator 
 - Reduce operator for specific axes
 - Matmul operator as a combination of sum, add and reshape ideally
 - Pooling operators

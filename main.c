@@ -1,30 +1,35 @@
 #include "tensor.h"
 #include "ops.h"
 #include "log.h"
+#include "time.h"
 
 int main()
 {
     log_set_level(LOG_INFO);
+    clock_t start, end;
+    double cpu_time_used;
 
-    tensor_t *a = tensor((float[]){2., 4., 6.}, (int[]){3}, 1, true);
-    tensor_t *b = tensor((float[]){1., 2., 0.}, (int[]){3}, 1, true);
-    // c = a + b
-    tensor_t *c = tensor_add(a, b);
-    // c = c - 1
-    c = tensor_sub_tf(c, 1.);
-    // d = c ** 3
-    tensor_t *d = tensor_pow_tf(c, 3.);
-    // e = relu(d)
-    tensor_t *e = tensor_relu(d);
-    // f = sum(e)
-    tensor_t *f = tensor_sum(e);
+    tensor_t *a = tensor_rand((int[]){3, 200, 200}, 3, false);
 
-    tensor_backward(f); // compute gradients
+    start = clock();
+    iterator_t it = tensor_iterator(a);
+    while (iterator_has_next(&it))
+    {
+        int index = iterator_next(&it);
+        a->data[index] = a->data[index] * 2;
+    }
+    iterator_free(&it);
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("Time taken by Method 1: %f\n", cpu_time_used);
 
-    tensor_print(a, PRINT_ALL); // print tensors a.data and a.grad = d(f)/d(a)
-    tensor_print(b, PRINT_ALL); // print tensors b.data and b.grad = d(f)/d(b)
-
-    // recursively free all tensors in the graph
-    tensor_free(f, true);
+    start = clock();
+    for (int i = 0; i < a->size; i++)
+    {
+        a->data[i] = a->data[i] * 2;
+    }
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("Time taken by Method 2: %f\n", cpu_time_used);
     return 0;
 }

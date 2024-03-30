@@ -402,18 +402,11 @@ tensor_t *tensor_sum_axis(tensor_t *tensor, int axis)
     for (int i = 0; i < n; i++)
     {
         range[axis] = (slice_t){i, i + 1, 1};
-        // problem with tensor_copy:
-        // tensor_copy operates on a lazy executed graph
-        // either init operator has to be lazy executed as well
-        // or slice has to be a copy of the data
-        slices[i] = tensor_copy(tensor_slice(tensor, range), false);
+        slices[i] = tensor_slice(tensor, range);
         slices[i] = tensor_sum(slices[i]);
     }
+    free(range);
     tensor_t *out = tensor_cat(slices, n, axis);
-    for (int i = 0; i < n; i++)
-    {
-        tensor_free(slices[i], false);
-    }
     return out;
 }
 
@@ -578,8 +571,6 @@ void tensor_backward(tensor_t *tensor)
 
 void tensor_print(tensor_t *tensor, print_flag_t flags)
 {
-    tensor_forward(tensor);
-
     printf("Tensor @ %p\n", (void *)tensor);
     printf("Shape:\t");
     print_metadata(tensor->shape, tensor->ndim);

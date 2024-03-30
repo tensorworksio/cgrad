@@ -5,6 +5,15 @@
 #include "assert.h"
 #include <stdbool.h>
 
+// typedef struct
+// {
+//     int (*next)(void *);
+//     bool (*has_next)(void *);
+//     void (*reset)(void *);
+//     void (*free)(void *);
+//     int (*size)(void *);
+// } iterator_t;
+
 typedef struct
 {
     int ndim;
