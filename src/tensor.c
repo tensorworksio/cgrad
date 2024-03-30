@@ -97,6 +97,19 @@ tensor_t *tensor(const float data[], int shape[], int ndim, bool requires_grad)
     return tensor;
 }
 
+tensor_t *tensor_copy(tensor_t *tensor, bool with_grad)
+{
+    tensor_t *out = tensor_init(tensor->shape, tensor->ndim, tensor->requires_grad, NULL);
+    memcpy(out->data, tensor->data, tensor->size * sizeof(float));
+    memcpy(out->stride, tensor->stride, tensor->ndim * sizeof(int));
+    memcpy(out->range, tensor->range, tensor->ndim * sizeof(slice_t));
+    if (with_grad && tensor->requires_grad)
+    {
+        memcpy(out->grad, tensor->grad, tensor->size * sizeof(float));
+    }
+    return out;
+}
+
 tensor_t *tensor_rand(int shape[], int ndim, bool requires_grad)
 {
     tensor_t *tensor = tensor_init(shape, ndim, requires_grad, NULL);
@@ -369,13 +382,38 @@ tensor_t *tensor_pow_ft(float a, tensor_t *b)
 }
 
 // REDUCE OPS
-tensor_t *tensor_sum(tensor_t *a)
+tensor_t *tensor_sum(tensor_t *tensor)
 {
-    tensor_t *out = tensor_init((int[]){1}, 1, a->requires_grad, forward_sum);
-    tensor_child(out, a);
+    tensor_t *out = tensor_init((int[]){1}, 1, tensor->requires_grad, forward_sum);
+    tensor_child(out, tensor);
     if (out->requires_grad)
         out->backward = backward_sum;
 
+    return out;
+}
+
+tensor_t *tensor_sum_axis(tensor_t *tensor, int axis)
+{
+    int n = tensor->shape[axis];
+    slice_t *range = malloc(tensor->ndim * sizeof(slice_t));
+    memcpy(range, tensor->range, tensor->ndim * sizeof(slice_t));
+
+    tensor_t *slices[n];
+    for (int i = 0; i < n; i++)
+    {
+        range[axis] = (slice_t){i, i + 1, 1};
+        // problem with tensor_copy:
+        // tensor_copy operates on a lazy executed graph
+        // either init operator has to be lazy executed as well
+        // or slice has to be a copy of the data
+        slices[i] = tensor_copy(tensor_slice(tensor, range), false);
+        slices[i] = tensor_sum(slices[i]);
+    }
+    tensor_t *out = tensor_cat(slices, n, axis);
+    for (int i = 0; i < n; i++)
+    {
+        tensor_free(slices[i], false);
+    }
     return out;
 }
 
@@ -384,10 +422,10 @@ tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
 {
     int size = get_size(shape, ndim);
     ASSERT(size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
-    tensor_t *out = tensor_init(shape, ndim, tensor->requires_grad, forward_nop);
+    tensor_t *out = tensor_init(shape, ndim, tensor->requires_grad, forward_ref);
     tensor_child(out, tensor);
     if (out->requires_grad)
-        out->backward = backward_nop;
+        out->backward = backward_ref;
 
     return out;
 }
@@ -400,14 +438,14 @@ tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
     axis1 = (axis1 < 0) ? tensor->ndim + axis1 : axis1;
     axis2 = (axis2 < 0) ? tensor->ndim + axis2 : axis2;
 
-    tensor_t *out = tensor_init(tensor->shape, tensor->ndim, tensor->requires_grad, forward_nop);
+    tensor_t *out = tensor_init(tensor->shape, tensor->ndim, tensor->requires_grad, forward_ref);
     swap_int(out->shape, axis1, axis2);
     swap_int(out->stride, axis1, axis2);
     swap_slice(out->range, axis1, axis2);
 
     tensor_child(out, tensor);
     if (out->requires_grad)
-        out->backward = backward_nop;
+        out->backward = backward_ref;
 
     return out;
 }
@@ -423,7 +461,7 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
                    (abs(range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
-    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_nop);
+    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_ref);
 
     tensor_child(out, tensor);
     memcpy(out->range, range, sizeof(slice_t) * out->ndim);
@@ -478,7 +516,7 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
         memcpy(tensors[i]->stride, out->stride, sizeof(int) * ndim);
     }
     if (out->requires_grad)
-        out->backward = backward_nop;
+        out->backward = backward_ref;
 
     return out;
 }

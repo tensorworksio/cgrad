@@ -26,6 +26,6 @@ void backward_pow(tensor_t *self);
 void backward_sum(tensor_t *self);
 
 // MOVEMENT OPS
-void backward_nop(tensor_t *self);
+void backward_ref(tensor_t *self);
 void backward_slice(tensor_t *self);
-void backward_cat(tensor_t *self);
+void backward_copy(tensor_t *self);

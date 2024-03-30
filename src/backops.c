@@ -23,7 +23,7 @@ void init_grad(tensor_t *self)
     tensor_zero_grad(self);
 }
 
-// UPDATE OPS
+// BACKWARD
 void update_grad_add(tensor_t *self, tensor_t *child)
 {
     if (!child->requires_grad)
@@ -97,7 +97,7 @@ void update_grad_sum(tensor_t *self, tensor_t *child)
 // UNARY OPS
 void backward_relu(tensor_t *self)
 {
-    ASSERT(self->n_children == 1, "RELU Node %p expects 1 child, got %d", (void *)self, self->n_children);
+    ASSERT(self->n_children == 1, "backward_relu expects 1 child, got %d", self->n_children);
     init_grad(self->children[0]);
     update_grad_relu(self, self->children[0]);
     backward(self->children[0]);
@@ -106,7 +106,7 @@ void backward_relu(tensor_t *self)
 // BINARY OPS
 void backward_add(tensor_t *self)
 {
-    ASSERT(self->n_children == 2, "ADD Node %p expects 2 children, got %d", (void *)self, self->n_children);
+    ASSERT(self->n_children == 2, "backward_add expects 2 children, got %d", self->n_children);
     init_grad(self->children[0]);
     init_grad(self->children[1]);
 
@@ -119,7 +119,7 @@ void backward_add(tensor_t *self)
 
 void backward_mul(tensor_t *self)
 {
-    ASSERT(self->n_children == 2, "MUL Node %p expects 2 children, got %d", (void *)self, self->n_children);
+    ASSERT(self->n_children == 2, "backward_mul expects 2 children, got %d", self->n_children);
     init_grad(self->children[0]);
     init_grad(self->children[1]);
 
@@ -132,7 +132,7 @@ void backward_mul(tensor_t *self)
 
 void backward_pow(tensor_t *self)
 {
-    ASSERT(self->n_children == 2, "POW Node %p expects 2 children, got %d", (void *)self, self->n_children);
+    ASSERT(self->n_children == 2, "backward_pow expects 2 children, got %d", self->n_children);
     init_grad(self->children[0]);
     init_grad(self->children[1]);
 
@@ -146,16 +146,16 @@ void backward_pow(tensor_t *self)
 // REDUCE OPS
 void backward_sum(tensor_t *self)
 {
-    ASSERT(self->n_children == 1, "SUM Node %p expects 1 child, got %d", (void *)self, self->n_children);
+    ASSERT(self->n_children == 1, "backward_sum expects 1 child, got %d", self->n_children);
     init_grad(self->children[0]);
     update_grad_sum(self, self->children[0]);
     backward(self->children[0]);
 }
 
 // MOVEMENT OPS
-void backward_nop(tensor_t *self)
+void backward_ref(tensor_t *self)
 {
-    ASSERT(self->n_children > 0, "NOP Node %p expects at least 1 child, got %d", (void *)self, self->n_children);
+    ASSERT(self->n_children > 0, "backward_ref expects at least 1 child, got %d", self->n_children);
     for (int i = 0; i < self->n_children; i++)
     {
         self->children[i]->grad = sref(self->grad);
@@ -165,12 +165,22 @@ void backward_nop(tensor_t *self)
 
 void backward_slice(tensor_t *self)
 {
-    ASSERT(self->n_children == 1, "SLICE Node %p expects 1 child, got %d", (void *)self, self->n_children);
+    ASSERT(self->n_children == 1, "backward_slice expects 1 child, got %d", self->n_children);
     init_grad(self->children[0]);
     iterator_t it = tensor_iterator(self);
     copy_to_range(self->children[0]->grad, self->grad, &it);
     iterator_free(&it);
     sfree(self->grad);
     self->grad = sref(self->children[0]->grad);
+    backward(self->children[0]);
+}
+
+void backward_copy(tensor_t *self)
+{
+    ASSERT(self->n_children == 1, "backward_copy expects 1 child, got %d", self->n_children);
+    init_grad(self->children[0]);
+    iterator_t it = tensor_iterator(self);
+    copy_to_range(self->children[0]->grad, self->grad, &it);
+    iterator_free(&it);
     backward(self->children[0]);
 }
