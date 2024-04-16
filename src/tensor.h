@@ -33,6 +33,9 @@ typedef struct tensor
     int *stride;
     slice_t *range;
 
+    int n_parents;
+    struct tensor **parents;
+
     int n_children;
     struct tensor **children;
 
@@ -45,7 +48,10 @@ typedef struct tensor
 tensor_t *tensor_alloc(int size);
 tensor_t *tensor_create(int shape[], int ndim, bool requires_grad);
 tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, void (*op)(tensor_t *));
-void tensor_child(tensor_t *parent, tensor_t *child);
+void tensor_link(tensor_t *child, tensor_t *parent);
+
+// DESTRUCT OPS
+void tensor_unlink(tensor_t *child, tensor_t *parent);
 void tensor_free(tensor_t *tensor, bool recursive);
 
 // INIT OPS
