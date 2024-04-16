@@ -7,12 +7,12 @@ void init_data(tensor_t *self);
 void free_data(tensor_t *self);
 
 // FORWARD
-void relut(tensor_t *self, tensor_t *child);
-void addt(tensor_t *self, tensor_t *child, tensor_t *other);
-void mult(tensor_t *self, tensor_t *child, tensor_t *other);
-void powt(tensor_t *self, tensor_t *child, tensor_t *other);
-void sumt(tensor_t *self, tensor_t *child);
-void catt(tensor_t *self, tensor_t *children[], int n_children);
+void relut(tensor_t *self, tensor_t *parent);
+void addt(tensor_t *self, tensor_t *parent, tensor_t *other);
+void mult(tensor_t *self, tensor_t *parent, tensor_t *other);
+void powt(tensor_t *self, tensor_t *parent, tensor_t *other);
+void sumt(tensor_t *self, tensor_t *parent);
+void catt(tensor_t *self, tensor_t *parents[], int n_parents);
 
 // UNARY OPS
 void forward_relu(tensor_t *self);
