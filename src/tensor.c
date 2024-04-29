@@ -451,32 +451,48 @@ tensor_t *tensor_pow_ft(float a, tensor_t *b)
 }
 
 // REDUCE OPS
-tensor_t *tensor_sum(tensor_t *tensor)
+tensor_t *tensor_reduce(tensor_t *tensor, int axes[], int n_axes, tensor_t *(*op)(tensor_t *, tensor_t *))
 {
-    tensor_t *out = tensor_init((int[]){1}, 1, tensor->requires_grad, forward_sum);
-    tensor_link(out, tensor);
-    if (out->requires_grad)
-        out->backward = backward_sum;
-
+    ASSERT(n_axes > 0, "Number of axes must be greater than 0.");
+    tensor_t *out = tensor_reduce_axis(tensor, axes[0], op);
+    for (int i = 1; i < n_axes; i++)
+    {
+        out = tensor_reduce_axis(out, axes[i], op);
+    }
     return out;
 }
 
-tensor_t *tensor_sum_axis(tensor_t *tensor, int axis)
+tensor_t *tensor_reduce_axis(tensor_t *tensor, int axis, tensor_t *(*op)(tensor_t *, tensor_t *))
 {
-    int n = tensor->shape[axis];
     slice_t *range = malloc(tensor->ndim * sizeof(slice_t));
     memcpy(range, tensor->range, tensor->ndim * sizeof(slice_t));
 
-    tensor_t *slices[n];
-    for (int i = 0; i < n; i++)
+    int n = tensor->shape[axis];
+    range[axis] = SLICE_ONE(0);
+    tensor_t *out = tensor_slice(tensor, range);
+
+    for (int i = 1; i < n; i++)
     {
-        range[axis] = (slice_t){i, i + 1, 1};
-        slices[i] = tensor_slice(tensor, range);
-        slices[i] = tensor_sum(slices[i]);
+        range[axis] = SLICE_ONE(i);
+        out = op(out, tensor_slice(tensor, range));
     }
     free(range);
-    tensor_t *out = tensor_cat(slices, n, axis);
     return out;
+}
+
+tensor_t *tensor_sum_axes(tensor_t *tensor, int axes[], int n_axes)
+{
+    return tensor_reduce(tensor, axes, n_axes, tensor_add);
+}
+
+tensor_t *tensor_sum(tensor_t *tensor)
+{
+    int axes[tensor->ndim];
+    for (int i = 0; i < tensor->ndim; i++)
+    {
+        axes[i] = i;
+    }
+    return tensor_sum_axes(tensor, axes, tensor->ndim);
 }
 
 // MOVEMENT OPS
@@ -523,14 +539,14 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
                    (abs(range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
-    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_ref);
+    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_copy);
 
     tensor_link(out, tensor);
     memcpy(out->range, range, sizeof(slice_t) * out->ndim);
-    memcpy(out->stride, tensor->stride, sizeof(int) * out->ndim);
+    // memcpy(out->stride, tensor->stride, sizeof(int) * out->ndim);
 
     if (out->requires_grad)
-        out->backward = backward_slice;
+        out->backward = backward_copy;
 
     return out;
 }

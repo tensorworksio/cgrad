@@ -63,17 +63,6 @@ void powt(tensor_t *self, tensor_t *parent, tensor_t *other)
     }
 }
 
-void sumt(tensor_t *self, tensor_t *parent)
-{
-    *self->data = 0.0;
-    iterator_t it = tensor_iterator(parent);
-    while (iterator_has_next(&it))
-    {
-        *self->data += parent->data[iterator_next(&it)];
-    }
-    iterator_free(&it);
-}
-
 void catt(tensor_t *self, tensor_t *parents[], int n_parents)
 {
     for (int i = 0; i < n_parents; i++)
@@ -116,14 +105,6 @@ void forward_pow(tensor_t *self)
     powt(self, self->parents[0], self->parents[1]);
 }
 
-// REDUCE OPS
-void forward_sum(tensor_t *self)
-{
-    ASSERT(self->n_parents == 1, "forward_sum must have 1 parent, got %d", self->n_parents);
-    init_data(self);
-    sumt(self, self->parents[0]);
-}
-
 // MOVEMENT OPS
 void forward_cat(tensor_t *self)
 {
@@ -138,6 +119,10 @@ void forward_copy(tensor_t *self)
     init_data(self);
     iterator_t it = tensor_iterator(self);
     copy_from_range(self->data, self->parents[0]->data, &it);
+    for (int i = 0; i < self->size; i++)
+    {
+        printf("self[%d] = %f\n", i, self->data[i]);
+    }
     iterator_free(&it);
 }
 
