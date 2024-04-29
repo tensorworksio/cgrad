@@ -469,6 +469,12 @@ Test(slice, backward_slice)
     tensor_t *b_grad = tensor((float[]){3., 4., 5., 6.}, (int[]){2, 2}, 2, true);
     tensor_set_grad(b_grad, (float[]){1., 1., 1., 1.}, b->size);
 
+    tensor_print(a, PRINT_ALL);
+    tensor_print(a_grad, PRINT_ALL);
+
+    tensor_print(b, PRINT_ALL);
+    tensor_print(b_grad, PRINT_ALL);
+
     cr_assert(tensor_equals(a, a_grad, true), "backward_slice failed");
     cr_assert(tensor_equals(b, b_grad, true), "backward_slice failed");
 

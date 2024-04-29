@@ -6,14 +6,12 @@
 int main()
 {
     log_set_level(LOG_INFO);
-    tensor_t *a = tensor_rand((int[]){2, 3}, 2, false);
-    tensor_t *b = tensor_rand((int[]){2, 3}, 2, false);
-    tensor_t *c = tensor_rand((int[]){2, 3}, 2, false);
+    tensor_t *a = tensor((float[]){1., 2., 3., 4., 5., 6., 7., 8.}, (int[]){4, 2}, 2, false);
+    tensor_t *b = tensor_slice(a, (slice_t[]){SLICE_ONE(3), SLICE_ALL});
 
-    tensor_t *d = tensor_add(a, b);
-    tensor_t *e = tensor_add(b, c);
-    tensor_t *f = tensor_add(d, e);
+    tensor_forward(b);
+    tensor_print(a, PRINT_ALL);
+    tensor_print(b, PRINT_ALL);
 
-    tensor_free(f, true);
     return 0;
 }

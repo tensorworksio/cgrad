@@ -84,16 +84,6 @@ void update_grad_exp(tensor_t *self, tensor_t *parent, tensor_t *other)
     }
 }
 
-void update_grad_sum(tensor_t *self, tensor_t *parent)
-{
-    if (!parent->requires_grad)
-        return;
-    for (int i = 0; i < parent->size; i++)
-    {
-        parent->grad[i] += self->grad[0];
-    }
-}
-
 // UNARY OPS
 void backward_relu(tensor_t *self)
 {
@@ -143,15 +133,6 @@ void backward_pow(tensor_t *self)
     backward(self->parents[1]);
 }
 
-// REDUCE OPS
-void backward_sum(tensor_t *self)
-{
-    ASSERT(self->n_parents == 1, "backward_sum expects 1 parent, got %d", self->n_parents);
-    init_grad(self->parents[0]);
-    update_grad_sum(self, self->parents[0]);
-    backward(self->parents[0]);
-}
-
 // MOVEMENT OPS
 void backward_ref(tensor_t *self)
 {
@@ -163,6 +144,16 @@ void backward_ref(tensor_t *self)
     }
 }
 
+void backward_copy(tensor_t *self)
+{
+    ASSERT(self->n_parents == 1, "backward_copy expects 1 parent, got %d", self->n_parents);
+    init_grad(self->parents[0]);
+    iterator_t it = tensor_iterator(self);
+    copy_to_range(self->parents[0]->grad, self->grad, &it);
+    iterator_free(&it);
+    backward(self->parents[0]);
+}
+
 void backward_slice(tensor_t *self)
 {
     ASSERT(self->n_parents == 1, "backward_slice expects 1 parent, got %d", self->n_parents);
@@ -172,15 +163,5 @@ void backward_slice(tensor_t *self)
     iterator_free(&it);
     sfree(self->grad);
     self->grad = sref(self->parents[0]->grad);
-    backward(self->parents[0]);
-}
-
-void backward_copy(tensor_t *self)
-{
-    ASSERT(self->n_parents == 1, "backward_copy expects 1 parent, got %d", self->n_parents);
-    init_grad(self->parents[0]);
-    iterator_t it = tensor_iterator(self);
-    copy_to_range(self->parents[0]->grad, self->grad, &it);
-    iterator_free(&it);
     backward(self->parents[0]);
 }
