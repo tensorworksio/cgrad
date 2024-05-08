@@ -63,6 +63,18 @@ void powt(tensor_t *self, tensor_t *parent, tensor_t *other)
     }
 }
 
+void slicet(tensor_t *self, tensor_t *parent, slice_t range[])
+{
+    iterator_t it = iterator(range, parent->stride, parent->ndim);
+    copy_from_range(self->data, parent->data, &it);
+    iterator_free(&it);
+    // reset range after slicing
+    for (int i = self->ndim; i-- > 0;)
+    {
+        self->range[i] = (slice_t){0, self->shape[i], 1};
+    }
+}
+
 void catt(tensor_t *self, tensor_t *parents[], int n_parents)
 {
     for (int i = 0; i < n_parents; i++)
@@ -106,24 +118,18 @@ void forward_pow(tensor_t *self)
 }
 
 // MOVEMENT OPS
+void forward_slice(tensor_t *self)
+{
+    ASSERT(self->n_parents == 1, "forward_slice must have 1 parent, got %d", self->n_parents);
+    init_data(self);
+    slicet(self, self->parents[0], self->range);
+}
+
 void forward_cat(tensor_t *self)
 {
     ASSERT(self->n_parents > 0, "forward_cat must have at least 1 parent, got %d", self->n_parents);
     init_data(self);
     catt(self, self->parents, self->n_parents);
-}
-
-void forward_copy(tensor_t *self)
-{
-    ASSERT(self->n_parents == 1, "forward_copy must have 1 parent, got %d", self->n_parents);
-    init_data(self);
-    iterator_t it = tensor_iterator(self);
-    copy_from_range(self->data, self->parents[0]->data, &it);
-    for (int i = 0; i < self->size; i++)
-    {
-        printf("self[%d] = %f\n", i, self->data[i]);
-    }
-    iterator_free(&it);
 }
 
 void forward_ref(tensor_t *self)

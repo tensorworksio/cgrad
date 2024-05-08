@@ -539,8 +539,7 @@ tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
                    (abs(range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
-    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_copy);
-
+    tensor_t *out = tensor_init(shape, tensor->ndim, tensor->requires_grad, forward_slice);
     tensor_link(out, tensor);
     memcpy(out->range, range, sizeof(slice_t) * out->ndim);
     // memcpy(out->stride, tensor->stride, sizeof(int) * out->ndim);

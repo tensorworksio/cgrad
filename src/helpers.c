@@ -79,6 +79,14 @@ void normalize_range(slice_t range[], int shape[], int ndim)
     }
 }
 
+void copy_from_mask(float *dst, float *src, bool *mask, int size)
+{
+    for (int i = 0, j = 0; i < size; i++)
+    {
+        dst[i] = (mask[i]) ? src[j++] : 0.0;
+    }
+}
+
 void copy_from_range(float *dst, float *src, iterator_t *it)
 {
     int idx = 0;
@@ -116,7 +124,7 @@ void print_data(float *data, iterator_t *it)
     {
         eod = iterator_eod(it);
         index = iterator_next(it);
-        printf("%.4f ", data[index]);
+        printf("%d : %.4f ", index, data[index]);
         for (int i = 0; i < eod; i++)
         {
             printf("\n");
