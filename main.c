@@ -23,6 +23,10 @@ int main()
 
     tensor_print(a, PRINT_ALL); // print tensors a.data and a.grad = d(f)/d(a)
     tensor_print(b, PRINT_ALL); // print tensors b.data and b.grad = d(f)/d(b)
+    tensor_print(c, PRINT_ALL);
+    tensor_print(d, PRINT_ALL);
+    tensor_print(e, PRINT_ALL);
+    tensor_print(f, PRINT_ALL);
 
     // recursively free all tensors in the graph
     tensor_free(f, true);

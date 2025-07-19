@@ -49,13 +49,11 @@ int main()
 ## Compile and run
 
 ```bash
-make && ./main
-```
+meson setup --wipe build
+meson compile -C build
 
-## Run test
-
-```bash
-make test
+cd build
+meson test # or ./main
 ```
 
 ## TODO
