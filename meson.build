@@ -13,14 +13,12 @@ src_dir = meson.current_source_dir() / 'src'
 src_files = run_command('find', src_dir, '-name', '*.c', check : true).stdout().strip().split()
 
 main_file = meson.current_source_dir() / 'main.c'
-src_files += main_file
-
-executable('main', src_files, dependencies : deps, include_directories : inc_dir)
+executable('main', [src_files, main_file], dependencies : deps, include_directories : inc_dir)
 
 test_dir = meson.current_source_dir() / 'tests'
 test_files = run_command('find', test_dir, '-name', '*.c', check : true).stdout().strip().split()
 
 foreach ts : test_files
-  test_exe = executable(ts.underscorify(), src_files, dependencies : deps, include_directories : inc_dir)
+  test_exe = executable(ts.underscorify(), [src_files, ts], dependencies : deps, include_directories : inc_dir)
   test(ts.underscorify(), test_exe)
 endforeach

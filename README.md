@@ -51,13 +51,16 @@ int main()
 ```bash
 meson setup --wipe build
 meson compile -C build
+./build/main
+```
 
+## Run tests
+```bash
 cd build
-meson test # or ./main
+meson test --wrap='valgrind --leak-check=full --error-exitcode=1'
 ```
 
 ## TODO
-
 ### Bug
 - Anonymous tensor Segfault when using recursive tensor_free
 

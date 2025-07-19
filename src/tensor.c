@@ -80,6 +80,8 @@ void tensor_free(tensor_t *tensor, bool recursive)
     // free metadata
     free(tensor->shape);
     free(tensor->stride);
+    // free children
+    free(tensor->children);
     // free tensor
     free(tensor);
 }
