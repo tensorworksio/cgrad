@@ -4,15 +4,31 @@
 Intended to be a Torch-like autograd engine, inspired by [micrograd](https://github.com/karpathy/micrograd/tree/master)
 
 ## Dependencies
-Install criterion to run tests:
+### Ubuntu
 ```bash
 add-apt-repository ppa:snaipewastaken/ppa
 apt-get update
+apt-get install python3 ninja-build meson
 apt-get install libcriterion-dev
 apt-get install libcsptr-dev
 ```
 
-## How to use it
+### macOS
+```bash
+brew install meson
+brew install criterion
+brew install libcsptr
+export LDFLAGS="-L/opt/homebrew/opt/criterion/lib -L/opt/homebrew/opt/libcsptr/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/criterion/include -I/opt/homebrew/opt/libcsptr/include"
+```
+
+## Build
+```bash
+meson setup --wipe build
+meson compile -C build
+```
+
+## Usage
 ```C
 #include "tensor.h"
 #include "ops.h"
@@ -46,18 +62,10 @@ int main()
 }
 ```
 
-## Compile and run
-
-```bash
-meson setup --wipe build
-meson compile -C build
-./build/main
-```
-
 ## Run tests
 ```bash
 cd build
-meson test --wrap='valgrind --leak-check=full --error-exitcode=1'
+meson test # --wrap='valgrind --leak-check=full --error-exitcode=1'
 ```
 
 ## TODO
@@ -66,7 +74,7 @@ meson test --wrap='valgrind --leak-check=full --error-exitcode=1'
 
 ### Features
 - Move movement ops to ops & define grad
-- tensor_cat requires many children if requires_grad 
+- tensor_cat requires many children if requires_grad
 - Reduce operator for specific axes (require slices)
 - Matmul operator as a combination of sum, add and reshape ideally
 - Pooling operators
