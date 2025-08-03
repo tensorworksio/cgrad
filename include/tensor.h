@@ -106,4 +106,30 @@ void tensor_forward (tensor_t *tensor);
 void tensor_backward (tensor_t *tensor);
 void tensor_print (tensor_t *tensor, flag_t flags);
 
+/* ---------- Ownership helpers (safe with `smart` variables) ---------- */
+
+static inline void
+tensor_release (tensor_t **p)
+{
+    if (p && *p)
+    {
+        sfree (*p);
+        *p = NULL;
+    }
+}
+
+#ifndef TENSOR_DROP
+#define TENSOR_DROP(var) tensor_release (&(var))
+#endif
+
+#ifndef TENSOR_REBIND
+#define TENSOR_REBIND(var, expr)                                                                   \
+    do                                                                                             \
+    {                                                                                              \
+        tensor_t *_tnew = (expr);                                                                  \
+        tensor_release (&(var));                                                                   \
+        (var) = _tnew;                                                                             \
+    } while (0)
+#endif
+
 #endif
