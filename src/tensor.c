@@ -74,13 +74,6 @@ tensor_add_child (tensor_t *tensor, tensor_t *child)
     tensor->children[tensor->n_children - 1] = sref (child);
 }
 
-void
-tensor_free (tensor_t *tensor, bool recursive)
-{
-    (void) recursive;
-    sfree (tensor);
-}
-
 // INIT OPS
 tensor_t *
 tensor (const float data[], int shape[], int ndim, bool requires_grad)
@@ -550,14 +543,12 @@ tensor_backward (tensor_t *tensor)
     if (!tensor->requires_grad)
     {
         log_error ("Cannot perform backward on tensor that has no grad.\n");
-        tensor_free (tensor, true);
-        exit (EXIT_FAILURE);
+        return;
     }
     if (tensor->size != 1)
     {
         log_error ("Backward operation only supported for scalar tensors.\n");
-        tensor_free (tensor, true);
-        exit (EXIT_FAILURE);
+        return;
     }
     if (tensor->backward == NULL)
     {
