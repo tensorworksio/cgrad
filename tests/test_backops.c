@@ -373,3 +373,131 @@ Test (complex, diamond_shape_graph)
     cr_assert (tensor_equals (a, expected_a_grad, true),
                "diamond_shape_graph: gradient computation failed");
 }
+
+Test (rebind, backward_rebind_basic)
+{
+    log_set_level (LOG_INFO);
+
+    // Test backward propagation with TENSOR_REBIND for scalar operations
+    smart tensor_t *a = tensor ((float[]) { 2., 3., 4. }, (int[]) { 3 }, 1, true);
+    smart tensor_t *c = tensor_mul_tf (a, 2.0f); // c = 2 * a = [4., 6., 8.]
+
+    // c = c - 1 using TENSOR_REBIND
+    TENSOR_REBIND (c, tensor_sub_tf (c, 1.0f)); // c = c - 1 = [3., 5., 7.]
+
+    // Final operation: sum for scalar output
+    smart tensor_t *y = tensor_sum (c); // y = sum(c) = 15
+
+    tensor_backward (y);
+
+    // Expected gradients: dy/da = dy/dc * dc/da = 1 * 2 = 2 for each element
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 2., 2., 2. }, a->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true), "backward_rebind_basic failed");
+}
+
+Test (rebind, backward_rebind_tensor_ops)
+{
+    log_set_level (LOG_INFO);
+
+    // Test backward propagation with TENSOR_REBIND for tensor-tensor operations
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3. }, (int[]) { 3 }, 1, true);
+    smart tensor_t *b = tensor ((float[]) { 2., 3., 4. }, (int[]) { 3 }, 1, true);
+    smart tensor_t *c = tensor_mul (a, b); // c = a * b = [2., 6., 12.]
+
+    // c = c + a using TENSOR_REBIND
+    TENSOR_REBIND (c, tensor_add (c, a)); // c = c + a = [3., 8., 15.]
+
+    // Final operation: sum for scalar output
+    smart tensor_t *y = tensor_sum (c); // y = sum(c) = 26
+
+    tensor_backward (y);
+
+    // Expected gradients for a:
+    // dy/da = dy/dc * (dc/da_mul + dc/da_add) = 1 * (b + 1) = [3., 4., 5.]
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 3., 4., 5. }, a->size);
+
+    // Expected gradients for b:
+    // dy/db = dy/dc * dc/db = 1 * a = [1., 2., 3.]
+    smart tensor_t *expected_b_grad = tensor_create (b->shape, b->ndim, true);
+    tensor_set_data (expected_b_grad, b->data, b->size);
+    tensor_set_grad (expected_b_grad, (float[]) { 1., 2., 3. }, b->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true),
+               "backward_rebind_tensor_ops: a gradient failed");
+    cr_assert (tensor_equals (b, expected_b_grad, true),
+               "backward_rebind_tensor_ops: b gradient failed");
+}
+
+Test (rebind, backward_rebind_complex_chain)
+{
+    log_set_level (LOG_INFO);
+
+    // Test backward propagation with multiple TENSOR_REBIND operations
+    // This reproduces the pattern from main.c
+    smart tensor_t *a = tensor ((float[]) { 2., 4., 6. }, (int[]) { 3 }, 1, true);
+    smart tensor_t *b = tensor ((float[]) { 1., 2., 0. }, (int[]) { 3 }, 1, true);
+
+    // c = a + b
+    smart tensor_t *c = tensor_add (a, b); // c = [3., 6., 6.]
+
+    // c = c - 1 using TENSOR_REBIND
+    TENSOR_REBIND (c, tensor_sub_tf (c, 1.0f)); // c = [2., 5., 5.]
+
+    // d = c ^ 3
+    smart tensor_t *d = tensor_pow_tf (c, 3.); // d = [8., 125., 125.]
+
+    // e = relu(d) (all positive, so no change)
+    smart tensor_t *e = tensor_relu (d); // e = [8., 125., 125.]
+
+    // f = sum(e)
+    smart tensor_t *f = tensor_sum (e); // f = 258
+
+    tensor_backward (f);
+
+    // Expected gradients for a:
+    // df/da = df/de * de/dd * dd/dc * dc/da = 1 * 1 * 3*c^2 * 1 = 3 * [4., 25., 25.] =
+    // [12., 75., 75.]
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 12., 75., 75. }, a->size);
+
+    // Expected gradients for b: same as a since dc/db = 1
+    smart tensor_t *expected_b_grad = tensor_create (b->shape, b->ndim, true);
+    tensor_set_data (expected_b_grad, b->data, b->size);
+    tensor_set_grad (expected_b_grad, (float[]) { 12., 75., 75. }, b->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true),
+               "backward_rebind_complex_chain: a gradient failed");
+    cr_assert (tensor_equals (b, expected_b_grad, true),
+               "backward_rebind_complex_chain: b gradient failed");
+}
+
+Test (rebind, backward_rebind_power_ops)
+{
+    log_set_level (LOG_INFO);
+
+    // Test backward propagation with TENSOR_REBIND for power operations
+    smart tensor_t *a = tensor ((float[]) { 2., 3. }, (int[]) { 2 }, 1, true);
+    smart tensor_t *c = tensor_pow_tf (a, 2.); // c = a^2 = [4., 9.]
+
+    // c = c ^ a using TENSOR_REBIND (where a = [2., 3.])
+    TENSOR_REBIND (c, tensor_pow (c, a)); // c = [4., 9.] ^ [2., 3.] = [16., 729.]
+
+    // Final operation: sum for scalar output
+    smart tensor_t *y = tensor_sum (c); // y = sum(c) = 745
+
+    tensor_backward (y);
+
+    // Expected gradients for a:
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 54.18071, 3059.7769 }, a->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true),
+               "backward_rebind_power_ops: a gradient failed");
+}

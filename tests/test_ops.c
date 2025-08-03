@@ -237,3 +237,110 @@ Test (sum, sum_t)
     smart tensor_t *expected = tensor ((float[]) { -2. }, (int[]) { 1 }, 1, false);
     cr_assert (tensor_equals (res, expected, true), "sum_t failed");
 }
+
+Test (rebind, tensor_rebind)
+{
+    log_set_level (LOG_INFO);
+
+    // Test TENSOR_REBIND macro for safe tensor reassignment
+    smart tensor_t *a = tensor ((float[]) { 2., 4., 6. }, (int[]) { 3 }, 1, false);
+    smart tensor_t *b = tensor ((float[]) { 1., 2., 0. }, (int[]) { 3 }, 1, false);
+
+    // c = a + b
+    smart tensor_t *c = tensor_add (a, b);
+    tensor_forward (c);
+
+    // Verify initial c = a + b = [3., 6., 6.]
+    smart tensor_t *expected_c1 = tensor ((float[]) { 3., 6., 6. }, (int[]) { 3 }, 1, false);
+    cr_assert (tensor_equals (c, expected_c1, false), "rebind: initial c = a + b failed");
+
+    // c = c - 1 using TENSOR_REBIND (safe reassignment)
+    TENSOR_REBIND (c, tensor_sub_tf (c, 1.0f));
+    tensor_forward (c);
+
+    // Verify reassigned c = [3., 6., 6.] - 1 = [2., 5., 5.]
+    smart tensor_t *expected_c2 = tensor ((float[]) { 2., 5., 5. }, (int[]) { 3 }, 1, false);
+    cr_assert (tensor_equals (c, expected_c2, false), "rebind: c = c - 1 failed");
+
+    // Test another reassignment: c = c * 2
+    TENSOR_REBIND (c, tensor_mul_tf (c, 2.0f));
+    tensor_forward (c);
+
+    // Verify c = [2., 5., 5.] * 2 = [4., 10., 10.]
+    smart tensor_t *expected_c3 = tensor ((float[]) { 4., 10., 10. }, (int[]) { 3 }, 1, false);
+    cr_assert (tensor_equals (c, expected_c3, false), "rebind: c = c * 2 failed");
+}
+
+Test (rebind, tensor_rebind_with_tensors)
+{
+    log_set_level (LOG_INFO);
+
+    // Test TENSOR_REBIND with tensor-tensor operations
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3. }, (int[]) { 3 }, 1, false);
+    smart tensor_t *c = tensor ((float[]) { 10., 20., 30. }, (int[]) { 3 }, 1, false);
+
+    // Test c = c + a using TENSOR_REBIND
+    TENSOR_REBIND (c, tensor_add (c, a));
+    tensor_forward (c);
+
+    // Verify c = [10., 20., 30.] + [1., 2., 3.] = [11., 22., 33.]
+    smart tensor_t *expected_add = tensor ((float[]) { 11., 22., 33. }, (int[]) { 3 }, 1, false);
+    cr_assert (tensor_equals (c, expected_add, false), "rebind: c = c + a failed");
+
+    // Test c = c - a using TENSOR_REBIND
+    TENSOR_REBIND (c, tensor_sub (c, a));
+    tensor_forward (c);
+
+    // Verify c = [11., 22., 33.] - [1., 2., 3.] = [10., 20., 30.]
+    smart tensor_t *expected_sub = tensor ((float[]) { 10., 20., 30. }, (int[]) { 3 }, 1, false);
+    cr_assert (tensor_equals (c, expected_sub, false), "rebind: c = c - a failed");
+
+    // Test c = c * a using TENSOR_REBIND
+    TENSOR_REBIND (c, tensor_mul (c, a));
+    tensor_forward (c);
+
+    // Verify c = [10., 20., 30.] * [1., 2., 3.] = [10., 40., 90.]
+    smart tensor_t *expected_mul = tensor ((float[]) { 10., 40., 90. }, (int[]) { 3 }, 1, false);
+    cr_assert (tensor_equals (c, expected_mul, false), "rebind: c = c * a failed");
+
+    // Test c = c / a using TENSOR_REBIND
+    TENSOR_REBIND (c, tensor_div (c, a));
+    tensor_forward (c);
+
+    // Verify c = [10., 40., 90.] / [1., 2., 3.] = [10., 20., 30.]
+    smart tensor_t *expected_div = tensor ((float[]) { 10., 20., 30. }, (int[]) { 3 }, 1, false);
+    cr_assert (tensor_equals (c, expected_div, false), "rebind: c = c / a failed");
+}
+
+Test (rebind, tensor_rebind_power_operations)
+{
+    log_set_level (LOG_INFO);
+
+    // Test TENSOR_REBIND with power operations
+    smart tensor_t *a = tensor ((float[]) { 2., 3., 2. }, (int[]) { 3 }, 1, false);
+    smart tensor_t *c = tensor ((float[]) { 2., 4., 8. }, (int[]) { 3 }, 1, false);
+
+    // Test c = c ^ a using TENSOR_REBIND
+    TENSOR_REBIND (c, tensor_pow (c, a));
+    tensor_forward (c);
+
+    // Verify c = [2., 4., 8.] ^ [2., 3., 2.] = [4., 64., 64.]
+    smart tensor_t *expected_pow = tensor ((float[]) { 4., 64., 64. }, (int[]) { 3 }, 1, false);
+    cr_assert (tensor_equals (c, expected_pow, false), "rebind: c = c ^ a failed");
+
+    // Test c = a ^ c using TENSOR_REBIND (reversed operands)
+    TENSOR_REBIND (c, tensor_pow (a, c));
+    tensor_forward (c);
+
+    // Verify c = [2., 3., 2.] ^ [4., 64., 64.] = [16., 3^64, 2^64]
+    // Note: We'll use smaller values to avoid overflow in testing
+    smart tensor_t *a_small = tensor ((float[]) { 2., 2., 2. }, (int[]) { 3 }, 1, false);
+    smart tensor_t *c_small = tensor ((float[]) { 3., 4., 5. }, (int[]) { 3 }, 1, false);
+
+    TENSOR_REBIND (c_small, tensor_pow (a_small, c_small));
+    tensor_forward (c_small);
+
+    // Verify c = [2., 2., 2.] ^ [3., 4., 5.] = [8., 16., 32.]
+    smart tensor_t *expected_pow_rev = tensor ((float[]) { 8., 16., 32. }, (int[]) { 3 }, 1, false);
+    cr_assert (tensor_equals (c_small, expected_pow_rev, false), "rebind: c = a ^ c failed");
+}

@@ -264,7 +264,8 @@ tensor_add_ft (float a, tensor_t *b)
 tensor_t *
 tensor_sub_tt (tensor_t *a, tensor_t *b)
 {
-    return tensor_add (a, tensor_neg (b));
+    smart tensor_t *nb = tensor_neg (b);
+    return tensor_add (a, nb);
 }
 
 tensor_t *
@@ -315,7 +316,8 @@ tensor_mul_ft (float a, tensor_t *b)
 tensor_t *
 tensor_div_tt (tensor_t *a, tensor_t *b)
 {
-    return tensor_mul (a, tensor_pow_tf (b, -1.0));
+    smart tensor_t *invb = tensor_pow_tf (b, -1.0f);
+    return tensor_mul (a, invb);
 }
 
 tensor_t *
@@ -327,7 +329,8 @@ tensor_div_tf (tensor_t *a, float b)
 tensor_t *
 tensor_div_ft (float a, tensor_t *b)
 {
-    return tensor_mul_ft (a, tensor_pow_tf (b, -1.0));
+    smart tensor_t *invb = tensor_pow_tf (b, -1.0f);
+    return tensor_mul_ft (a, invb);
 }
 
 tensor_t *
@@ -360,8 +363,9 @@ tensor_pow_tf (tensor_t *a, float b)
 tensor_t *
 tensor_pow_ft (float a, tensor_t *b)
 {
-    tensor_t *out = tensor_init (b->shape, b->ndim, b->requires_grad, forward_pow);
-    tensor_add_child (out, tensor ((float[]) { a }, (int[]) { 1 }, 1, false));
+    tensor_t       *out = tensor_init (b->shape, b->ndim, b->requires_grad, forward_pow);
+    smart tensor_t *tmp = tensor ((float[]) { a }, (int[]) { 1 }, 1, false);
+    tensor_add_child (out, tmp);
     tensor_add_child (out, b);
     if (out->requires_grad)
         out->backward = backward_pow;
