@@ -1,195 +1,203 @@
-#include "ops.h"
 #include "tensor.h"
 #include "helpers.h"
+#include "ops.h"
 
 // ALLOC OPS
-tensor_t *tensor_alloc(int size)
+void
+tensor_destructor (void *ptr, void *meta)
 {
-    tensor_t *tensor = (tensor_t *)malloc(sizeof(tensor_t));
-    tensor->size = size;
+    tensor_t *tensor = (tensor_t *) ptr;
 
-    // shared pointers data & grad
-    tensor->data = NULL;
-    tensor->grad = NULL;
+    for (int i = 0; i < tensor->n_children; ++i)
+    {
+        sfree (tensor->children[i]);
+    }
 
-    // shape & stride
-    tensor->shape = NULL;
-    tensor->stride = NULL;
+    // Free metadata only at actual deallocation time
+    free (tensor->shape);
+    free (tensor->stride);
+    free (tensor->children);
 
-    // children
-    tensor->n_children = 0;
-    tensor->children = NULL;
-
-    // backward & forward
-    tensor->forward = NULL;
-    tensor->backward = NULL;
-    return tensor;
+    // Free data & grad (shared)
+    sfree (tensor->data);
+    sfree (tensor->grad);
 }
 
-tensor_t *tensor_create(int shape[], int ndim, bool requires_grad)
+tensor_t *
+tensor_create (int shape[], int ndim, bool requires_grad)
 {
-    int size = get_size(shape, ndim);
-    tensor_t *tensor = tensor_alloc(size);
+    int       size   = get_size (shape, ndim);
+    tensor_t *tensor = shared_ptr (tensor_t,
+                                   { .size          = size,
+                                     .ndim          = ndim,
+                                     .requires_grad = requires_grad,
+                                     .data          = NULL,
+                                     .grad          = NULL,
+                                     .shape         = NULL,
+                                     .stride        = NULL,
+                                     .n_children    = 0,
+                                     .children      = NULL,
+                                     .forward       = NULL,
+                                     .backward      = NULL },
+                                   tensor_destructor);
 
-    // tensor skeleton
-    tensor->ndim = ndim;
-    tensor->requires_grad = requires_grad;
-    tensor->shape = (int *)malloc(sizeof(int) * ndim);
-    tensor->stride = (int *)malloc(sizeof(int) * ndim);
+    tensor->shape  = (int *) malloc (sizeof (int) * ndim);
+    tensor->stride = (int *) malloc (sizeof (int) * ndim);
 
     for (int i = ndim; i-- > 0;)
     {
-        tensor->shape[i] = shape[i];
+        tensor->shape[i]  = shape[i];
         tensor->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
     }
 
     return tensor;
 }
 
-tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float *(*op)(int, tensor_t **))
+tensor_t *
+tensor_init (int shape[], int ndim, bool requires_grad, float *(*op) (int, tensor_t **) )
 {
-    tensor_t *tensor = tensor_create(shape, ndim, requires_grad);
-    tensor->forward = op;
+    tensor_t *tensor = tensor_create (shape, ndim, requires_grad);
+    tensor->forward  = op;
     if (op == NULL)
     {
-        tensor->data = smalloc(.size = tensor->size, .nmemb = sizeof(float), .kind = SHARED);
-        set_data(tensor->data, 0., tensor->size);
+        tensor->data = smalloc (.size = tensor->size, .nmemb = sizeof (float), .kind = SHARED);
+        set_data (tensor->data, 0., tensor->size);
     }
     return tensor;
 }
 
-void tensor_child(tensor_t *parent, tensor_t *child)
+void
+tensor_add_child (tensor_t *tensor, tensor_t *child)
 {
-    parent->n_children++;
-    parent->children = realloc(parent->children, parent->n_children * sizeof(tensor_t *));
-    parent->children[parent->n_children - 1] = child;
+    tensor->n_children++;
+    tensor->children = realloc (tensor->children, tensor->n_children * sizeof (tensor_t *));
+    tensor->children[tensor->n_children - 1] = sref (child);
 }
 
-void tensor_free(tensor_t *tensor, bool recursive)
+void
+tensor_free (tensor_t *tensor, bool recursive)
 {
-    if (recursive)
-    {
-        for (int i = 0; i < tensor->n_children; ++i)
-        {
-            tensor_free(tensor->children[i], recursive);
-        }
-    }
-    // free data
-    sfree(tensor->data);
-    sfree(tensor->grad);
-    // free metadata
-    free(tensor->shape);
-    free(tensor->stride);
-    // free children
-    free(tensor->children);
-    // free tensor
-    free(tensor);
+    (void) recursive;
+    sfree (tensor);
 }
 
 // INIT OPS
-tensor_t *tensor(const float data[], int shape[], int ndim, bool requires_grad)
+tensor_t *
+tensor (const float data[], int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_init(shape, ndim, requires_grad, NULL);
-    memcpy(tensor->data, data, tensor->size * sizeof(float));
+    tensor_t *tensor = tensor_init (shape, ndim, requires_grad, NULL);
+    memcpy (tensor->data, data, tensor->size * sizeof (float));
     return tensor;
 }
 
-tensor_t *tensor_rand(int shape[], int ndim, bool requires_grad)
+tensor_t *
+tensor_rand (int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_init(shape, ndim, requires_grad, NULL);
+    tensor_t *tensor = tensor_init (shape, ndim, requires_grad, NULL);
     for (int i = 0; i < tensor->size; ++i)
     {
-        tensor->data[i] = (float)rand() / (float)RAND_MAX;
+        tensor->data[i] = (float) rand () / (float) RAND_MAX;
     }
     return tensor;
 }
 
-tensor_t *tensor_zeros(int shape[], int ndim, bool requires_grad)
+tensor_t *
+tensor_zeros (int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_init(shape, ndim, requires_grad, NULL);
-    set_data(tensor->data, 0., tensor->size);
+    tensor_t *tensor = tensor_init (shape, ndim, requires_grad, NULL);
+    set_data (tensor->data, 0., tensor->size);
     return tensor;
 }
 
-tensor_t *tensor_ones(int shape[], int ndim, bool requires_grad)
+tensor_t *
+tensor_ones (int shape[], int ndim, bool requires_grad)
 {
-    tensor_t *tensor = tensor_init(shape, ndim, requires_grad, NULL);
-    set_data(tensor->data, 1., tensor->size);
+    tensor_t *tensor = tensor_init (shape, ndim, requires_grad, NULL);
+    set_data (tensor->data, 1., tensor->size);
     return tensor;
 }
 
-void tensor_zero_grad(tensor_t *tensor)
+void
+tensor_zero_grad (tensor_t *tensor)
 {
-    set_data(tensor->grad, 0., tensor->size);
+    set_data (tensor->grad, 0., tensor->size);
 }
 
-void tensor_init_grad(tensor_t *tensor)
+void
+tensor_init_grad (tensor_t *tensor)
 {
-    set_data(tensor->grad, 1., tensor->size);
+    set_data (tensor->grad, 1., tensor->size);
 }
 
-void tensor_set_data(tensor_t *tensor, float data[], int size)
+void
+tensor_set_data (tensor_t *tensor, float data[], int size)
 {
-    ASSERT(size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
+    ASSERT (size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
     if (tensor->data == NULL)
     {
-        tensor->data = smalloc(.size = size, .nmemb = sizeof(float), .kind = SHARED);
+        tensor->data = smalloc (.size = size, .nmemb = sizeof (float), .kind = SHARED);
     }
-    memcpy(tensor->data, data, size * sizeof(float));
+    memcpy (tensor->data, data, size * sizeof (float));
 }
 
-void tensor_set_grad(tensor_t *tensor, float grad[], int size)
+void
+tensor_set_grad (tensor_t *tensor, float grad[], int size)
 {
-    ASSERT(size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
+    ASSERT (size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
     if (tensor->grad == NULL)
     {
-        tensor->grad = smalloc(.size = size, .nmemb = sizeof(float), .kind = SHARED);
+        tensor->grad = smalloc (.size = size, .nmemb = sizeof (float), .kind = SHARED);
     }
-    memcpy(tensor->grad, grad, size * sizeof(float));
+    memcpy (tensor->grad, grad, size * sizeof (float));
 }
 
 // COMPARISON OPS
-bool tensor_same_shape(tensor_t *a, tensor_t *b, bool debug)
+bool
+tensor_same_shape (tensor_t *a, tensor_t *b, bool debug)
 {
-    bool same = is_same_shape(a->shape, b->shape, a->ndim, b->ndim);
+    bool same = is_same_shape (a->shape, b->shape, a->ndim, b->ndim);
     if (debug && !same)
     {
-        print_metadata(a->shape, a->ndim);
-        printf(" != ");
-        print_metadata(b->shape, b->ndim);
-        printf("\n");
+        print_metadata (a->shape, a->ndim);
+        printf (" != ");
+        print_metadata (b->shape, b->ndim);
+        printf ("\n");
     }
     return same;
 }
 
-bool tensor_equals(tensor_t *a, tensor_t *b, bool with_grad)
+bool
+tensor_equals (tensor_t *a, tensor_t *b, bool with_grad)
 {
-    if (!tensor_same_shape(a, b, false))
+    if (!tensor_same_shape (a, b, false))
         return false;
-    if (!is_equal_data(a->data, b->data, a->size))
+    if (!is_equal_data (a->data, b->data, a->size))
         return false;
     if (with_grad && a->requires_grad != b->requires_grad)
         return false;
-    if (a->requires_grad && b->requires_grad && !is_equal_data(a->grad, b->grad, a->size))
+    if (a->requires_grad && b->requires_grad && !is_equal_data (a->grad, b->grad, a->size))
         return false;
     return true;
 }
 
 // UNARY OPS
-tensor_t *tensor_neg(tensor_t *a)
+tensor_t *
+tensor_neg (tensor_t *a)
 {
-    return tensor_mul_tf(a, -1.0);
+    return tensor_mul_tf (a, -1.0);
 }
 
-tensor_t *tensor_exp(tensor_t *a)
+tensor_t *
+tensor_exp (tensor_t *a)
 {
-    return tensor_pow_ft(expf(1.0), a);
+    return tensor_pow_ft (expf (1.0), a);
 }
 
-tensor_t *tensor_relu(tensor_t *a)
+tensor_t *
+tensor_relu (tensor_t *a)
 {
-    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad, forward_relu);
-    tensor_child(out, a);
+    tensor_t *out = tensor_init (a->shape, a->ndim, a->requires_grad, forward_relu);
+    tensor_add_child (out, a);
     if (out->requires_grad)
         out->backward = backward_relu;
 
@@ -197,145 +205,171 @@ tensor_t *tensor_relu(tensor_t *a)
 }
 
 // BINARY OPS
-tensor_t *tensor_add(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_add (tensor_t *a, tensor_t *b)
 {
-    return tensor_add_tt(a, b);
+    return tensor_add_tt (a, b);
 }
 
-tensor_t *tensor_sub(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_sub (tensor_t *a, tensor_t *b)
 {
-    return tensor_sub_tt(a, b);
+    return tensor_sub_tt (a, b);
 }
 
-tensor_t *tensor_mul(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_mul (tensor_t *a, tensor_t *b)
 {
-    return tensor_mul_tt(a, b);
+    return tensor_mul_tt (a, b);
 }
 
-tensor_t *tensor_div(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_div (tensor_t *a, tensor_t *b)
 {
-    return tensor_div_tt(a, b);
+    return tensor_div_tt (a, b);
 }
 
-tensor_t *tensor_pow(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_pow (tensor_t *a, tensor_t *b)
 {
-    return tensor_pow_tt(a, b);
+    return tensor_pow_tt (a, b);
 }
 
-tensor_t *tensor_add_tt(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_add_tt (tensor_t *a, tensor_t *b)
 {
-    ASSERT(tensor_same_shape(a, b, true), "Add error :: Shape mismatch");
-    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad, forward_add);
-    tensor_child(out, a);
-    tensor_child(out, b);
+    ASSERT (tensor_same_shape (a, b, true), "Add error :: Shape mismatch");
+    tensor_t *out
+        = tensor_init (a->shape, a->ndim, a->requires_grad || b->requires_grad, forward_add);
+    tensor_add_child (out, a);
+    tensor_add_child (out, b);
     if (out->requires_grad)
         out->backward = backward_add;
 
     return out;
 }
 
-tensor_t *tensor_add_tf(tensor_t *a, float b)
+tensor_t *
+tensor_add_tf (tensor_t *a, float b)
 {
-    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad, forward_add);
-    tensor_child(out, a);
-    tensor_child(out, tensor((float[]){b}, (int[]){1}, 1, false));
+    tensor_t       *out = tensor_init (a->shape, a->ndim, a->requires_grad, forward_add);
+    smart tensor_t *tmp = tensor ((float[]) { b }, (int[]) { 1 }, 1, false);
+    tensor_add_child (out, a);
+    tensor_add_child (out, tmp);
     if (out->requires_grad)
         out->backward = backward_add;
 
     return out;
 }
 
-tensor_t *tensor_add_ft(float a, tensor_t *b)
+tensor_t *
+tensor_add_ft (float a, tensor_t *b)
 {
-    return tensor_add_tf(b, a);
+    return tensor_add_tf (b, a);
 }
 
-tensor_t *tensor_sub_tt(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_sub_tt (tensor_t *a, tensor_t *b)
 {
-    return tensor_add(a, tensor_neg(b));
+    return tensor_add (a, tensor_neg (b));
 }
 
-tensor_t *tensor_sub_tf(tensor_t *a, float b)
+tensor_t *
+tensor_sub_tf (tensor_t *a, float b)
 {
-    return tensor_add_tf(a, -b);
+    return tensor_add_tf (a, -b);
 }
 
-tensor_t *tensor_sub_ft(float a, tensor_t *b)
+tensor_t *
+tensor_sub_ft (float a, tensor_t *b)
 {
-    return tensor_add_ft(a, tensor_neg(b));
+    return tensor_add_ft (a, tensor_neg (b));
 }
 
-tensor_t *tensor_mul_tt(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_mul_tt (tensor_t *a, tensor_t *b)
 {
-    ASSERT(tensor_same_shape(a, b, true), "Mul error :: Shape mismatch");
-    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad, forward_mul);
-    tensor_child(out, a);
-    tensor_child(out, b);
+    ASSERT (tensor_same_shape (a, b, true), "Mul error :: Shape mismatch");
+    tensor_t *out
+        = tensor_init (a->shape, a->ndim, a->requires_grad || b->requires_grad, forward_mul);
+    tensor_add_child (out, a);
+    tensor_add_child (out, b);
     if (out->requires_grad)
         out->backward = backward_mul;
 
     return out;
 }
 
-tensor_t *tensor_mul_tf(tensor_t *a, float b)
+tensor_t *
+tensor_mul_tf (tensor_t *a, float b)
 {
-    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad, forward_mul);
-    tensor_child(out, a);
-    tensor_child(out, tensor((float[]){b}, (int[]){1}, 1, false));
+    tensor_t       *out = tensor_init (a->shape, a->ndim, a->requires_grad, forward_mul);
+    smart tensor_t *tmp = tensor ((float[]) { b }, (int[]) { 1 }, 1, false);
+    tensor_add_child (out, a);
+    tensor_add_child (out, tmp);
     if (out->requires_grad)
         out->backward = backward_mul;
 
     return out;
 }
 
-tensor_t *tensor_mul_ft(float a, tensor_t *b)
+tensor_t *
+tensor_mul_ft (float a, tensor_t *b)
 {
-    return tensor_mul_tf(b, a);
+    return tensor_mul_tf (b, a);
 }
 
-tensor_t *tensor_div_tt(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_div_tt (tensor_t *a, tensor_t *b)
 {
-    return tensor_mul(a, tensor_pow_tf(b, -1.0));
+    return tensor_mul (a, tensor_pow_tf (b, -1.0));
 }
 
-tensor_t *tensor_div_tf(tensor_t *a, float b)
+tensor_t *
+tensor_div_tf (tensor_t *a, float b)
 {
-    return tensor_mul_tf(a, 1.0 / b);
+    return tensor_mul_tf (a, 1.0 / b);
 }
 
-tensor_t *tensor_div_ft(float a, tensor_t *b)
+tensor_t *
+tensor_div_ft (float a, tensor_t *b)
 {
-    return tensor_mul_ft(a, tensor_pow_tf(b, -1.0));
+    return tensor_mul_ft (a, tensor_pow_tf (b, -1.0));
 }
 
-tensor_t *tensor_pow_tt(tensor_t *a, tensor_t *b)
+tensor_t *
+tensor_pow_tt (tensor_t *a, tensor_t *b)
 {
-    ASSERT(tensor_same_shape(a, b, true), "Pow error :: Shape mismatch");
-    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad || b->requires_grad, forward_pow);
-    tensor_child(out, a);
-    tensor_child(out, b);
+    ASSERT (tensor_same_shape (a, b, true), "Pow error :: Shape mismatch");
+    tensor_t *out
+        = tensor_init (a->shape, a->ndim, a->requires_grad || b->requires_grad, forward_pow);
+    tensor_add_child (out, a);
+    tensor_add_child (out, b);
     if (out->requires_grad)
         out->backward = backward_pow;
 
     return out;
 }
 
-tensor_t *tensor_pow_tf(tensor_t *a, float b)
+tensor_t *
+tensor_pow_tf (tensor_t *a, float b)
 {
-    tensor_t *out = tensor_init(a->shape, a->ndim, a->requires_grad, forward_pow);
-    tensor_child(out, a);
-    tensor_child(out, tensor((float[]){b}, (int[]){1}, 1, false));
+    tensor_t       *out = tensor_init (a->shape, a->ndim, a->requires_grad, forward_pow);
+    smart tensor_t *tmp = tensor ((float[]) { b }, (int[]) { 1 }, 1, false);
+    tensor_add_child (out, a);
+    tensor_add_child (out, tmp);
     if (out->requires_grad)
         out->backward = backward_pow;
 
     return out;
 }
 
-tensor_t *tensor_pow_ft(float a, tensor_t *b)
+tensor_t *
+tensor_pow_ft (float a, tensor_t *b)
 {
-    tensor_t *out = tensor_init(b->shape, b->ndim, b->requires_grad, forward_pow);
-    tensor_child(out, tensor((float[]){a}, (int[]){1}, 1, false));
-    tensor_child(out, b);
+    tensor_t *out = tensor_init (b->shape, b->ndim, b->requires_grad, forward_pow);
+    tensor_add_child (out, tensor ((float[]) { a }, (int[]) { 1 }, 1, false));
+    tensor_add_child (out, b);
     if (out->requires_grad)
         out->backward = backward_pow;
 
@@ -343,10 +377,11 @@ tensor_t *tensor_pow_ft(float a, tensor_t *b)
 }
 
 // REDUCE OPS
-tensor_t *tensor_sum(tensor_t *a)
+tensor_t *
+tensor_sum (tensor_t *a)
 {
-    tensor_t *out = tensor_init((int[]){1}, 1, a->requires_grad, forward_sum);
-    tensor_child(out, a);
+    tensor_t *out = tensor_init ((int[]) { 1 }, 1, a->requires_grad, forward_sum);
+    tensor_add_child (out, a);
     if (out->requires_grad)
         out->backward = backward_sum;
 
@@ -357,87 +392,101 @@ tensor_t *tensor_sum(tensor_t *a)
 // TODO: These ops should only share data and grad pointers
 // They don't need backward and forward functions
 
-tensor_t *tensor_reshape(tensor_t *tensor, int shape[], int ndim)
+tensor_t *
+tensor_reshape (tensor_t *tensor, int shape[], int ndim)
 {
-    int size = get_size(shape, ndim);
-    ASSERT(size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
-    tensor_t *reshaped = tensor_create(shape, ndim, tensor->requires_grad);
-    reshaped->data = sref(tensor->data);
+    int size = get_size (shape, ndim);
+    ASSERT (size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
+
+    // Create reshaped tensor
+    tensor_t *reshaped = tensor_create (shape, ndim, tensor->requires_grad);
+
+    // Shared data and grad pointers
+    reshaped->data = sref (tensor->data);
     if (tensor->grad)
-        reshaped->grad = sref(tensor->grad);
+        reshaped->grad = sref (tensor->grad);
+
+    // Set shape and stride
     for (int i = ndim; i-- > 0;)
     {
-        reshaped->shape[i] = shape[i];
+        reshaped->shape[i]  = shape[i];
         reshaped->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
     };
-    tensor_child(reshaped, tensor);
+
+    // Add tensor as child of reshaped
+    tensor_add_child (reshaped, tensor);
+
     return reshaped;
 }
 
-tensor_t *tensor_transpose(tensor_t *tensor, int axis1, int axis2)
+tensor_t *
+tensor_transpose (tensor_t *tensor, int axis1, int axis2)
 {
     int shape[tensor->ndim];
     // set shape
-    memcpy(shape, tensor->shape, sizeof(shape));
+    memcpy (shape, tensor->shape, sizeof (shape));
     shape[axis1] = tensor->shape[axis2];
     shape[axis2] = tensor->shape[axis1];
 
-    tensor_t *transposed = tensor_reshape(tensor, shape, tensor->ndim);
+    tensor_t *transposed = tensor_reshape (tensor, shape, tensor->ndim);
     // set stride
-    memcpy(transposed->stride, tensor->stride, tensor->ndim * sizeof(int));
+    memcpy (transposed->stride, tensor->stride, tensor->ndim * sizeof (int));
     transposed->stride[axis1] = tensor->stride[axis2];
     transposed->stride[axis2] = tensor->stride[axis1];
 
     return transposed;
 }
 
-tensor_t *tensor_slice(tensor_t *tensor, slice_t range[])
+tensor_t *
+tensor_slice (tensor_t *tensor, slice_t range[])
 {
     // Compute new shape
     int shape[tensor->ndim];
-    normalize_range(range, tensor->shape, tensor->ndim);
+    normalize_range (range, tensor->shape, tensor->ndim);
     for (int d = 0; d < tensor->ndim; d++)
     {
-        shape[d] = abs(range[d].stop - range[d].start) / range[d].step +
-                   (abs(range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
+        shape[d] = abs (range[d].stop - range[d].start) / range[d].step
+                   + (abs (range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
     // TODO: what about grad ?
-    tensor_t *sliced = tensor_init(shape, tensor->ndim, tensor->requires_grad, NULL);
+    tensor_t *sliced = tensor_init (shape, tensor->ndim, tensor->requires_grad, NULL);
 
     // Fill sliced tensor with data
     int idx = 0;
     int src_idx[sliced->ndim];
-    tensor_copy(sliced, tensor, &idx, src_idx, range, 0);
+    tensor_copy (sliced, tensor, &idx, src_idx, range, 0);
 
     return sliced;
 }
 
-tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
+tensor_t *
+tensor_cat (tensor_t *tensors[], int num_tensors, int axis)
 {
     int ndim = tensors[0]->ndim;
-    ASSERT(axis >= 0 && axis < ndim, "Axis out of bounds: got %d", axis);
+    ASSERT (axis >= 0 && axis < ndim, "Axis out of bounds: got %d", axis);
 
     // Compute new shape
     int shape[ndim];
-    memcpy(shape, tensors[0]->shape, sizeof(shape));
+    memcpy (shape, tensors[0]->shape, sizeof (shape));
     for (int i = 1; i < num_tensors; i++)
     {
-        ASSERT(tensors[i]->ndim == ndim,
-               "Number of dimensions must be the same for all tensors. Got %d and %d", ndim, tensors[i]->ndim);
+        ASSERT (tensors[i]->ndim == ndim,
+                "Number of dimensions must be the same for all tensors. Got %d and %d", ndim,
+                tensors[i]->ndim);
         for (int d = 0; d < ndim; d++)
         {
             if (d != axis)
             {
-                ASSERT(tensors[i]->shape[d] == shape[d],
-                       "Shape mismatch at axis %d: %d != %d", d, tensors[i]->shape[d], shape[d]);
+                ASSERT (tensors[i]->shape[d] == shape[d], "Shape mismatch at axis %d: %d != %d", d,
+                        tensors[i]->shape[d], shape[d]);
             }
         }
         shape[axis] += tensors[i]->shape[axis];
     }
 
     // TODO: what about grad ?
-    tensor_t *cated = tensor_init(shape, ndim, false, NULL);
+    tensor_t *cated = tensor_init (shape, ndim, false, NULL);
 
     // Fill cated tensor with data
     int offset = 0;
@@ -445,10 +494,11 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
     {
         int step = 0;
         int size = (axis == 0) ? tensors[i]->size : tensors[i]->stride[axis - 1];
-        int n = tensors[i]->size / size;
+        int n    = tensors[i]->size / size;
         for (int j = 0; j < n; j++)
         {
-            memcpy(cated->data + offset + step, tensors[i]->data + j * size, size * sizeof(float));
+            memcpy (cated->data + offset + step, tensors[i]->data + j * size,
+                    size * sizeof (float));
             step += cated->stride[axis - 1];
         }
         offset += size;
@@ -456,28 +506,30 @@ tensor_t *tensor_cat(tensor_t *tensors[], int num_tensors, int axis)
     return cated;
 }
 
-void tensor_copy(tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *range, int dim)
+void
+tensor_copy (tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *range, int dim)
 {
     if (dim == src->ndim)
     {
-        dst->data[(*dst_idx)++] = src->data[get_index(src_idx, src->stride, src->ndim)];
+        dst->data[(*dst_idx)++] = src->data[get_index (src_idx, src->stride, src->ndim)];
     }
     else
     {
         for (int i = range[dim].start; i < range[dim].stop; i += range[dim].step)
         {
             src_idx[dim] = i;
-            tensor_copy(dst, src, dst_idx, src_idx, range, dim + 1);
+            tensor_copy (dst, src, dst_idx, src_idx, range, dim + 1);
         }
     }
 }
 
 // FORCING OPS
-void tensor_forward(tensor_t *tensor)
+void
+tensor_forward (tensor_t *tensor)
 {
     if (tensor->forward == NULL)
     {
-        log_debug("Node %p has no forward function.\n", (void *)tensor);
+        log_debug ("Node %p has no forward function.\n", (void *) tensor);
         return;
     }
     // TODO: check on data = NULL should be removed and replaced with a flag
@@ -486,75 +538,77 @@ void tensor_forward(tensor_t *tensor)
     {
         for (int i = 0; i < tensor->n_children; ++i)
         {
-            tensor_forward(tensor->children[i]);
+            tensor_forward (tensor->children[i]);
         }
-        tensor->data = tensor->forward(tensor->n_children, tensor->children);
+        tensor->data = tensor->forward (tensor->n_children, tensor->children);
     }
 }
 
-void tensor_backward(tensor_t *tensor)
+void
+tensor_backward (tensor_t *tensor)
 {
     if (!tensor->requires_grad)
     {
-        log_error("Cannot perform backward on tensor that has no grad.\n");
-        tensor_free(tensor, true);
-        exit(EXIT_FAILURE);
+        log_error ("Cannot perform backward on tensor that has no grad.\n");
+        tensor_free (tensor, true);
+        exit (EXIT_FAILURE);
     }
     if (tensor->size != 1)
     {
-        log_error("Backward operation only supported for scalar tensors.\n");
-        tensor_free(tensor, true);
-        exit(EXIT_FAILURE);
+        log_error ("Backward operation only supported for scalar tensors.\n");
+        tensor_free (tensor, true);
+        exit (EXIT_FAILURE);
     }
     if (tensor->backward == NULL)
     {
-        log_warn("Node %p has no backward function.\n", (void *)tensor);
+        log_warn ("Node %p has no backward function.\n", (void *) tensor);
         return;
     }
     if (tensor->children == NULL)
     {
-        log_warn("Node %p has no children.", (void *)tensor);
+        log_warn ("Node %p has no children.", (void *) tensor);
         return;
     }
-    tensor_forward(tensor);
+    tensor_forward (tensor);
     // TODO: check on grad = NULL should be removed and replaced with a flag
     // because we could modify grad even if it's already initialized
     if (tensor->grad == NULL)
     {
-        tensor->grad = smalloc(.size = tensor->size, .nmemb = sizeof(float), .kind = SHARED);
-        tensor_init_grad(tensor);
-        tensor->backward(tensor);
+        tensor->grad = smalloc (.size = tensor->size, .nmemb = sizeof (float), .kind = SHARED);
+        tensor_init_grad (tensor);
+        tensor->backward (tensor);
     }
 }
 
-void tensor_print(tensor_t *tensor, flag_t flags)
+void
+tensor_print (tensor_t *tensor, flag_t flags)
 {
-    tensor_forward(tensor);
+    tensor_forward (tensor);
 
-    printf("Tensor @ %p\n", (void *)tensor);
-    printf("Shape:\t");
-    print_metadata(tensor->shape, tensor->ndim);
-    printf("\n");
+    printf ("Tensor @ %p\n", (void *) tensor);
+    printf ("Shape:\t");
+    print_metadata (tensor->shape, tensor->ndim);
+    printf ("\n");
 
     if (flags & PRINT_STRIDE)
     {
-        printf("Stride:\t");
-        print_metadata(tensor->stride, tensor->ndim);
-        printf("\n");
+        printf ("Stride:\t");
+        print_metadata (tensor->stride, tensor->ndim);
+        printf ("\n");
     }
 
     if (flags & PRINT_CHILDREN)
     {
         if (!tensor->children)
         {
-            printf("Children: NULL\n");
+            printf ("Children: NULL\n");
         }
         else
         {
-            printf("Children:\n");
+            printf ("Children:\n");
             for (int i = 0; i < tensor->n_children; ++i)
             {
-                printf("\tChild %d: Tensor @ %p\n", i + 1, (void *)tensor->children[i]);
+                printf ("\tChild %d: Tensor @ %p\n", i + 1, (void *) tensor->children[i]);
             }
         }
     }
@@ -563,12 +617,12 @@ void tensor_print(tensor_t *tensor, flag_t flags)
     {
         if (tensor->data)
         {
-            printf("Data @ %p:\n", (void *)tensor->data);
-            print_data(tensor->data, tensor->shape, tensor->stride, tensor->ndim);
+            printf ("Data @ %p:\n", (void *) tensor->data);
+            print_data (tensor->data, tensor->shape, tensor->stride, tensor->ndim);
         }
         else
         {
-            printf("Data: NULL\n");
+            printf ("Data: NULL\n");
         }
     }
 
@@ -576,13 +630,13 @@ void tensor_print(tensor_t *tensor, flag_t flags)
     {
         if (tensor->grad)
         {
-            printf("Grad @ %p:\n", (void *)tensor->grad);
-            print_data(tensor->grad, tensor->shape, tensor->stride, tensor->ndim);
+            printf ("Grad @ %p:\n", (void *) tensor->grad);
+            print_data (tensor->grad, tensor->shape, tensor->stride, tensor->ndim);
         }
         else
         {
-            printf("Grad: NULL\n");
+            printf ("Grad: NULL\n");
         }
     }
-    printf("\n");
+    printf ("\n");
 }

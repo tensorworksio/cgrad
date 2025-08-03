@@ -1,4 +1,5 @@
 .vscode
+.clang-format
 .DS_Store
 dev.txt
 

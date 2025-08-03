@@ -4,16 +4,22 @@
 Intended to be a Torch-like autograd engine, inspired by [micrograd](https://github.com/karpathy/micrograd/tree/master)
 
 ## Dependencies
-### Ubuntu
+<details open>
+    <summary>Ubuntu</summary>
+
 ```bash
 add-apt-repository ppa:snaipewastaken/ppa
-apt-get update
-apt-get install python3 ninja-build meson
-apt-get install libcriterion-dev
-apt-get install libcsptr-dev
+apt update
+apt install python3 ninja-build meson
+apt install libcriterion-dev
+apt install libcsptr-dev
 ```
 
-### macOS
+</details>
+
+<details>
+    <summary>macOS</summary>
+
 ```bash
 brew install meson
 brew install criterion
@@ -21,6 +27,8 @@ brew install libcsptr
 export LDFLAGS="-L/opt/homebrew/opt/criterion/lib -L/opt/homebrew/opt/libcsptr/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/criterion/include -I/opt/homebrew/opt/libcsptr/include"
 ```
+
+</details>
 
 ## Build
 ```bash
@@ -64,15 +72,10 @@ int main()
 
 ## Run tests
 ```bash
-cd build
-meson test # --wrap='valgrind --leak-check=full --error-exitcode=1'
+meson test -C build # --wrap='valgrind --leak-check=full --error-exitcode=1'
 ```
 
 ## TODO
-### Bug
-- Anonymous tensor Segfault when using recursive tensor_free
-
-### Features
 - Move movement ops to ops & define grad
 - tensor_cat requires many children if requires_grad
 - Reduce operator for specific axes (require slices)

@@ -39,10 +39,9 @@ typedef struct tensor
 } tensor_t;
 
 // ALLOC OPS
-tensor_t *tensor_alloc(int size);
 tensor_t *tensor_create(int shape[], int ndim, bool requires_grad);
 tensor_t *tensor_init(int shape[], int ndim, bool requires_grad, float *(*op)(int, tensor_t **));
-void tensor_child(tensor_t *parent, tensor_t *child);
+void tensor_add_child(tensor_t *parent, tensor_t *child);
 void tensor_free(tensor_t *tensor, bool recursive);
 
 // INIT OPS
