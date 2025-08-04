@@ -1,5 +1,13 @@
 #include "ops.h"
 
+void
+init_data (tensor_t *self)
+{
+    if (self->data)
+        return;
+    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+}
+
 // FORWARD
 void
 relut (tensor_t *self, tensor_t *child)
@@ -61,7 +69,7 @@ void
 forward_relu (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "forward_relu must have 1 child, got %d", self->n_children);
-    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    init_data (self);
     relut (self, self->children[0]);
 }
 
@@ -70,7 +78,7 @@ void
 forward_add (tensor_t *self)
 {
     ASSERT (self->n_children == 2, "forward_add must have 2 children, got %d", self->n_children);
-    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    init_data (self);
     addt (self, self->children[0], self->children[1]);
 }
 
@@ -78,7 +86,7 @@ void
 forward_mul (tensor_t *self)
 {
     ASSERT (self->n_children == 2, "forward_mul must have 2 children, got %d", self->n_children);
-    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    init_data (self);
     mult (self, self->children[0], self->children[1]);
 }
 
@@ -86,7 +94,7 @@ void
 forward_pow (tensor_t *self)
 {
     ASSERT (self->n_children == 2, "forward_pow must have 2 children, got %d", self->n_children);
-    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    init_data (self);
     powt (self, self->children[0], self->children[1]);
 }
 
@@ -95,7 +103,7 @@ void
 forward_sum (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "forward_sum must have 1 child, got %d", self->n_children);
-    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    init_data (self);
     sumt (self, self->children[0]);
 }
 
@@ -106,4 +114,12 @@ forward_ref (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "forward_ref must have 1 child, got %d", self->n_children);
     self->data = sref (self->children[0]->data);
+}
+
+void
+forward_copy (tensor_t *self)
+{
+    ASSERT (self->n_children == 1, "forward_copy must have 1 child, got %d", self->n_children);
+    init_data (self);
+    memcpy (self->data, self->children[0]->data, self->size * sizeof (float));
 }

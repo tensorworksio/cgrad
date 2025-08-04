@@ -45,6 +45,7 @@ void      tensor_add_child (tensor_t *parent, tensor_t *child);
 
 // INIT OPS
 tensor_t *tensor (const float data[], int shape[], int ndim, bool requires_grad);
+tensor_t *tensor_clone (tensor_t *tensor);
 tensor_t *tensor_rand (int shape[], int ndim, bool requires_grad);
 tensor_t *tensor_zeros (int shape[], int ndim, bool requires_grad);
 tensor_t *tensor_ones (int shape[], int ndim, bool requires_grad);

@@ -390,6 +390,17 @@ tensor_sum (tensor_t *a)
 // They don't need backward and forward functions
 
 tensor_t *
+tensor_clone (tensor_t *tensor)
+{
+    tensor_t *out = tensor_init (tensor->shape, tensor->ndim, tensor->requires_grad, forward_copy);
+    tensor_add_child (out, tensor);
+    if (out->requires_grad)
+        out->backward = backward_copy;
+
+    return out;
+}
+
+tensor_t *
 tensor_reshape (tensor_t *tensor, int shape[], int ndim)
 {
     int size = get_size (shape, ndim);

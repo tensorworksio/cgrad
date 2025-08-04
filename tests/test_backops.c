@@ -501,3 +501,88 @@ Test (rebind, backward_rebind_power_ops)
     cr_assert (tensor_equals (a, expected_a_grad, true),
                "backward_rebind_power_ops: a gradient failed");
 }
+
+Test (clone, backward_tensor_clone_basic)
+{
+    log_set_level (LOG_INFO);
+
+    // Test backward propagation through tensor_clone
+    smart tensor_t *a      = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
+    smart tensor_t *cloned = tensor_clone (a);
+    smart tensor_t *y      = tensor_sum (cloned);
+
+    tensor_backward (y);
+
+    // Expected gradients: dy/da = dy/dcloned * dcloned/da = 1 * 1 = 1 for each element
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 1., 1., 1., 1. }, a->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true), "backward_tensor_clone_basic failed");
+}
+
+Test (clone, backward_tensor_clone_chain)
+{
+    log_set_level (LOG_INFO);
+
+    // Test backward propagation through tensor_clone in a computation chain
+    smart tensor_t *a      = tensor ((float[]) { 2., 3., 4. }, (int[]) { 3 }, 1, true);
+    smart tensor_t *cloned = tensor_clone (a);
+    smart tensor_t *scaled = tensor_mul_tf (cloned, 2.0f); // scaled = 2 * cloned = 2 * a
+    smart tensor_t *y      = tensor_sum (scaled);          // y = sum(2 * a) = 2 * sum(a)
+
+    tensor_backward (y);
+
+    // Expected gradients: dy/da = dy/dscaled * dscaled/dcloned * dcloned/da = 1 * 2 * 1 = 2
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 2., 2., 2. }, a->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true), "backward_tensor_clone_chain failed");
+}
+
+Test (clone, backward_tensor_clone_multiple)
+{
+    log_set_level (LOG_INFO);
+
+    // Test backward propagation with multiple clones of the same tensor
+    smart tensor_t *a      = tensor ((float[]) { 1., 2., 3. }, (int[]) { 3 }, 1, true);
+    smart tensor_t *clone1 = tensor_clone (a);
+    smart tensor_t *clone2 = tensor_clone (a);
+
+    // Use both clones in computation: y = sum(clone1 + clone2) = sum(2*a)
+    smart tensor_t *added = tensor_add (clone1, clone2);
+    smart tensor_t *y     = tensor_sum (added);
+
+    tensor_backward (y);
+
+    // Expected gradients: dy/da = dy/dadded * (dadded/dclone1 * dclone1/da + dadded/dclone2 *
+    // dclone2/da)
+    //                    = 1 * (1 * 1 + 1 * 1) = 2 for each element
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 2., 2., 2. }, a->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true), "backward_tensor_clone_multiple failed");
+}
+
+Test (clone, backward_tensor_clone_main_example)
+{
+    log_set_level (LOG_INFO);
+
+    // Test the exact pattern from main.c
+    smart tensor_t *a
+        = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 2, 2, 2 }, 3, true);
+    smart tensor_t *b = tensor_clone (a);
+    smart tensor_t *c = tensor_sum (b);
+
+    tensor_backward (c);
+
+    // Expected gradients: dc/da = dc/db * db/da = 1 * 1 = 1 for each element
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 1., 1., 1., 1., 1., 1., 1., 1. }, a->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true),
+               "backward_tensor_clone_main_example failed");
+}
