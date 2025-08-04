@@ -7,8 +7,10 @@ main ()
 {
     log_set_level (LOG_INFO);
 
-    smart tensor_t *a = tensor ((float[]) { 2., 4., 6. }, (int[]) { 3 }, 1, true);
-    smart tensor_t *b = tensor ((float[]) { 1., 2., 0. }, (int[]) { 3 }, 1, true);
+    smart tensor_t *a
+        = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 2, 2, 2 }, 3, true);
+    smart tensor_t *b
+        = tensor ((float[]) { 9., 8., 7., 6., 5., 4., 3., 2. }, (int[]) { 2, 2, 2 }, 3, true);
     // c = a + b
     smart tensor_t *c = tensor_add (a, b);
     // c = c - 1

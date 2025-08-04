@@ -54,7 +54,7 @@ tensor_create (int shape[], int ndim, bool requires_grad)
 }
 
 tensor_t *
-tensor_init (int shape[], int ndim, bool requires_grad, float *(*op) (int, tensor_t **) )
+tensor_init (int shape[], int ndim, bool requires_grad, void (*op) (tensor_t *))
 {
     tensor_t *tensor = tensor_create (shape, ndim, requires_grad);
     tensor->forward  = op;
@@ -450,9 +450,9 @@ tensor_slice (tensor_t *tensor, slice_t range[])
     tensor_t *sliced = tensor_init (shape, tensor->ndim, tensor->requires_grad, NULL);
 
     // Fill sliced tensor with data
-    int idx = 0;
-    int src_idx[sliced->ndim];
-    tensor_copy (sliced, tensor, &idx, src_idx, range, 0);
+    // int idx = 0;
+    // int src_idx[sliced->ndim];
+    // tensor_copy (sliced, tensor, &idx, src_idx, range, 0);
 
     return sliced;
 }
@@ -503,23 +503,6 @@ tensor_cat (tensor_t *tensors[], int num_tensors, int axis)
     return cated;
 }
 
-void
-tensor_copy (tensor_t *dst, tensor_t *src, int *dst_idx, int *src_idx, slice_t *range, int dim)
-{
-    if (dim == src->ndim)
-    {
-        dst->data[(*dst_idx)++] = src->data[get_index (src_idx, src->stride, src->ndim)];
-    }
-    else
-    {
-        for (int i = range[dim].start; i < range[dim].stop; i += range[dim].step)
-        {
-            src_idx[dim] = i;
-            tensor_copy (dst, src, dst_idx, src_idx, range, dim + 1);
-        }
-    }
-}
-
 // FORCING OPS
 void
 tensor_forward (tensor_t *tensor)
@@ -537,7 +520,7 @@ tensor_forward (tensor_t *tensor)
         {
             tensor_forward (tensor->children[i]);
         }
-        tensor->data = tensor->forward (tensor->n_children, tensor->children);
+        tensor->forward (tensor);
     }
 }
 

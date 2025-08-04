@@ -1,113 +1,109 @@
 #include "ops.h"
 
 // FORWARD
-float *
-forward_relu (int n_children, tensor_t **children)
+void
+relut (tensor_t *self, tensor_t *child)
 {
-    ASSERT (n_children == 1, "Relu forward must have 1 child, got %d", n_children);
-    return relut (children[0]);
+    for (int i = 0; i < self->size; ++i)
+    {
+        self->data[i] = (child->data[i] > 0.0) ? child->data[i] : 0.0;
+    }
 }
 
-float *
-forward_add (int n_children, tensor_t **children)
+void
+addt (tensor_t *self, tensor_t *child, tensor_t *other)
 {
-    ASSERT (n_children == 2, "Add forward must have 2 children, got %d", n_children);
-    return addt (children[0], children[1]);
+    int j, k;
+    for (int i = 0; i < self->size; ++i)
+    {
+        j             = (child->size == 1) ? 0 : i;
+        k             = (other->size == 1) ? 0 : i;
+        self->data[i] = child->data[j] + other->data[k];
+    }
 }
 
-float *
-forward_mul (int n_children, tensor_t **children)
+void
+mult (tensor_t *self, tensor_t *child, tensor_t *other)
 {
-    ASSERT (n_children == 2, "Mul forward must have 2 children, got %d", n_children);
-    return mult (children[0], children[1]);
+    int j, k;
+    for (int i = 0; i < self->size; ++i)
+    {
+        j             = (child->size == 1) ? 0 : i;
+        k             = (other->size == 1) ? 0 : i;
+        self->data[i] = child->data[j] * other->data[k];
+    }
 }
 
-float *
-forward_pow (int n_children, tensor_t **children)
+void
+powt (tensor_t *self, tensor_t *child, tensor_t *other)
 {
-    ASSERT (n_children == 2, "Pow forward must have 2 children, got %d", n_children);
-    return powt (children[0], children[1]);
+    int j, k;
+    for (int i = 0; i < self->size; ++i)
+    {
+        j             = (child->size == 1) ? 0 : i;
+        k             = (other->size == 1) ? 0 : i;
+        self->data[i] = powf (child->data[j], other->data[k]);
+    }
 }
 
-float *
-forward_sum (int n_children, tensor_t **children)
+void
+sumt (tensor_t *self, tensor_t *child)
 {
-    ASSERT (n_children == 1, "Sum forward must have 1 child, got %d", n_children);
-    return sumt (children[0]);
+    *self->data = 0.f;
+    for (int i = 0; i < child->size; ++i)
+    {
+        *self->data += child->data[i];
+    }
 }
-
-// TODO:
-// before any operation, check if full range is used
-// if so, iterate over data contiguous memory
-// if not, use iterator to iterate over data
 
 // UNARY OPS
-float *
-relut (tensor_t *a)
+void
+forward_relu (tensor_t *self)
 {
-    int    size = a->size;
-    float *data = smalloc (.size = size, .nmemb = sizeof (float), .kind = SHARED);
-    for (int i = 0; i < size; i++)
-    {
-        data[i] = (a->data[i] > 0.0) ? a->data[i] : 0.0;
-    }
-    return data;
+    ASSERT (self->n_children == 1, "forward_relu must have 1 child, got %d", self->n_children);
+    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    relut (self, self->children[0]);
 }
 
 // BINARY OPS
-float *
-addt (tensor_t *a, tensor_t *b)
+void
+forward_add (tensor_t *self)
 {
-    int    j, k;
-    int    size = (a->size > b->size) ? a->size : b->size;
-    float *data = smalloc (.size = size, .nmemb = sizeof (float), .kind = SHARED);
-    for (int i = 0; i < size; i++)
-    {
-        j       = (a->size == 1) ? 0 : i;
-        k       = (b->size == 1) ? 0 : i;
-        data[i] = a->data[j] + b->data[k];
-    }
-    return data;
+    ASSERT (self->n_children == 2, "forward_add must have 2 children, got %d", self->n_children);
+    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    addt (self, self->children[0], self->children[1]);
 }
 
-float *
-mult (tensor_t *a, tensor_t *b)
+void
+forward_mul (tensor_t *self)
 {
-    int    j, k;
-    int    size = (a->size > b->size) ? a->size : b->size;
-    float *data = smalloc (.size = size, .nmemb = sizeof (float), .kind = SHARED);
-    for (int i = 0; i < size; i++)
-    {
-        j       = (a->size == 1) ? 0 : i;
-        k       = (b->size == 1) ? 0 : i;
-        data[i] = a->data[j] * b->data[k];
-    }
-    return data;
+    ASSERT (self->n_children == 2, "forward_mul must have 2 children, got %d", self->n_children);
+    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    mult (self, self->children[0], self->children[1]);
 }
 
-float *
-powt (tensor_t *a, tensor_t *b)
+void
+forward_pow (tensor_t *self)
 {
-    int    j, k;
-    int    size = (a->size > b->size) ? a->size : b->size;
-    float *data = smalloc (.size = size, .nmemb = sizeof (float), .kind = SHARED);
-    for (int i = 0; i < size; i++)
-    {
-        j       = (a->size == 1) ? 0 : i;
-        k       = (b->size == 1) ? 0 : i;
-        data[i] = powf (a->data[j], b->data[k]);
-    }
-    return data;
+    ASSERT (self->n_children == 2, "forward_pow must have 2 children, got %d", self->n_children);
+    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    powt (self, self->children[0], self->children[1]);
 }
 
 // REDUCE OPS
-float *
-sumt (tensor_t *a)
+void
+forward_sum (tensor_t *self)
 {
-    float *data = smalloc (.size = 1, .nmemb = sizeof (float), .kind = SHARED);
-    for (int i = 0; i < a->size; i++)
-    {
-        data[0] += a->data[i];
-    }
-    return data;
+    ASSERT (self->n_children == 1, "forward_sum must have 1 child, got %d", self->n_children);
+    self->data = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    sumt (self, self->children[0]);
+}
+
+// MOVEMENT OPS
+
+void
+forward_ref (tensor_t *self)
+{
+    ASSERT (self->n_children == 1, "forward_ref must have 1 child, got %d", self->n_children);
+    self->data = sref (self->children[0]->data);
 }

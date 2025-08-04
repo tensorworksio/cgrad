@@ -4,19 +4,24 @@
 #include <math.h>
 
 // FORWARD
-float *forward_relu (int n_children, tensor_t **children);
-float *forward_add (int n_children, tensor_t **children);
-float *forward_mul (int n_children, tensor_t **children);
-float *forward_pow (int n_children, tensor_t **children);
-float *forward_sum (int n_children, tensor_t **children);
+void relut (tensor_t *self, tensor_t *child);
+void addt (tensor_t *self, tensor_t *child, tensor_t *other);
+void mult (tensor_t *self, tensor_t *child, tensor_t *other);
+void powt (tensor_t *self, tensor_t *child, tensor_t *other);
+void sumt (tensor_t *self, tensor_t *child);
 
 // UNARY OPS
-float *relut (tensor_t *a);
+void forward_relu (tensor_t *self);
 
 // BINARY OPS
-float *addt (tensor_t *a, tensor_t *b);
-float *mult (tensor_t *a, tensor_t *b);
-float *powt (tensor_t *a, tensor_t *b);
+void forward_add (tensor_t *self);
+void forward_mul (tensor_t *self);
+void forward_pow (tensor_t *self);
 
 // REDUCE OPS
-float *sumt (tensor_t *a);
+void forward_sum (tensor_t *self);
+
+// MOVEMENT OPS
+void forward_cat (tensor_t *self);
+void forward_ref (tensor_t *self);
+void forward_copy (tensor_t *self);
