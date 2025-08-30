@@ -440,3 +440,49 @@ Test (reshape, tensor_reshape_data_sharing)
     // Check if reshaped data is updated (since shared)
     cr_assert (reshaped->data[0] == 99., "reshape: data should be shared");
 }
+
+Test (transpose, tensor_transpose_forward)
+{
+    log_set_level (LOG_INFO);
+
+    // Test tensor_transpose forward functionality
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 2, 3 }, 2, false);
+    smart tensor_t *transposed = tensor_transpose (a, 0, 1);
+    tensor_forward (transposed);
+
+    // Verify shape
+    cr_assert (transposed->ndim == 2, "transpose: ndim should be 2");
+    cr_assert (transposed->shape[0] == 3, "transpose: shape[0] should be 3");
+    cr_assert (transposed->shape[1] == 2, "transpose: shape[1] should be 2");
+
+    // Verify stride
+    cr_assert (transposed->stride[0] == 1, "transpose: stride[0] should be 1");
+    cr_assert (transposed->stride[1] == 3, "transpose: stride[1] should be 3");
+
+    // Verify data is shared
+    cr_assert (transposed->data == a->data, "transpose: data should be shared");
+
+    // Verify data values (transposed accesses same data)
+    cr_assert (transposed->data[0] == 1., "transpose: data[0] should be 1");
+    cr_assert (transposed->data[1] == 2., "transpose: data[1] should be 2");
+    cr_assert (transposed->data[2] == 3., "transpose: data[2] should be 3");
+    cr_assert (transposed->data[3] == 4., "transpose: data[3] should be 4");
+    cr_assert (transposed->data[4] == 5., "transpose: data[4] should be 5");
+    cr_assert (transposed->data[5] == 6., "transpose: data[5] should be 6");
+}
+
+Test (transpose, tensor_transpose_data_sharing)
+{
+    log_set_level (LOG_INFO);
+
+    // Test that transpose shares data
+    smart tensor_t *a          = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 2, 2 }, 2, false);
+    smart tensor_t *transposed = tensor_transpose (a, 0, 1);
+    tensor_forward (transposed);
+
+    // Modify original data
+    a->data[0] = 99.;
+
+    // Check if transposed data is updated (since shared)
+    cr_assert (transposed->data[0] == 99., "transpose: data should be shared");
+}
