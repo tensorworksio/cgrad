@@ -398,3 +398,45 @@ Test (clone, tensor_clone_independence)
     // Note: In this implementation, clone creates a new data array, so pointers should be different
     // This test verifies the cloning behavior is working correctly
 }
+
+Test (reshape, tensor_reshape_forward)
+{
+    log_set_level (LOG_INFO);
+
+    // Test tensor_reshape forward functionality
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 6 }, 1, false);
+    smart tensor_t *reshaped = tensor_reshape (a, (int[]) { 2, 3 }, 2);
+    tensor_forward (reshaped);
+
+    // Verify shape
+    cr_assert (reshaped->ndim == 2, "reshape: ndim should be 2");
+    cr_assert (reshaped->shape[0] == 2, "reshape: shape[0] should be 2");
+    cr_assert (reshaped->shape[1] == 3, "reshape: shape[1] should be 3");
+
+    // Verify data is shared
+    cr_assert (reshaped->data == a->data, "reshape: data should be shared");
+
+    // Verify data values (reshaped accesses same data)
+    cr_assert (reshaped->data[0] == 1., "reshape: data[0] should be 1");
+    cr_assert (reshaped->data[1] == 2., "reshape: data[1] should be 2");
+    cr_assert (reshaped->data[2] == 3., "reshape: data[2] should be 3");
+    cr_assert (reshaped->data[3] == 4., "reshape: data[3] should be 4");
+    cr_assert (reshaped->data[4] == 5., "reshape: data[4] should be 5");
+    cr_assert (reshaped->data[5] == 6., "reshape: data[5] should be 6");
+}
+
+Test (reshape, tensor_reshape_data_sharing)
+{
+    log_set_level (LOG_INFO);
+
+    // Test that reshape shares data
+    smart tensor_t *a        = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, false);
+    smart tensor_t *reshaped = tensor_reshape (a, (int[]) { 2, 2 }, 2);
+    tensor_forward (reshaped);
+
+    // Modify original data
+    a->data[0] = 99.;
+
+    // Check if reshaped data is updated (since shared)
+    cr_assert (reshaped->data[0] == 99., "reshape: data should be shared");
+}

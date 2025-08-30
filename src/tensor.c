@@ -406,23 +406,11 @@ tensor_reshape (tensor_t *tensor, int shape[], int ndim)
     int size = get_size (shape, ndim);
     ASSERT (size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
 
-    // Create reshaped tensor
-    tensor_t *reshaped = tensor_create (shape, ndim, tensor->requires_grad);
-
-    // Shared data and grad pointers
-    reshaped->data = sref (tensor->data);
-    if (tensor->grad)
-        reshaped->grad = sref (tensor->grad);
-
-    // Set shape and stride
-    for (int i = ndim; i-- > 0;)
-    {
-        reshaped->shape[i]  = shape[i];
-        reshaped->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
-    };
-
-    // Add tensor as child of reshaped
+    tensor_t *reshaped = tensor_init (shape, ndim, tensor->requires_grad, forward_ref);
     tensor_add_child (reshaped, tensor);
+
+    if (reshaped->requires_grad)
+        reshaped->backward = backward_ref;
 
     return reshaped;
 }
@@ -457,13 +445,11 @@ tensor_slice (tensor_t *tensor, slice_t range[])
                    + (abs (range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
-    // TODO: what about grad ?
-    tensor_t *sliced = tensor_init (shape, tensor->ndim, tensor->requires_grad, NULL);
+    tensor_t *sliced = tensor_init (shape, tensor->ndim, tensor->requires_grad, forward_ref);
+    tensor_add_child (sliced, tensor);
 
-    // Fill sliced tensor with data
-    // int idx = 0;
-    // int src_idx[sliced->ndim];
-    // tensor_copy (sliced, tensor, &idx, src_idx, range, 0);
+    if (sliced->requires_grad)
+        sliced->backward = backward_ref;
 
     return sliced;
 }

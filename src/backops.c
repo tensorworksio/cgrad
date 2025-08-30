@@ -173,6 +173,14 @@ backward_sum (tensor_t *self)
 
 // MOVEMENT OPS
 void
+backward_ref (tensor_t *self)
+{
+    ASSERT (self->n_children == 1, "backward_ref expects 1 child, got %d", self->n_children);
+    self->children[0]->grad = sref (self->grad);
+    backward (self->children[0]);
+}
+
+void
 backward_copy (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "backward_copy expects 1 child, got %d", self->n_children);

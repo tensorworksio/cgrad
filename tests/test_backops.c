@@ -586,3 +586,21 @@ Test (clone, backward_tensor_clone_main_example)
     cr_assert (tensor_equals (a, expected_a_grad, true),
                "backward_tensor_clone_main_example failed");
 }
+
+Test (reshape, backward_reshape)
+{
+    log_set_level (LOG_INFO);
+
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
+    smart tensor_t *b = tensor_reshape (a, (int[]) { 2, 2 }, 2);
+    smart tensor_t *y = tensor_sum (b);
+
+    tensor_backward (y);
+
+    // Since reshape shares grad, a's grad should be set
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 1., 1., 1., 1. }, a->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true), "backward_reshape failed");
+}
