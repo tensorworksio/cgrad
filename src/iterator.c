@@ -1,17 +1,32 @@
 #include "iterator.h"
 
-iterator_t
+void
+iterator_destructor (void *ptr, void *meta)
+{
+    iterator_t *it = (iterator_t *) ptr;
+    free (it->shape);
+    free (it->indices);
+    free (it->range);
+    free (it->stride);
+}
+
+iterator_t *
 iterator (slice_t *range, int *stride, int ndim)
 {
-    iterator_t it;
-    it.ndim   = ndim;
-    it.range  = range;
-    it.stride = stride;
+    iterator_t *it = unique_ptr (
+        iterator_t, { .ndim = ndim, .range = NULL, .shape = NULL, .stride = NULL, .indices = NULL },
+        iterator_destructor);
 
-    it.shape   = (int *) malloc (ndim * sizeof (int));
-    it.indices = (int *) malloc (ndim * sizeof (int));
+    it->shape   = (int *) malloc (ndim * sizeof (int));
+    it->indices = (int *) malloc (ndim * sizeof (int));
 
-    iterator_reset (&it);
+    it->range = (slice_t *) malloc (ndim * sizeof (slice_t));
+    memcpy (it->range, range, ndim * sizeof (slice_t));
+
+    it->stride = (int *) malloc (ndim * sizeof (int));
+    memcpy (it->stride, stride, ndim * sizeof (int));
+
+    iterator_reset (it);
     return it;
 }
 
@@ -30,10 +45,7 @@ iterator_reset (iterator_t *it)
 void
 iterator_free (iterator_t *it)
 {
-    free (it->shape);
-    free (it->indices);
-    it->shape   = NULL;
-    it->indices = NULL;
+    sfree (it);
 }
 
 int

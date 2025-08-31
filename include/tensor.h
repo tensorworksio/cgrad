@@ -101,7 +101,6 @@ tensor_t *tensor_reshape (tensor_t *tensor, int shape[], int ndim);
 tensor_t *tensor_transpose (tensor_t *self, int axis1, int axis2);
 tensor_t *tensor_slice (tensor_t *self, slice_t ranges[]);
 tensor_t *tensor_cat (tensor_t *tensors[], int n_tensors, int axis);
-tensor_t *tensor_copy (tensor_t *tensor, bool with_grad);
 
 // FORCING OPS
 void tensor_forward (tensor_t *tensor);

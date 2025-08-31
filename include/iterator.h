@@ -3,6 +3,7 @@
 
 #include "log.h"
 #include "slice.h"
+#include <csptr/smart_ptr.h>
 #include <stdbool.h>
 
 typedef struct
@@ -17,7 +18,7 @@ typedef struct
 
 } iterator_t;
 
-iterator_t iterator (slice_t *range, int *stride, int ndim);
+iterator_t *iterator (slice_t *range, int *stride, int ndim);
 
 void iterator_reset (iterator_t *it);
 void iterator_free (iterator_t *it);

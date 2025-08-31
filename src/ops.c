@@ -132,7 +132,6 @@ forward_slice (tensor_t *self)
 
     init_data (self);
 
-    iterator_t it = iterator (self->range, self->children[0]->stride, self->ndim);
-    copy_from_range (self->data, self->children[0]->data, &it);
-    iterator_free (&it);
+    smart iterator_t *it = iterator (self->range, self->children[0]->stride, self->ndim);
+    copy_from_range (self->data, self->children[0]->data, it);
 }

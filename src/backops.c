@@ -196,8 +196,7 @@ backward_slice (tensor_t *self)
     ASSERT (self->range != NULL, "Slice range must be set for backward_slice");
 
     init_grad (self->children[0]);
-    iterator_t it = iterator (self->range, self->children[0]->stride, self->ndim);
-    copy_to_range (self->children[0]->grad, self->grad, &it);
-    iterator_free (&it);
+    smart iterator_t *it = iterator (self->range, self->children[0]->stride, self->ndim);
+    copy_to_range (self->children[0]->grad, self->grad, it);
     backward (self->children[0]);
 }
