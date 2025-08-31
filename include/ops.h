@@ -1,5 +1,6 @@
 #include "backops.h"
 #include "helpers.h"
+#include "iterator.h"
 #include "tensor.h"
 #include <math.h>
 
@@ -22,6 +23,7 @@ void forward_pow (tensor_t *self);
 void forward_sum (tensor_t *self);
 
 // MOVEMENT OPS
-void forward_cat (tensor_t *self);
 void forward_ref (tensor_t *self);
 void forward_copy (tensor_t *self);
+void forward_slice (tensor_t *self);
+void forward_cat (tensor_t *self);

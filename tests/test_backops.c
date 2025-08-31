@@ -622,3 +622,23 @@ Test (transpose, backward_transpose)
 
     cr_assert (tensor_equals (a, expected_a_grad, true), "backward_transpose failed");
 }
+
+Test (slice, backward_slice)
+{
+    log_set_level (LOG_INFO);
+
+    smart tensor_t *a
+        = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 4, 2 }, 2, true);
+    smart tensor_t *b
+        = tensor_slice (a, (slice_t[]) { (slice_t) { 1, 3, 1 }, (slice_t) { 0, 2, 1 } });
+    smart tensor_t *y = tensor_sum (b);
+
+    tensor_backward (y);
+
+    // Expected grad for a: zeros except positions 2,3,4,5 (0-indexed) which are 1
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 0., 0., 1., 1., 1., 1., 0., 0. }, a->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true), "backward_slice failed");
+}

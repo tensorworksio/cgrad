@@ -1,4 +1,5 @@
 #include "helpers.h"
+#include "iterator.h"
 #include "log.h"
 #include "tensor.h"
 #include <math.h>

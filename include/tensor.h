@@ -1,6 +1,7 @@
 #ifndef TENSOR_H
 #define TENSOR_H
 
+#include "log.h"
 #include "slice.h"
 #include <csptr/smart_ptr.h>
 #include <stdarg.h>
@@ -25,10 +26,11 @@ typedef struct tensor
     float *grad;
     bool   requires_grad;
 
-    int  size;
-    int  ndim;
-    int *shape;
-    int *stride;
+    int      size;
+    int      ndim;
+    int     *shape;
+    int     *stride;
+    slice_t *range;
 
     int             n_children;
     struct tensor **children;

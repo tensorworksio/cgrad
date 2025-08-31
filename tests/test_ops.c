@@ -486,3 +486,18 @@ Test (transpose, tensor_transpose_data_sharing)
     // Check if transposed data is updated (since shared)
     cr_assert (transposed->data[0] == 99., "transpose: data should be shared");
 }
+
+Test (slice, forward_slice)
+{
+    log_set_level (LOG_INFO);
+
+    smart tensor_t *a
+        = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 4, 2 }, 2, false);
+    smart tensor_t *b
+        = tensor_slice (a, (slice_t[]) { (slice_t) { 1, 3, 1 }, (slice_t) { 0, 2, 1 } });
+    tensor_forward (b);
+
+    // Expected: rows 1-2 (0-indexed), cols 0-1: [3,4,5,6]
+    smart tensor_t *expected = tensor ((float[]) { 3., 4., 5., 6. }, (int[]) { 2, 2 }, 2, false);
+    cr_assert (tensor_equals (b, expected, true), "forward_slice failed");
+}

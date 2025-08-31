@@ -73,7 +73,7 @@ normalize_range (slice_t range[], int shape[], int ndim)
 
         // if start/stop is negative, add shape to it
         range[d].start = (range[d].start < 0) ? range[d].start + shape[d] : range[d].start;
-        range[d].stop  = (range[d].stop < 0) ? range[d].stop + shape[d] : range[d].stop;
+        range[d].stop  = (range[d].stop < 0) ? range[d].stop + shape[d] + 1 : range[d].stop;
 
         ASSERT (range[d].start <= range[d].stop,
                 "Slice start must be less than or equal to slice stop");
@@ -122,5 +122,25 @@ copy_data (float *dst, float *src, int size)
     for (int i = 0; i < size; i++)
     {
         dst[i] = src[i];
+    }
+}
+
+void
+copy_from_range (float *dst, float *src, iterator_t *it)
+{
+    int idx = 0;
+    while (iterator_has_next (it))
+    {
+        dst[idx++] = src[iterator_next (it)];
+    }
+}
+
+void
+copy_to_range (float *dst, float *src, iterator_t *it)
+{
+    int idx = 0;
+    while (iterator_has_next (it))
+    {
+        dst[iterator_next (it)] = src[idx++];
     }
 }

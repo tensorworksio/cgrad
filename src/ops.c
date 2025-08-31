@@ -123,3 +123,16 @@ forward_copy (tensor_t *self)
     init_data (self);
     memcpy (self->data, self->children[0]->data, self->size * sizeof (float));
 }
+
+void
+forward_slice (tensor_t *self)
+{
+    ASSERT (self->n_children == 1, "forward_slice must have 1 child, got %d", self->n_children);
+    ASSERT (self->range != NULL, "Slice range must be set for forward_slice");
+
+    init_data (self);
+
+    iterator_t it = iterator (self->range, self->children[0]->stride, self->ndim);
+    copy_from_range (self->data, self->children[0]->data, &it);
+    iterator_free (&it);
+}

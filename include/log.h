@@ -15,6 +15,16 @@
 
 #define LOG_VERSION "0.1.0"
 
+#define ASSERT(condition, format, ...)                                                             \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(condition))                                                                          \
+        {                                                                                          \
+            log_error (format, ##__VA_ARGS__);                                                     \
+            exit (EXIT_FAILURE);                                                                   \
+        }                                                                                          \
+    } while (0)
+
 typedef struct
 {
     va_list     ap;

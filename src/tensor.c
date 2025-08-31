@@ -16,6 +16,7 @@ tensor_destructor (void *ptr, void *meta)
     // Free metadata only at actual deallocation time
     free (tensor->shape);
     free (tensor->stride);
+    free (tensor->range);
     free (tensor->children);
 
     // Free data & grad (shared)
@@ -35,6 +36,7 @@ tensor_create (int shape[], int ndim, bool requires_grad)
                                      .grad          = NULL,
                                      .shape         = NULL,
                                      .stride        = NULL,
+                                     .range         = NULL,
                                      .n_children    = 0,
                                      .children      = NULL,
                                      .forward       = NULL,
@@ -43,10 +45,12 @@ tensor_create (int shape[], int ndim, bool requires_grad)
 
     tensor->shape  = (int *) malloc (sizeof (int) * ndim);
     tensor->stride = (int *) malloc (sizeof (int) * ndim);
+    tensor->range  = (slice_t *) malloc (sizeof (slice_t) * ndim);
 
     for (int i = ndim; i-- > 0;)
     {
         tensor->shape[i]  = shape[i];
+        tensor->range[i]  = (slice_t) { 0, shape[i], 1 };
         tensor->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
     }
 
@@ -453,13 +457,12 @@ tensor_slice (tensor_t *tensor, slice_t range[])
                    + (abs (range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
-    // TODO: what about grad ?
-    tensor_t *sliced = tensor_init (shape, tensor->ndim, tensor->requires_grad, NULL);
+    tensor_t *sliced = tensor_init (shape, tensor->ndim, tensor->requires_grad, forward_slice);
+    memcpy (sliced->range, range, sizeof (slice_t) * tensor->ndim);
+    tensor_add_child (sliced, tensor);
 
-    // Fill sliced tensor with data
-    // int idx = 0;
-    // int src_idx[sliced->ndim];
-    // tensor_copy (sliced, tensor, &idx, src_idx, range, 0);
+    if (sliced->requires_grad)
+        sliced->backward = backward_slice;
 
     return sliced;
 }

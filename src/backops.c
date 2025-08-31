@@ -188,3 +188,16 @@ backward_copy (tensor_t *self)
     update_grad_add (self, self->children[0]);
     backward (self->children[0]);
 }
+
+void
+backward_slice (tensor_t *self)
+{
+    ASSERT (self->n_children == 1, "backward_slice expects 1 child, got %d", self->n_children);
+    ASSERT (self->range != NULL, "Slice range must be set for backward_slice");
+
+    init_grad (self->children[0]);
+    iterator_t it = iterator (self->range, self->children[0]->stride, self->ndim);
+    copy_to_range (self->children[0]->grad, self->grad, &it);
+    iterator_free (&it);
+    backward (self->children[0]);
+}

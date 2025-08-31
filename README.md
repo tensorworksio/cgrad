@@ -75,6 +75,9 @@ meson test -C build --wrap='valgrind --leak-check=full --error-exitcode=1' --ver
 ```
 
 ## TODO
+- Iterator for slice (use offset instead of range ?)
+- forward_slice backward_slice to use iterator (not the ops, too slow)
+
 - Move movement ops to ops & define grad
 - tensor_cat requires many children if requires_grad
 - Reduce operator for specific axes (require slices)
