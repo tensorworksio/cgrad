@@ -1,6 +1,7 @@
 #include "helpers.h"
 #include "iterator.h"
 #include "log.h"
+#include "params.h"
 #include "tensor.h"
 #include <math.h>
 
@@ -27,3 +28,4 @@ void backward_sum (tensor_t *self);
 void backward_ref (tensor_t *self);
 void backward_slice (tensor_t *self);
 void backward_copy (tensor_t *self);
+void backward_cat (tensor_t *self);

@@ -26,15 +26,15 @@ typedef struct tensor
     float *grad;
     bool   requires_grad;
 
-    int      size;
-    int      ndim;
-    int     *shape;
-    int     *stride;
-    slice_t *range;
+    int  size;
+    int  ndim;
+    int *shape;
+    int *stride;
 
     int             n_children;
     struct tensor **children;
 
+    void *op_params;
     void (*backward) (struct tensor *self);
     void (*forward) (struct tensor *self);
 

@@ -128,10 +128,13 @@ void
 forward_slice (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "forward_slice must have 1 child, got %d", self->n_children);
-    ASSERT (self->range != NULL, "Slice range must be set for forward_slice");
+
+    slice_params_t *params = (slice_params_t *) self->op_params;
+    ASSERT (params != NULL && params->range != NULL,
+            "Slice parameters must be set for forward_slice");
 
     init_data (self);
 
-    smart iterator_t *it = iterator (self->range, self->children[0]->stride, self->ndim);
+    smart iterator_t *it = iterator (params->range, self->children[0]->stride, self->ndim);
     copy_from_range (self->data, self->children[0]->data, it);
 }

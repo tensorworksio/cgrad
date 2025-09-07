@@ -16,8 +16,10 @@ tensor_destructor (void *ptr, void *meta)
     // Free metadata only at actual deallocation time
     free (tensor->shape);
     free (tensor->stride);
-    free (tensor->range);
     free (tensor->children);
+
+    // Free op_params with custom destructor
+    sfree (tensor->op_params);
 
     // Free data & grad (shared)
     sfree (tensor->data);
@@ -36,21 +38,19 @@ tensor_create (int shape[], int ndim, bool requires_grad)
                                      .grad          = NULL,
                                      .shape         = NULL,
                                      .stride        = NULL,
-                                     .range         = NULL,
                                      .n_children    = 0,
                                      .children      = NULL,
+                                     .op_params     = NULL,
                                      .forward       = NULL,
                                      .backward      = NULL },
                                    tensor_destructor);
 
     tensor->shape  = (int *) malloc (sizeof (int) * ndim);
     tensor->stride = (int *) malloc (sizeof (int) * ndim);
-    tensor->range  = (slice_t *) malloc (sizeof (slice_t) * ndim);
 
     for (int i = ndim; i-- > 0;)
     {
         tensor->shape[i]  = shape[i];
-        tensor->range[i]  = (slice_t) { 0, shape[i], 1 };
         tensor->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
     }
 
@@ -458,7 +458,13 @@ tensor_slice (tensor_t *tensor, slice_t range[])
     }
 
     tensor_t *sliced = tensor_init (shape, tensor->ndim, tensor->requires_grad, forward_slice);
-    memcpy (sliced->range, range, sizeof (slice_t) * tensor->ndim);
+    slice_params_t *params
+        = unique_ptr (slice_params_t, { .range = NULL }, slice_params_destructor);
+
+    params->range = malloc (sizeof (slice_t) * tensor->ndim);
+    memcpy (params->range, range, sizeof (slice_t) * tensor->ndim);
+    sliced->op_params = params;
+
     tensor_add_child (sliced, tensor);
 
     if (sliced->requires_grad)

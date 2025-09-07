@@ -193,10 +193,14 @@ void
 backward_slice (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "backward_slice expects 1 child, got %d", self->n_children);
-    ASSERT (self->range != NULL, "Slice range must be set for backward_slice");
+
+    slice_params_t *params = (slice_params_t *) self->op_params;
+    ASSERT (params != NULL && params->range != NULL,
+            "Slice parameters must be set for backward_slice");
 
     init_grad (self->children[0]);
-    smart iterator_t *it = iterator (self->range, self->children[0]->stride, self->ndim);
+
+    smart iterator_t *it = iterator (params->range, self->children[0]->stride, self->ndim);
     copy_to_range (self->children[0]->grad, self->grad, it);
     backward (self->children[0]);
 }
