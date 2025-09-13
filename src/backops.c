@@ -21,7 +21,7 @@ init_grad (tensor_t *self)
 {
     if (!self->requires_grad || self->grad)
         return;
-    self->grad = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    self->grad = smalloc (.nmemb = self->size, .size = sizeof (float), .kind = SHARED);
     tensor_zero_grad (self);
 }
 

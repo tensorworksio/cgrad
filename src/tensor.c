@@ -62,7 +62,7 @@ tensor_init (int shape[], int ndim, bool requires_grad, op_t *op)
     tensor->op       = op;
     if (op == NULL)
     {
-        tensor->data = smalloc (.size = tensor->size, .nmemb = sizeof (float), .kind = SHARED);
+        tensor->data = smalloc (.nmemb = tensor->size, .size = sizeof (float), .kind = SHARED);
         set_data (tensor->data, 0., tensor->size);
     }
     return tensor;
@@ -130,7 +130,7 @@ tensor_set_data (tensor_t *tensor, float data[], int size)
     ASSERT (size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
     if (tensor->data == NULL)
     {
-        tensor->data = smalloc (.size = size, .nmemb = sizeof (float), .kind = SHARED);
+        tensor->data = smalloc (.nmemb = size, .size = sizeof (float), .kind = SHARED);
     }
     memcpy (tensor->data, data, size * sizeof (float));
 }
@@ -141,7 +141,7 @@ tensor_set_grad (tensor_t *tensor, float grad[], int size)
     ASSERT (size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
     if (tensor->grad == NULL)
     {
-        tensor->grad = smalloc (.size = size, .nmemb = sizeof (float), .kind = SHARED);
+        tensor->grad = smalloc (.nmemb = size, .size = sizeof (float), .kind = SHARED);
     }
     memcpy (tensor->grad, grad, size * sizeof (float));
 }
@@ -528,7 +528,7 @@ tensor_backward (tensor_t *tensor)
     // because we could modify grad even if it's already initialized
     if (tensor->grad == NULL)
     {
-        tensor->grad = smalloc (.size = tensor->size, .nmemb = sizeof (float), .kind = SHARED);
+        tensor->grad = smalloc (.nmemb = tensor->size, .size = sizeof (float), .kind = SHARED);
         tensor_init_grad (tensor);
         tensor->op->backward (tensor);
     }
