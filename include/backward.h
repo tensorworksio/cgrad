@@ -1,7 +1,6 @@
 #include "helpers.h"
 #include "iterator.h"
 #include "log.h"
-#include "params.h"
 #include "tensor.h"
 #include <math.h>
 

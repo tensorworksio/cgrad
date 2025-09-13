@@ -39,7 +39,7 @@ meson compile -C build
 ## Usage
 ```C
 #include "log.h"
-#include "ops.h"
+#include "forward.h"
 #include "tensor.h"
 
 int

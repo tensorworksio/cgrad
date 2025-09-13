@@ -1,9 +1,9 @@
-#include "backops.h"
+#include "backward.h"
 
 void
 backward (tensor_t *self)
 {
-    if (self->backward == NULL)
+    if (self->op == NULL || self->op->backward == NULL)
     {
         log_debug ("Node %p has no backward function.", (void *) self);
         return;
@@ -13,7 +13,7 @@ backward (tensor_t *self)
         log_debug ("Node %p has no children.", (void *) self);
         return;
     }
-    self->backward (self);
+    self->op->backward (self);
 }
 
 void
@@ -21,7 +21,7 @@ init_grad (tensor_t *self)
 {
     if (!self->requires_grad || self->grad)
         return;
-    self->grad = smalloc (.size = self->size, .nmemb = sizeof (float), .kind = SHARED);
+    self->grad = smalloc (.nmemb = self->size, .size = sizeof (float), .kind = SHARED);
     tensor_zero_grad (self);
 }
 
@@ -194,7 +194,7 @@ backward_slice (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "backward_slice expects 1 child, got %d", self->n_children);
 
-    slice_params_t *params = (slice_params_t *) self->op_params;
+    slice_params_t *params = (slice_params_t *) self->op->params;
     ASSERT (params != NULL && params->range != NULL,
             "Slice parameters must be set for backward_slice");
 

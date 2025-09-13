@@ -2,6 +2,7 @@
 #define TENSOR_H
 
 #include "log.h"
+#include "operator.h"
 #include "slice.h"
 #include <csptr/smart_ptr.h>
 #include <stdarg.h>
@@ -34,15 +35,13 @@ typedef struct tensor
     int             n_children;
     struct tensor **children;
 
-    void *op_params;
-    void (*backward) (struct tensor *self);
-    void (*forward) (struct tensor *self);
+    op_t *op;
 
 } tensor_t;
 
 // ALLOC OPS
 tensor_t *tensor_create (int shape[], int ndim, bool requires_grad);
-tensor_t *tensor_init (int shape[], int ndim, bool requires_grad, void (*op) (tensor_t *));
+tensor_t *tensor_init (int shape[], int ndim, bool requires_grad, op_t *op);
 void      tensor_add_child (tensor_t *parent, tensor_t *child);
 
 // INIT OPS
