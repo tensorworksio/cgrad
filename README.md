@@ -75,7 +75,6 @@ meson test -C build --wrap='valgrind --leak-check=full --error-exitcode=1' --ver
 ```
 
 ## TODO
-- is tensor's range metadata necessary ?
 - cat operator
 
 - Move movement ops to ops & define grad
