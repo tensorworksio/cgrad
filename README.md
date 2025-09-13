@@ -77,7 +77,6 @@ meson test -C build --wrap='valgrind --leak-check=full --error-exitcode=1' --ver
 ## TODO
 - is tensor's range metadata necessary ?
 - cat operator
-- move log to meson subprojects
 
 - Move movement ops to ops & define grad
 - tensor_cat requires many children if requires_grad
