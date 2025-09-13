@@ -1,6 +1,6 @@
 #include "tensor.h"
+#include "forward.h"
 #include "helpers.h"
-#include "ops.h"
 
 // ALLOC OPS
 void

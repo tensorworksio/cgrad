@@ -1,5 +1,5 @@
+#include "forward.h"
 #include "log.h"
-#include "ops.h"
 #include "tensor.h"
 
 int
