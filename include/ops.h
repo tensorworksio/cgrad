@@ -1,7 +1,6 @@
 #include "backops.h"
 #include "helpers.h"
 #include "iterator.h"
-#include "params.h"
 #include "tensor.h"
 #include <math.h>
 

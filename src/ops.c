@@ -129,7 +129,7 @@ forward_slice (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "forward_slice must have 1 child, got %d", self->n_children);
 
-    slice_params_t *params = (slice_params_t *) self->op_params;
+    slice_params_t *params = (slice_params_t *) self->op->params;
     ASSERT (params != NULL && params->range != NULL,
             "Slice parameters must be set for forward_slice");
 
