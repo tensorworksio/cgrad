@@ -501,3 +501,31 @@ Test (slice, forward_slice)
     smart tensor_t *expected = tensor ((float[]) { 3., 4., 5., 6. }, (int[]) { 2, 2 }, 2, false);
     cr_assert (tensor_equals (b, expected, true), "forward_slice failed");
 }
+
+Test (cat, cat_axis0_forward)
+{
+    log_set_level (LOG_INFO);
+
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 2, 2 }, 2, false);
+    smart tensor_t *b = tensor ((float[]) { 5., 6., 7., 8. }, (int[]) { 2, 2 }, 2, false);
+    smart tensor_t *c = tensor_cat ((tensor_t *[]) { a, b }, 2, 0);
+    tensor_forward (c);
+
+    smart tensor_t *expected
+        = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 4, 2 }, 2, false);
+    cr_assert (tensor_equals (c, expected, true), "cat_axis0_forward failed");
+}
+
+Test (cat, cat_axis1_forward)
+{
+    log_set_level (LOG_INFO);
+
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 2, 2 }, 2, false);
+    smart tensor_t *b = tensor ((float[]) { 5., 6., 7., 8. }, (int[]) { 2, 2 }, 2, false);
+    smart tensor_t *c = tensor_cat ((tensor_t *[]) { a, b }, 2, 1);
+    tensor_forward (c);
+
+    smart tensor_t *expected
+        = tensor ((float[]) { 1., 2., 5., 6., 3., 4., 7., 8. }, (int[]) { 2, 4 }, 2, false);
+    cr_assert (tensor_equals (c, expected, true), "cat_axis1_forward failed");
+}

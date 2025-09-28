@@ -642,3 +642,62 @@ Test (slice, backward_slice)
 
     cr_assert (tensor_equals (a, expected_a_grad, true), "backward_slice failed");
 }
+
+Test (cat, cat_axis0_backward)
+{
+    log_set_level (LOG_INFO);
+
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 2, 2 }, 2, true);
+    smart tensor_t *b = tensor ((float[]) { 5., 6., 7., 8. }, (int[]) { 2, 2 }, 2, true);
+    smart tensor_t *c = tensor_cat ((tensor_t *[]) { a, b }, 2, 0);
+    smart tensor_t *weights
+        = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 4, 2 }, 2, false);
+    smart tensor_t *loss = tensor_mul (c, weights);
+    smart tensor_t *y    = tensor_sum (loss);
+
+    tensor_backward (y);
+
+    // Expected grads: for a (rows 0-1), grad_a = weights[0:4] = [1,2,3,4]
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 1., 2., 3., 4. }, a->size);
+
+    // For b (rows 2-3), grad_b = weights[4:8] = [5,6,7,8]
+    smart tensor_t *expected_b_grad = tensor_create (b->shape, b->ndim, true);
+    tensor_set_data (expected_b_grad, b->data, b->size);
+    tensor_set_grad (expected_b_grad, (float[]) { 5., 6., 7., 8. }, b->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true), "cat_axis0_backward a failed");
+    cr_assert (tensor_equals (b, expected_b_grad, true), "cat_axis0_backward b failed");
+}
+
+Test (cat, cat_axis1_backward)
+{
+    log_set_level (LOG_INFO);
+
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 2, 2 }, 2, true);
+    smart tensor_t *b = tensor ((float[]) { 5., 6., 7., 8. }, (int[]) { 2, 2 }, 2, true);
+    smart tensor_t *c = tensor_cat ((tensor_t *[]) { a, b }, 2, 1);
+    smart tensor_t *weights
+        = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 2, 4 }, 2, false);
+    smart tensor_t *loss = tensor_mul (c, weights);
+    smart tensor_t *y    = tensor_sum (loss);
+
+    tensor_backward (y);
+
+    // c shape [2,4], data: [1,2,5,6, 3,4,7,8]
+    // weights: [1,2,3,4, 5,6,7,8]
+    // grad_c = weights
+    // For a (cols 0-1), grad_a = weights[:,0:2] = [1,2, 5,6]
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 1., 2., 5., 6. }, a->size);
+
+    // For b (cols 2-3), grad_b = weights[:,2:4] = [3,4, 7,8]
+    smart tensor_t *expected_b_grad = tensor_create (b->shape, b->ndim, true);
+    tensor_set_data (expected_b_grad, b->data, b->size);
+    tensor_set_grad (expected_b_grad, (float[]) { 3., 4., 7., 8. }, b->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true), "cat_axis1_backward a failed");
+    cr_assert (tensor_equals (b, expected_b_grad, true), "cat_axis1_backward b failed");
+}

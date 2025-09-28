@@ -75,10 +75,6 @@ meson test -C build --wrap='valgrind --leak-check=full --error-exitcode=1' --ver
 ```
 
 ## TODO
-- cat operator
-
-- Move movement ops to ops & define grad
-- tensor_cat requires many children if requires_grad
 - Reduce operator for specific axes (require slices)
 - Matmul operator as a combination of sum, add and reshape ideally
 - Pooling operators
