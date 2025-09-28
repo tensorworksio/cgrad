@@ -204,3 +204,38 @@ backward_slice (tensor_t *self)
     copy_to_range (self->children[0]->grad, self->grad, it);
     backward (self->children[0]);
 }
+
+void
+backward_cat (tensor_t *self)
+{
+    ASSERT (self->n_children >= 1, "backward_cat must have at least 1 child, got %d",
+            self->n_children);
+
+    cat_params_t *params = (cat_params_t *) self->op->params;
+    ASSERT (params != NULL, "Cat parameters must be set for backward_cat");
+    int axis = params->axis;
+
+    slice_t range[self->ndim];
+    for (int d = 0; d < self->ndim; d++)
+    {
+        range[d] = SLICE_RANGE (0, self->shape[d]);
+    }
+
+    int start = 0, stop = 0;
+    for (int i = 0; i < self->n_children; i++)
+    {
+        tensor_t *child = self->children[i];
+        if (!child->requires_grad)
+        {
+            start += child->shape[axis];
+            continue;
+        }
+        init_grad (child);
+        stop                 = start + child->shape[axis];
+        range[axis]          = SLICE_RANGE (start, stop);
+        smart iterator_t *it = iterator (range, self->stride, self->ndim);
+        copy_from_range (child->grad, self->grad, it);
+        start = stop;
+        backward (child);
+    }
+}

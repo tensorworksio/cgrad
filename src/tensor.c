@@ -437,44 +437,55 @@ tensor_slice (tensor_t *tensor, slice_t range[])
 tensor_t *
 tensor_cat (tensor_t *tensors[], int num_tensors, int axis)
 {
+    // Validate inputs
+    ASSERT (num_tensors > 0, "tensor_cat requires at least one tensor");
+
     int ndim = tensors[0]->ndim;
-    ASSERT (axis >= 0 && axis < ndim, "Axis out of bounds: got %d", axis);
+    axis     = (axis < 0) ? ndim + axis : axis;
+
+    ASSERT (axis >= 0 && axis < ndim, "Invalid axis %d for ndim %d", axis, ndim);
+
+    // Check shape compatibility
+    for (int i = 1; i < num_tensors; ++i)
+    {
+        ASSERT (tensors[i]->ndim == ndim, "Shape mismatch: tensor %d has ndim %d, expected %d", i,
+                tensors[i]->ndim, ndim);
+        for (int d = 0; d < ndim; ++d)
+        {
+            if (d != axis)
+            {
+                ASSERT (tensors[i]->shape[d] == tensors[0]->shape[d],
+                        "Shape mismatch along dim %d: %d vs %d", d, tensors[i]->shape[d],
+                        tensors[0]->shape[d]);
+            }
+        }
+    }
 
     // Compute new shape
     int shape[ndim];
     memcpy (shape, tensors[0]->shape, sizeof (shape));
-    for (int i = 1; i < num_tensors; i++)
+    for (int i = 1; i < num_tensors; ++i)
     {
-        ASSERT (tensors[i]->ndim == ndim,
-                "Number of dimensions must be the same for all tensors. Got %d and %d", ndim,
-                tensors[i]->ndim);
-        for (int d = 0; d < ndim; d++)
-        {
-            if (d != axis)
-            {
-                ASSERT (tensors[i]->shape[d] == shape[d], "Shape mismatch at axis %d: %d != %d", d,
-                        tensors[i]->shape[d], shape[d]);
-            }
-        }
         shape[axis] += tensors[i]->shape[axis];
     }
 
-    tensor_t *cated = tensor_init (shape, ndim, false, op_cat (axis)); // TODO: handle requires_grad
+    // Determine requires_grad
+    bool requires_grad = false;
+    for (int i = 0; i < num_tensors; ++i)
+    {
+        if (tensors[i]->requires_grad)
+        {
+            requires_grad = true;
+            break;
+        }
+    }
 
-    // Fill cated tensor with data
-    int offset = 0;
+    // Create output tensor
+    tensor_t *cated = tensor_init (shape, ndim, requires_grad, op_cat (axis));
+
     for (int i = 0; i < num_tensors; i++)
     {
-        int step = 0;
-        int size = (axis == 0) ? tensors[i]->size : tensors[i]->stride[axis - 1];
-        int n    = tensors[i]->size / size;
-        for (int j = 0; j < n; j++)
-        {
-            memcpy (cated->data + offset + step, tensors[i]->data + j * size,
-                    size * sizeof (float));
-            step += cated->stride[axis - 1];
-        }
-        offset += size;
+        tensor_add_child (cated, tensors[i]);
     }
     return cated;
 }

@@ -141,14 +141,14 @@ op_slice (slice_t *range, int ndim)
         op_destructor);
 }
 
-// Updated op_cat: Takes raw args, creates params internally
 static inline op_t *
 op_cat (int axis)
 {
     cat_params_t *params = unique_ptr (cat_params_t, { .axis = axis }, cat_params_destructor);
 
-    return unique_ptr (op_t, { .name = "cat", .params = params, .backward = NULL, .forward = NULL },
-                       op_destructor); // Adjust backward/forward if needed
+    return unique_ptr (
+        op_t, { .name = "cat", .params = params, .backward = backward_cat, .forward = forward_cat },
+        op_destructor);
 }
 
 #endif // OPERATOR_H

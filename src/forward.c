@@ -138,3 +138,32 @@ forward_slice (tensor_t *self)
     smart iterator_t *it = iterator (params->range, self->children[0]->stride, self->ndim);
     copy_from_range (self->data, self->children[0]->data, it);
 }
+
+void
+forward_cat (tensor_t *self)
+{
+    ASSERT (self->n_children >= 1, "forward_cat must have at least 1 child, got %d",
+            self->n_children);
+
+    cat_params_t *params = (cat_params_t *) self->op->params;
+    ASSERT (params != NULL, "Cat parameters must be set for forward_cat");
+    int axis = params->axis;
+
+    init_data (self);
+
+    slice_t range[self->ndim];
+    for (int d = 0; d < self->ndim; d++)
+    {
+        range[d] = SLICE_RANGE (0, self->shape[d]);
+    }
+
+    int start = 0, stop = 0;
+    for (int i = 0; i < self->n_children; i++)
+    {
+        stop                 = start + self->children[i]->shape[axis];
+        range[axis]          = SLICE_RANGE (start, stop);
+        smart iterator_t *it = iterator (range, self->stride, self->ndim);
+        copy_to_range (self->data, self->children[i]->data, it);
+        start = stop;
+    }
+}
