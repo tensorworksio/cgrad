@@ -48,6 +48,11 @@ typedef struct cat_params
     int axis;
 } cat_params_t;
 
+typedef struct sum_axis_params
+{
+    int axis;
+} sum_axis_params_t;
+
 static void
 slice_params_destructor (void *ptr, void *meta)
 {
@@ -68,6 +73,7 @@ cat_params_destructor (void *ptr, void *meta)
 #include "backward.h"
 #include "forward.h"
 
+// BINARY OPS
 static inline op_t *
 op_add (void)
 {
@@ -92,14 +98,7 @@ op_pow (void)
         op_destructor);
 }
 
-static inline op_t *
-op_sum (void)
-{
-    return unique_ptr (
-        op_t, { .name = "sum", .params = NULL, .backward = backward_sum, .forward = forward_sum },
-        op_destructor);
-}
-
+// UNARY OPS
 static inline op_t *
 op_relu (void)
 {
@@ -109,6 +108,16 @@ op_relu (void)
         op_destructor);
 }
 
+// REDUCE OPS
+static inline op_t *
+op_sum (void)
+{
+    return unique_ptr (
+        op_t, { .name = "sum", .params = NULL, .backward = backward_sum, .forward = forward_sum },
+        op_destructor);
+}
+
+// MOVEMENT OPS
 static inline op_t *
 op_copy (void)
 {

@@ -368,6 +368,45 @@ tensor_sum (tensor_t *a)
     return out;
 }
 
+tensor_t *
+tensor_sum_axis (tensor_t *tensor, int axis)
+{
+    axis = (axis < 0) ? tensor->ndim + axis : axis;
+    ASSERT (axis >= 0 && axis < tensor->ndim, "Axis out of bounds: axis=%d while ndim=%d", axis,
+            tensor->ndim);
+
+    // Compute new shape
+    int ndim = tensor->ndim - 1;
+    int shape[ndim];
+    for (int d = 0; d < axis; ++d)
+    {
+        shape[d] = tensor->shape[d];
+    }
+    for (int d = axis + 1; d < tensor->ndim; d++)
+    {
+        shape[d - 1] = tensor->shape[d];
+    }
+
+    tensor_t *out = tensor_init (shape, ndim, tensor->requires_grad, NULL);
+    tensor_add_child (out, tensor);
+
+    // Slice tensor along axis
+    int axis_size = tensor->shape[axis];
+    for (int i = 0; i < axis_size; ++i)
+    {
+        slice_t range[tensor->ndim];
+        for (int d = 0; d < tensor->ndim; ++d)
+        {
+            range[d] = (d == axis) ? SLICE_ONE (i) : SLICE_ALL;
+        }
+
+        smart tensor_t *layer = tensor_reshape (tensor_slice (tensor, range), shape, ndim);
+        TENSOR_REBIND (out, tensor_add (out, layer));
+    }
+
+    return out;
+}
+
 // MOVEMENT OPS
 tensor_t *
 tensor_clone (tensor_t *tensor)
