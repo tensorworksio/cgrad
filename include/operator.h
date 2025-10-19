@@ -40,7 +40,7 @@ op_destructor (void *ptr, void *meta)
 typedef struct slice_params
 {
     slice_t *range;
-    int      ndim; // Added for convenience if needed
+    int      ndim;
 } slice_params_t;
 
 typedef struct cat_params

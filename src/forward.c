@@ -10,7 +10,7 @@ init_data (tensor_t *self)
 
 // FORWARD
 void
-relut (tensor_t *self, tensor_t *child)
+update_data_relu (tensor_t *self, tensor_t *child)
 {
     for (int i = 0; i < self->size; ++i)
     {
@@ -19,7 +19,7 @@ relut (tensor_t *self, tensor_t *child)
 }
 
 void
-addt (tensor_t *self, tensor_t *child, tensor_t *other)
+update_data_add (tensor_t *self, tensor_t *child, tensor_t *other)
 {
     int j, k;
     for (int i = 0; i < self->size; ++i)
@@ -31,7 +31,7 @@ addt (tensor_t *self, tensor_t *child, tensor_t *other)
 }
 
 void
-mult (tensor_t *self, tensor_t *child, tensor_t *other)
+update_data_mul (tensor_t *self, tensor_t *child, tensor_t *other)
 {
     int j, k;
     for (int i = 0; i < self->size; ++i)
@@ -43,7 +43,7 @@ mult (tensor_t *self, tensor_t *child, tensor_t *other)
 }
 
 void
-powt (tensor_t *self, tensor_t *child, tensor_t *other)
+update_data_pow (tensor_t *self, tensor_t *child, tensor_t *other)
 {
     int j, k;
     for (int i = 0; i < self->size; ++i)
@@ -55,12 +55,34 @@ powt (tensor_t *self, tensor_t *child, tensor_t *other)
 }
 
 void
-sumt (tensor_t *self, tensor_t *child)
+update_data_sum (tensor_t *self, tensor_t *child)
 {
     *self->data = 0.f;
     for (int i = 0; i < child->size; ++i)
     {
         *self->data += child->data[i];
+    }
+}
+
+void
+update_data_slice (tensor_t *self, tensor_t *child, slice_t *range, int ndim)
+{
+    smart iterator_t *it  = iterator (range, child->stride, ndim);
+    int               idx = 0;
+    while (iterator_has_next (it))
+    {
+        self->data[idx++] = child->data[iterator_next (it)];
+    }
+}
+
+void
+update_data_cat (tensor_t *self, tensor_t *child, slice_t *range, int ndim)
+{
+    smart iterator_t *it  = iterator (range, self->stride, ndim);
+    int               idx = 0;
+    while (iterator_has_next (it))
+    {
+        self->data[iterator_next (it)] = child->data[idx++];
     }
 }
 
@@ -70,7 +92,7 @@ forward_relu (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "forward_relu must have 1 child, got %d", self->n_children);
     init_data (self);
-    relut (self, self->children[0]);
+    update_data_relu (self, self->children[0]);
 }
 
 // BINARY OPS
@@ -79,7 +101,7 @@ forward_add (tensor_t *self)
 {
     ASSERT (self->n_children == 2, "forward_add must have 2 children, got %d", self->n_children);
     init_data (self);
-    addt (self, self->children[0], self->children[1]);
+    update_data_add (self, self->children[0], self->children[1]);
 }
 
 void
@@ -87,7 +109,7 @@ forward_mul (tensor_t *self)
 {
     ASSERT (self->n_children == 2, "forward_mul must have 2 children, got %d", self->n_children);
     init_data (self);
-    mult (self, self->children[0], self->children[1]);
+    update_data_mul (self, self->children[0], self->children[1]);
 }
 
 void
@@ -95,7 +117,7 @@ forward_pow (tensor_t *self)
 {
     ASSERT (self->n_children == 2, "forward_pow must have 2 children, got %d", self->n_children);
     init_data (self);
-    powt (self, self->children[0], self->children[1]);
+    update_data_pow (self, self->children[0], self->children[1]);
 }
 
 // REDUCE OPS
@@ -104,7 +126,7 @@ forward_sum (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "forward_sum must have 1 child, got %d", self->n_children);
     init_data (self);
-    sumt (self, self->children[0]);
+    update_data_sum (self, self->children[0]);
 }
 
 // MOVEMENT OPS
@@ -134,9 +156,7 @@ forward_slice (tensor_t *self)
             "Slice parameters must be set for forward_slice");
 
     init_data (self);
-
-    smart iterator_t *it = iterator (params->range, self->children[0]->stride, self->ndim);
-    copy_from_range (self->data, self->children[0]->data, it);
+    update_data_slice (self, self->children[0], params->range, params->ndim);
 }
 
 void
@@ -147,9 +167,10 @@ forward_cat (tensor_t *self)
 
     cat_params_t *params = (cat_params_t *) self->op->params;
     ASSERT (params != NULL, "Cat parameters must be set for forward_cat");
-    int axis = params->axis;
 
     init_data (self);
+
+    int axis = params->axis;
 
     slice_t range[self->ndim];
     for (int d = 0; d < self->ndim; d++)
@@ -160,10 +181,10 @@ forward_cat (tensor_t *self)
     int start = 0, stop = 0;
     for (int i = 0; i < self->n_children; i++)
     {
-        stop                 = start + self->children[i]->shape[axis];
-        range[axis]          = SLICE_RANGE (start, stop);
-        smart iterator_t *it = iterator (range, self->stride, self->ndim);
-        copy_to_range (self->data, self->children[i]->data, it);
+        tensor_t *child = self->children[i];
+        stop            = start + child->shape[axis];
+        range[axis]     = SLICE_RANGE (start, stop);
+        update_data_cat (self, child, range, self->ndim);
         start = stop;
     }
 }

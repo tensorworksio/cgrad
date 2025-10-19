@@ -75,7 +75,7 @@ meson test -C build --wrap='valgrind --leak-check=full --error-exitcode=1' --ver
 ```
 
 ## TODO
-- Reduce operator for specific axes (require slices)
+- Reduce operator for specific axes -> Major BUG to be fixed
 - Matmul operator as a combination of sum, add and reshape ideally
 - Pooling operators
 - Conv operator as a specific case of pool operator

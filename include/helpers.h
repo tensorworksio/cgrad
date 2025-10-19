@@ -19,6 +19,3 @@ void print_data (float *data, int shape[], int stride[], int ndim);
 
 bool is_equal_data (float *data_a, float *data_b, int size);
 bool is_same_shape (int shape_a[], int shape_b[], int ndim_a, int ndim_b);
-
-void copy_to_range (float *dst, float *src, iterator_t *it);
-void copy_from_range (float *dst, float *src, iterator_t *it);

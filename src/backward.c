@@ -103,6 +103,34 @@ update_grad_sum (tensor_t *self, tensor_t *child)
     }
 }
 
+void
+update_grad_slice (tensor_t *self, tensor_t *child, slice_t *range, int ndim)
+{
+    if (!child->requires_grad)
+        return;
+
+    smart iterator_t *it  = iterator (range, child->stride, ndim);
+    int               idx = 0;
+    while (iterator_has_next (it))
+    {
+        child->grad[iterator_next (it)] += self->grad[idx++];
+    }
+}
+
+void
+update_grad_cat (tensor_t *self, tensor_t *child, slice_t *range, int ndim)
+{
+    if (!child->requires_grad)
+        return;
+
+    smart iterator_t *it  = iterator (range, self->stride, ndim);
+    int               idx = 0;
+    while (iterator_has_next (it))
+    {
+        child->grad[idx++] += self->grad[iterator_next (it)];
+    }
+}
+
 // UNARY OPS
 void
 backward_relu (tensor_t *self)
@@ -199,9 +227,7 @@ backward_slice (tensor_t *self)
             "Slice parameters must be set for backward_slice");
 
     init_grad (self->children[0]);
-
-    smart iterator_t *it = iterator (params->range, self->children[0]->stride, self->ndim);
-    copy_to_range (self->children[0]->grad, self->grad, it);
+    update_grad_slice (self, self->children[0], params->range, params->ndim);
     backward (self->children[0]);
 }
 
@@ -213,6 +239,10 @@ backward_cat (tensor_t *self)
 
     cat_params_t *params = (cat_params_t *) self->op->params;
     ASSERT (params != NULL, "Cat parameters must be set for backward_cat");
+
+    for (int i = 0; i < self->n_children; i++)
+        init_grad (self->children[i]);
+
     int axis = params->axis;
 
     slice_t range[self->ndim];
@@ -230,11 +260,10 @@ backward_cat (tensor_t *self)
             start += child->shape[axis];
             continue;
         }
-        init_grad (child);
         stop                 = start + child->shape[axis];
         range[axis]          = SLICE_RANGE (start, stop);
         smart iterator_t *it = iterator (range, self->stride, self->ndim);
-        copy_from_range (child->grad, self->grad, it);
+        update_grad_cat (self, child, range, self->ndim);
         start = stop;
         backward (child);
     }

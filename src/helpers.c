@@ -115,32 +115,3 @@ print_data (float *data, int shape[], int stride[], int ndim)
         indices[i] = 0;
     print_data_ndim (data, shape, stride, indices, ndim, 0);
 }
-
-void
-copy_data (float *dst, float *src, int size)
-{
-    for (int i = 0; i < size; i++)
-    {
-        dst[i] = src[i];
-    }
-}
-
-void
-copy_from_range (float *dst, float *src, iterator_t *it)
-{
-    int idx = 0;
-    while (iterator_has_next (it))
-    {
-        dst[idx++] = src[iterator_next (it)];
-    }
-}
-
-void
-copy_to_range (float *dst, float *src, iterator_t *it)
-{
-    int idx = 0;
-    while (iterator_has_next (it))
-    {
-        dst[iterator_next (it)] = src[idx++];
-    }
-}
