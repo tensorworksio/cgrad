@@ -499,16 +499,12 @@ tensor_forward (tensor_t *tensor)
         log_debug ("Node %p has no forward function.\n", (void *) tensor);
         return;
     }
-    // TODO: check on data = NULL should be removed and replaced with a flag
-    // because we could modify data even if it's already initialized
-    if (tensor->data == NULL)
+
+    for (int i = 0; i < tensor->n_children; ++i)
     {
-        for (int i = 0; i < tensor->n_children; ++i)
-        {
-            tensor_forward (tensor->children[i]);
-        }
-        tensor->op->forward (tensor);
+        tensor_forward (tensor->children[i]);
     }
+    forward (tensor);
 }
 
 void
@@ -535,14 +531,12 @@ tensor_backward (tensor_t *tensor)
         return;
     }
     tensor_forward (tensor);
-    // TODO: check on grad = NULL should be removed and replaced with a flag
-    // because we could modify grad even if it's already initialized
     if (tensor->grad == NULL)
     {
         tensor->grad = smalloc (.nmemb = tensor->size, .size = sizeof (float), .kind = SHARED);
         tensor_init_grad (tensor);
-        tensor->op->backward (tensor);
     }
+    backward (tensor);
 }
 
 void

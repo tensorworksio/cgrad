@@ -4,6 +4,8 @@
 #include "tensor.h"
 #include <math.h>
 
+void forward (tensor_t *self);
+
 // UNARY OPS
 void forward_relu (tensor_t *self);
 

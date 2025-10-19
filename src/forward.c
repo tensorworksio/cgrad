@@ -8,6 +8,22 @@ init_data (tensor_t *self)
     self->data = smalloc (.nmemb = self->size, .size = sizeof (float), .kind = SHARED);
 }
 
+void
+forward (tensor_t *self)
+{
+    if (self->op == NULL || self->op->forward == NULL)
+    {
+        log_debug ("Node %p has no forward function.", (void *) self);
+        return;
+    }
+    if (self->children == NULL)
+    {
+        log_debug ("Node %p has no children.", (void *) self);
+        return;
+    }
+    self->op->forward (self);
+}
+
 // FORWARD
 void
 update_data_relu (tensor_t *self, tensor_t *child)

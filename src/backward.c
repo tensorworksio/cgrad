@@ -1,6 +1,15 @@
 #include "backward.h"
 
 void
+init_grad (tensor_t *self)
+{
+    if (!self->requires_grad || self->grad)
+        return;
+    self->grad = smalloc (.nmemb = self->size, .size = sizeof (float), .kind = SHARED);
+    tensor_zero_grad (self);
+}
+
+void
 backward (tensor_t *self)
 {
     if (self->op == NULL || self->op->backward == NULL)
@@ -14,15 +23,10 @@ backward (tensor_t *self)
         return;
     }
     self->op->backward (self);
-}
-
-void
-init_grad (tensor_t *self)
-{
-    if (!self->requires_grad || self->grad)
-        return;
-    self->grad = smalloc (.nmemb = self->size, .size = sizeof (float), .kind = SHARED);
-    tensor_zero_grad (self);
+    for (int i = 0; i < self->n_children; i++)
+    {
+        backward (self->children[i]);
+    }
 }
 
 // UPDATE OPS
@@ -139,7 +143,6 @@ backward_relu (tensor_t *self)
             self->n_children);
     init_grad (self->children[0]);
     update_grad_relu (self, self->children[0]);
-    backward (self->children[0]);
 }
 
 // BINARY OPS
@@ -153,9 +156,6 @@ backward_add (tensor_t *self)
 
     update_grad_add (self, self->children[0]);
     update_grad_add (self, self->children[1]);
-
-    backward (self->children[0]);
-    backward (self->children[1]);
 }
 
 void
@@ -168,9 +168,6 @@ backward_mul (tensor_t *self)
 
     update_grad_mul (self, self->children[0], self->children[1]);
     update_grad_mul (self, self->children[1], self->children[0]);
-
-    backward (self->children[0]);
-    backward (self->children[1]);
 }
 
 void
@@ -183,9 +180,6 @@ backward_pow (tensor_t *self)
 
     update_grad_pow (self, self->children[0], self->children[1]);
     update_grad_exp (self, self->children[1], self->children[0]);
-
-    backward (self->children[0]);
-    backward (self->children[1]);
 }
 
 // REDUCE OPS
@@ -196,7 +190,6 @@ backward_sum (tensor_t *self)
             self->n_children);
     init_grad (self->children[0]);
     update_grad_sum (self, self->children[0]);
-    backward (self->children[0]);
 }
 
 // MOVEMENT OPS
@@ -214,7 +207,6 @@ backward_copy (tensor_t *self)
     ASSERT (self->n_children == 1, "backward_copy expects 1 child, got %d", self->n_children);
     init_grad (self->children[0]);
     update_grad_add (self, self->children[0]);
-    backward (self->children[0]);
 }
 
 void
@@ -228,7 +220,6 @@ backward_slice (tensor_t *self)
 
     init_grad (self->children[0]);
     update_grad_slice (self, self->children[0], params->range, params->ndim);
-    backward (self->children[0]);
 }
 
 void
@@ -265,6 +256,5 @@ backward_cat (tensor_t *self)
         smart iterator_t *it = iterator (range, self->stride, self->ndim);
         update_grad_cat (self, child, range, self->ndim);
         start = stop;
-        backward (child);
     }
 }
