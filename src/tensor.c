@@ -494,9 +494,8 @@ tensor_cat (tensor_t *tensors[], int num_tensors, int axis)
 void
 tensor_forward (tensor_t *tensor)
 {
-    if (tensor->op == NULL || tensor->op->forward == NULL)
+    if (tensor->op == NULL)
     {
-        log_debug ("Node %p has no forward function.\n", (void *) tensor);
         return;
     }
 
@@ -510,6 +509,11 @@ tensor_forward (tensor_t *tensor)
 void
 tensor_backward (tensor_t *tensor)
 {
+    if (tensor->op == NULL)
+    {
+        log_error ("Cannot perform backward on tensor that has no op.\n");
+        return;
+    }
     if (!tensor->requires_grad)
     {
         log_error ("Cannot perform backward on tensor that has no grad.\n");
@@ -518,11 +522,6 @@ tensor_backward (tensor_t *tensor)
     if (tensor->size != 1)
     {
         log_error ("Backward operation only supported for scalar tensors.\n");
-        return;
-    }
-    if (tensor->op == NULL || tensor->op->backward == NULL)
-    {
-        log_warn ("Node %p has no backward function.\n", (void *) tensor);
         return;
     }
     if (tensor->children == NULL)
@@ -536,7 +535,18 @@ tensor_backward (tensor_t *tensor)
         tensor->grad = smalloc (.nmemb = tensor->size, .size = sizeof (float), .kind = SHARED);
         tensor_init_grad (tensor);
     }
-    backward (tensor);
+
+    int              capacity = 16;
+    int              count    = 0;
+    smart tensor_t **nodes
+        = smalloc (.nmemb = capacity, .size = sizeof (tensor_t *), .kind = UNIQUE);
+
+    build_topo (tensor, &nodes, &count, &capacity);
+
+    for (int i = count - 1; i >= 0; --i)
+    {
+        backward (nodes[i]);
+    }
 }
 
 void

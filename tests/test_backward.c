@@ -374,6 +374,36 @@ Test (complex, diamond_shape_graph)
                "diamond_shape_graph: gradient computation failed");
 }
 
+Test (complex, diamond_slice_reshape)
+{
+    log_set_level (LOG_INFO);
+
+    // 2d example from main.c
+    // sum axis 0
+    smart tensor_t *trow = tensor_zeros ((int[]) { 3 }, 1, false);
+    smart tensor_t *tin  = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 2, 3 }, 2, true);
+
+    smart tensor_t *row0 = tensor_slice (tin, (slice_t[]) { SLICE_ONE (0), SLICE_ALL });
+    TENSOR_REBIND (row0, tensor_reshape (row0, (int[]) { 3 }, 1));
+
+    smart tensor_t *row1 = tensor_slice (tin, (slice_t[]) { SLICE_ONE (1), SLICE_ALL });
+    TENSOR_REBIND (row1, tensor_reshape (row1, (int[]) { 3 }, 1));
+
+    TENSOR_REBIND (trow, tensor_add (trow, row0));
+    TENSOR_REBIND (trow, tensor_add (trow, row1));
+
+    smart tensor_t *out = tensor_sum (trow);
+
+    tensor_backward (out);
+
+    smart tensor_t *expected_grad = tensor_create (tin->shape, tin->ndim, true);
+    tensor_set_data (expected_grad, tin->data, tin->size);
+    tensor_set_grad (expected_grad, (float[]) { 1., 1., 1., 1., 1., 1. }, tin->size);
+
+    cr_assert (tensor_equals (tin, expected_grad, true),
+               "diamond_slice_reshape: tin gradients incorrect");
+}
+
 Test (rebind, backward_rebind_basic)
 {
     log_set_level (LOG_INFO);

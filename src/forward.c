@@ -11,16 +11,13 @@ init_data (tensor_t *self)
 void
 forward (tensor_t *self)
 {
-    if (self->op == NULL || self->op->forward == NULL)
+    if (self->op == NULL || self->children == NULL)
     {
-        log_debug ("Node %p has no forward function.", (void *) self);
+        log_debug ("Node %p :: forward skipped.", (void *) self);
         return;
     }
-    if (self->children == NULL)
-    {
-        log_debug ("Node %p has no children.", (void *) self);
-        return;
-    }
+
+    self->op->visited = false;
     self->op->forward (self);
 }
 

@@ -19,3 +19,5 @@ void print_data (float *data, int shape[], int stride[], int ndim);
 
 bool is_equal_data (float *data_a, float *data_b, int size);
 bool is_same_shape (int shape_a[], int shape_b[], int ndim_a, int ndim_b);
+
+void build_topo (tensor_t *root, tensor_t ***list, int *count, int *capacity);

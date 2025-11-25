@@ -12,21 +12,12 @@ init_grad (tensor_t *self)
 void
 backward (tensor_t *self)
 {
-    if (self->op == NULL || self->op->backward == NULL)
+    if (self->op == NULL)
     {
-        log_debug ("Node %p has no backward function.", (void *) self);
         return;
     }
-    if (self->children == NULL)
-    {
-        log_debug ("Node %p has no children.", (void *) self);
-        return;
-    }
+
     self->op->backward (self);
-    for (int i = 0; i < self->n_children; i++)
-    {
-        backward (self->children[i]);
-    }
 }
 
 // UPDATE OPS
@@ -117,7 +108,8 @@ update_grad_slice (tensor_t *self, tensor_t *child, slice_t *range, int ndim)
     int               idx = 0;
     while (iterator_has_next (it))
     {
-        child->grad[iterator_next (it)] += self->grad[idx++];
+        int pos = iterator_next (it);
+        child->grad[pos] += self->grad[idx++];
     }
 }
 
@@ -198,7 +190,6 @@ backward_ref (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "backward_ref expects 1 child, got %d", self->n_children);
     self->children[0]->grad = sref (self->grad);
-    backward (self->children[0]);
 }
 
 void

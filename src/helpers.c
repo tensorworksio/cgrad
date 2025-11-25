@@ -115,3 +115,27 @@ print_data (float *data, int shape[], int stride[], int ndim)
         indices[i] = 0;
     print_data_ndim (data, shape, stride, indices, ndim, 0);
 }
+
+void
+build_topo (tensor_t *root, tensor_t ***list, int *count, int *capacity)
+{
+    if (root->op == NULL || root->op->visited)
+    {
+        return;
+    }
+
+    root->op->visited = true;
+
+    for (int i = 0; i < root->n_children; ++i)
+    {
+        build_topo (root->children[i], list, count, capacity);
+    }
+
+    if (*count == *capacity)
+    {
+        *capacity *= 2;
+        *list = realloc (*list, *capacity * sizeof (tensor_t *));
+    }
+
+    (*list)[(*count)++] = root;
+}

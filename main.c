@@ -8,6 +8,19 @@ main ()
     log_set_level (LOG_INFO);
 
     // Current bug illustration
+    smart tensor_t *tout = tensor_zeros ((int[]) { 1 }, 1, false);
+
+    // 1d example
+    // smart tensor_t *tin  = tensor ((float[]) { 1., 2., 3. }, (int[]) { 3 }, 1, true);
+    // smart tensor_t *col0 = tensor_slice (tin, (slice_t[]) { SLICE_ONE (0) });
+    // smart tensor_t *col1 = tensor_slice (tin, (slice_t[]) { SLICE_ONE (1) });
+    // smart tensor_t *col2 = tensor_slice (tin, (slice_t[]) { SLICE_ONE (2) });
+
+    // TENSOR_REBIND (tout, tensor_add (tout, col0));
+    // TENSOR_REBIND (tout, tensor_add (tout, col1));
+    // TENSOR_REBIND (tout, tensor_add (tout, col2));
+
+    // 2d example
 
     // sum axis 0
     smart tensor_t *trow = tensor_zeros ((int[]) { 3 }, 1, false);
@@ -21,9 +34,6 @@ main ()
 
     TENSOR_REBIND (trow, tensor_add (trow, row0));
     TENSOR_REBIND (trow, tensor_add (trow, row1));
-
-    // sum axis 1
-    smart tensor_t *tout = tensor_zeros ((int[]) { 1 }, 1, false);
 
     smart tensor_t *col0 = tensor_slice (trow, (slice_t[]) { SLICE_ONE (0) });
     smart tensor_t *col1 = tensor_slice (trow, (slice_t[]) { SLICE_ONE (1) });
