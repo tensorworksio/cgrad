@@ -536,10 +536,9 @@ tensor_backward (tensor_t *tensor)
         tensor_init_grad (tensor);
     }
 
-    int              capacity = 16;
-    int              count    = 0;
-    smart tensor_t **nodes
-        = smalloc (.nmemb = capacity, .size = sizeof (tensor_t *), .kind = UNIQUE);
+    int        capacity = 16;
+    int        count    = 0;
+    tensor_t **nodes    = malloc (capacity * sizeof (tensor_t *));
 
     build_topo (tensor, &nodes, &count, &capacity);
 
@@ -547,6 +546,8 @@ tensor_backward (tensor_t *tensor)
     {
         backward (nodes[i]);
     }
+
+    free (nodes);
 }
 
 void
