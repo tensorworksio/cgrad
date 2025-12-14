@@ -68,6 +68,7 @@ meson test -C build --wrap='valgrind --leak-check=full --error-exitcode=1' --ver
 ```
 
 ## TODO
+- Memory leak at matmul
 - Mul operator to auto broadcast shape like in numpy
 - Reduce operators: max, min, mean, prod
 - Pooling operators
