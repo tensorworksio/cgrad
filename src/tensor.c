@@ -8,7 +8,7 @@ tensor_destructor (void *ptr, void *meta)
 {
     tensor_t *tensor = (tensor_t *) ptr;
 
-    for (int i = 0; i < tensor->n_children; ++i)
+    for (size_t i = 0; i < tensor->n_children; ++i)
     {
         sfree (tensor->children[i]);
     }
@@ -27,9 +27,9 @@ tensor_destructor (void *ptr, void *meta)
 }
 
 tensor_t *
-tensor_create (int shape[], int ndim, bool requires_grad)
+tensor_create (int shape[], size_t ndim, bool requires_grad)
 {
-    int       size   = get_size (shape, ndim);
+    size_t    size   = get_size (shape, ndim);
     tensor_t *tensor = shared_ptr (tensor_t,
                                    { .size          = size,
                                      .ndim          = ndim,
@@ -46,7 +46,7 @@ tensor_create (int shape[], int ndim, bool requires_grad)
     tensor->shape  = (int *) malloc (sizeof (int) * ndim);
     tensor->stride = (int *) malloc (sizeof (int) * ndim);
 
-    for (int i = ndim; i-- > 0;)
+    for (size_t i = ndim; i-- > 0;)
     {
         tensor->shape[i]  = shape[i];
         tensor->stride[i] = (i == ndim - 1) ? 1 : tensor->stride[i + 1] * shape[i + 1];
@@ -56,7 +56,7 @@ tensor_create (int shape[], int ndim, bool requires_grad)
 }
 
 tensor_t *
-tensor_init (int shape[], int ndim, bool requires_grad, op_t *op)
+tensor_init (int shape[], size_t ndim, bool requires_grad, op_t *op)
 {
     tensor_t *tensor = tensor_create (shape, ndim, requires_grad);
     tensor->op       = op;
@@ -78,7 +78,7 @@ tensor_add_child (tensor_t *tensor, tensor_t *child)
 
 // INIT OPS
 tensor_t *
-tensor (const float data[], int shape[], int ndim, bool requires_grad)
+tensor (const float data[], int shape[], size_t ndim, bool requires_grad)
 {
     tensor_t *tensor = tensor_init (shape, ndim, requires_grad, NULL);
     memcpy (tensor->data, data, tensor->size * sizeof (float));
@@ -86,7 +86,7 @@ tensor (const float data[], int shape[], int ndim, bool requires_grad)
 }
 
 tensor_t *
-tensor_rand (int shape[], int ndim, bool requires_grad)
+tensor_rand (int shape[], size_t ndim, bool requires_grad)
 {
     tensor_t *tensor = tensor_init (shape, ndim, requires_grad, NULL);
     for (int i = 0; i < tensor->size; ++i)
@@ -97,7 +97,7 @@ tensor_rand (int shape[], int ndim, bool requires_grad)
 }
 
 tensor_t *
-tensor_zeros (int shape[], int ndim, bool requires_grad)
+tensor_zeros (int shape[], size_t ndim, bool requires_grad)
 {
     tensor_t *tensor = tensor_init (shape, ndim, requires_grad, NULL);
     set_data (tensor->data, 0., tensor->size);
@@ -105,7 +105,7 @@ tensor_zeros (int shape[], int ndim, bool requires_grad)
 }
 
 tensor_t *
-tensor_ones (int shape[], int ndim, bool requires_grad)
+tensor_ones (int shape[], size_t ndim, bool requires_grad)
 {
     tensor_t *tensor = tensor_init (shape, ndim, requires_grad, NULL);
     set_data (tensor->data, 1., tensor->size);
@@ -125,7 +125,7 @@ tensor_init_grad (tensor_t *tensor)
 }
 
 void
-tensor_set_data (tensor_t *tensor, float data[], int size)
+tensor_set_data (tensor_t *tensor, float data[], size_t size)
 {
     ASSERT (size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
     if (tensor->data == NULL)
@@ -136,7 +136,7 @@ tensor_set_data (tensor_t *tensor, float data[], int size)
 }
 
 void
-tensor_set_grad (tensor_t *tensor, float grad[], int size)
+tensor_set_grad (tensor_t *tensor, float grad[], size_t size)
 {
     ASSERT (size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
     if (tensor->grad == NULL)
@@ -381,11 +381,12 @@ tensor_sum (tensor_t *tensor, const int axes[], size_t n_axis)
 tensor_t *
 tensor_sum_dim (tensor_t *tensor, int axis)
 {
-    axis = (axis < 0) ? tensor->ndim + axis : axis;
-    ASSERT (axis >= 0 && axis < tensor->ndim, "Invalid axis %d for ndim %d", axis, tensor->ndim);
+    axis = (axis < 0) ? (int) tensor->ndim + axis : axis;
+    ASSERT (axis >= 0 && axis < (int) tensor->ndim, "Invalid axis %d for ndim %zu", axis,
+            tensor->ndim);
 
     // Target shape
-    int shape[tensor->ndim];
+    int shape[(size_t) tensor->ndim];
     memcpy (shape, tensor->shape, tensor->ndim * sizeof (int));
     shape[axis] = 1;
 
@@ -408,10 +409,10 @@ tensor_clone (tensor_t *tensor)
 }
 
 tensor_t *
-tensor_reshape (tensor_t *tensor, int shape[], int ndim)
+tensor_reshape (tensor_t *tensor, int shape[], size_t ndim)
 {
-    int size = get_size (shape, ndim);
-    ASSERT (size == tensor->size, "Size mismatch %d != %d", size, tensor->size);
+    size_t size = get_size (shape, ndim);
+    ASSERT (size == tensor->size, "Size mismatch %zu != %zu", size, tensor->size);
 
     tensor_t *reshaped = tensor_init (shape, ndim, tensor->requires_grad, op_ref ());
     tensor_add_child (reshaped, tensor);
@@ -469,10 +470,10 @@ tensor_slice (tensor_t *tensor, slice_t range[])
 }
 
 tensor_t *
-tensor_cat (tensor_t *tensors[], int num_tensors, int axis)
+tensor_cat (tensor_t *tensors[], size_t n_tensors, int axis)
 {
     // Validate inputs
-    ASSERT (num_tensors > 0, "tensor_cat requires at least one tensor");
+    ASSERT (n_tensors > 0, "tensor_cat requires at least one tensor");
 
     int ndim = tensors[0]->ndim;
     axis     = (axis < 0) ? ndim + axis : axis;
@@ -480,9 +481,9 @@ tensor_cat (tensor_t *tensors[], int num_tensors, int axis)
     ASSERT (axis >= 0 && axis < ndim, "Invalid axis %d for ndim %d", axis, ndim);
 
     // Check shape compatibility
-    for (int i = 1; i < num_tensors; ++i)
+    for (size_t i = 1; i < n_tensors; ++i)
     {
-        ASSERT (tensors[i]->ndim == ndim, "Shape mismatch: tensor %d has ndim %d, expected %d", i,
+        ASSERT (tensors[i]->ndim == ndim, "Shape mismatch: tensor %zu has ndim %d, expected %d", i,
                 tensors[i]->ndim, ndim);
         for (int d = 0; d < ndim; ++d)
         {
@@ -498,14 +499,14 @@ tensor_cat (tensor_t *tensors[], int num_tensors, int axis)
     // Compute new shape
     int shape[ndim];
     memcpy (shape, tensors[0]->shape, sizeof (shape));
-    for (int i = 1; i < num_tensors; ++i)
+    for (size_t i = 1; i < n_tensors; ++i)
     {
         shape[axis] += tensors[i]->shape[axis];
     }
 
     // Determine requires_grad
     bool requires_grad = false;
-    for (int i = 0; i < num_tensors; ++i)
+    for (size_t i = 0; i < n_tensors; ++i)
     {
         if (tensors[i]->requires_grad)
         {
@@ -518,7 +519,7 @@ tensor_cat (tensor_t *tensors[], int num_tensors, int axis)
     axis_params_t *params = unique_ptr (axis_params_t, { .axis = axis }, axis_params_destructor);
     tensor_t      *cated  = tensor_init (shape, ndim, requires_grad, op_cat (params));
 
-    for (int i = 0; i < num_tensors; i++)
+    for (size_t i = 0; i < n_tensors; i++)
     {
         tensor_add_child (cated, tensors[i]);
     }
@@ -534,7 +535,7 @@ tensor_forward (tensor_t *tensor)
         return;
     }
 
-    for (int i = 0; i < tensor->n_children; ++i)
+    for (size_t i = 0; i < tensor->n_children; ++i)
     {
         tensor_forward (tensor->children[i]);
     }

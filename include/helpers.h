@@ -8,16 +8,16 @@
 #define MAX_PRINT_SIZE 10
 
 // tensor helpers
-int get_size (int shape[], int ndim);
-int get_index (int coords[], int shape[], int ndim);
+size_t get_size (int shape[], size_t ndim);
+int    get_index (int coords[], int shape[], size_t ndim);
 
-void set_data (float *data, float value, int size);
-void normalize_range (slice_t range[], int shape[], int ndim);
+void set_data (float *data, float value, size_t size);
+void normalize_range (slice_t range[], int shape[], size_t ndim);
 
-void print_metadata (int data[], int ndim);
-void print_data (float *data, int shape[], int stride[], int ndim);
+void print_metadata (int data[], size_t ndim);
+void print_data (float *data, int shape[], int stride[], size_t ndim);
 
-bool is_equal_data (float *data_a, float *data_b, int size);
-bool is_same_shape (int shape_a[], int shape_b[], int ndim_a, int ndim_b);
+bool is_equal_data (float *data_a, float *data_b, size_t size);
+bool is_same_shape (int shape_a[], int shape_b[], size_t ndim_a, size_t ndim_b);
 
 void build_topo (tensor_t *root, tensor_t ***list, int *count, int *capacity);

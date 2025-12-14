@@ -27,12 +27,12 @@ typedef struct tensor
     float *grad;
     bool   requires_grad;
 
-    int  size;
-    int  ndim;
-    int *shape;
-    int *stride;
+    size_t size;
+    size_t ndim;
+    int   *shape;
+    int   *stride;
 
-    int             n_children;
+    size_t          n_children;
     struct tensor **children;
 
     op_t *op;
@@ -40,21 +40,21 @@ typedef struct tensor
 } tensor_t;
 
 // ALLOC OPS
-tensor_t *tensor_create (int shape[], int ndim, bool requires_grad);
-tensor_t *tensor_init (int shape[], int ndim, bool requires_grad, op_t *op);
+tensor_t *tensor_create (int shape[], size_t ndim, bool requires_grad);
+tensor_t *tensor_init (int shape[], size_t ndim, bool requires_grad, op_t *op);
 void      tensor_add_child (tensor_t *parent, tensor_t *child);
 
 // INIT OPS
-tensor_t *tensor (const float data[], int shape[], int ndim, bool requires_grad);
+tensor_t *tensor (const float data[], int shape[], size_t ndim, bool requires_grad);
 tensor_t *tensor_clone (tensor_t *tensor);
-tensor_t *tensor_rand (int shape[], int ndim, bool requires_grad);
-tensor_t *tensor_zeros (int shape[], int ndim, bool requires_grad);
-tensor_t *tensor_ones (int shape[], int ndim, bool requires_grad);
+tensor_t *tensor_rand (int shape[], size_t ndim, bool requires_grad);
+tensor_t *tensor_zeros (int shape[], size_t ndim, bool requires_grad);
+tensor_t *tensor_ones (int shape[], size_t ndim, bool requires_grad);
 
 void tensor_zero_grad (tensor_t *tensor);
 void tensor_init_grad (tensor_t *tensor);
-void tensor_set_data (tensor_t *self, float data[], int size);
-void tensor_set_grad (tensor_t *self, float grad[], int size);
+void tensor_set_data (tensor_t *self, float data[], size_t size);
+void tensor_set_grad (tensor_t *self, float grad[], size_t size);
 
 // COMPARISON OPS
 bool tensor_same_shape (tensor_t *a, tensor_t *b, bool debug);
@@ -97,10 +97,10 @@ tensor_t *tensor_sum (tensor_t *tensor, const int axes[], size_t n_axis);
 tensor_t *tensor_sum_dim (tensor_t *tensor, int axis);
 
 // MOVEMENT OPS
-tensor_t *tensor_reshape (tensor_t *tensor, int shape[], int ndim);
+tensor_t *tensor_reshape (tensor_t *tensor, int shape[], size_t ndim);
 tensor_t *tensor_transpose (tensor_t *self, int axis1, int axis2);
 tensor_t *tensor_slice (tensor_t *self, slice_t ranges[]);
-tensor_t *tensor_cat (tensor_t *tensors[], int n_tensors, int axis);
+tensor_t *tensor_cat (tensor_t *tensors[], size_t n_tensors, int axis);
 
 // FORCING OPS
 void tensor_forward (tensor_t *tensor);

@@ -1,10 +1,10 @@
 #include "helpers.h"
 
-int
-get_size (int shape[], int ndim)
+size_t
+get_size (int shape[], size_t ndim)
 {
-    int size = 1;
-    for (int i = 0; i < ndim; i++)
+    size_t size = 1;
+    for (size_t i = 0; i < ndim; i++)
     {
         size *= shape[i];
     }
@@ -12,10 +12,10 @@ get_size (int shape[], int ndim)
 }
 
 int
-get_index (int coords[], int stride[], int ndim)
+get_index (int coords[], int stride[], size_t ndim)
 {
     int index = 0;
-    for (int i = 0; i < ndim; i++)
+    for (size_t i = 0; i < ndim; i++)
     {
         index += coords[i] * stride[i];
     }
@@ -23,21 +23,21 @@ get_index (int coords[], int stride[], int ndim)
 }
 
 void
-set_data (float *data, float value, int size)
+set_data (float *data, float value, size_t size)
 {
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
     {
         data[i] = value;
     }
 }
 
 bool
-is_same_shape (int shape_a[], int shape_b[], int ndim_a, int ndim_b)
+is_same_shape (int shape_a[], int shape_b[], size_t ndim_a, size_t ndim_b)
 {
     if (ndim_a != ndim_b)
         return false;
 
-    for (int i = 0; i < ndim_a; i++)
+    for (size_t i = 0; i < ndim_a; i++)
     {
         if (shape_a[i] != shape_b[i])
             return false;
@@ -46,11 +46,11 @@ is_same_shape (int shape_a[], int shape_b[], int ndim_a, int ndim_b)
 }
 
 bool
-is_equal_data (float *data_a, float *data_b, int size)
+is_equal_data (float *data_a, float *data_b, size_t size)
 {
     if (data_a == NULL || data_b == NULL)
         return false;
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
     {
         if (fabs (data_a[i] - data_b[i]) > EPSILON)
             return false;
@@ -59,9 +59,9 @@ is_equal_data (float *data_a, float *data_b, int size)
 }
 
 void
-normalize_range (slice_t range[], int shape[], int ndim)
+normalize_range (slice_t range[], int shape[], size_t ndim)
 {
-    for (int d = 0; d < ndim; d++)
+    for (size_t d = 0; d < ndim; d++)
     {
         ASSERT (range[d].step > 0, "Slice step must be positive: got %d", range[d].step);
         ASSERT (abs (range[d].start) <= shape[d],
@@ -80,10 +80,10 @@ normalize_range (slice_t range[], int shape[], int ndim)
     }
 }
 void
-print_metadata (int data[], int ndim)
+print_metadata (int data[], size_t ndim)
 {
     printf ("[");
-    for (int i = 0; i < ndim - 1; i++)
+    for (size_t i = 0; i < ndim - 1; i++)
     {
         printf ("%d, ", data[i]);
     }
@@ -91,7 +91,7 @@ print_metadata (int data[], int ndim)
 }
 
 void
-print_data_ndim (float *data, int shape[], int stride[], int indices[], int ndim, int dim)
+print_data_ndim (float *data, int shape[], int stride[], int indices[], size_t ndim, size_t dim)
 {
     if (dim == ndim)
     {
@@ -108,10 +108,10 @@ print_data_ndim (float *data, int shape[], int stride[], int indices[], int ndim
 }
 
 void
-print_data (float *data, int shape[], int stride[], int ndim)
+print_data (float *data, int shape[], int stride[], size_t ndim)
 {
-    int indices[ndim];
-    for (int i = 0; i < ndim; i++)
+    int indices[(size_t) ndim];
+    for (int i = 0; i < (int) ndim; i++)
         indices[i] = 0;
     print_data_ndim (data, shape, stride, indices, ndim, 0);
 }
@@ -126,7 +126,7 @@ build_topo (tensor_t *root, tensor_t ***list, int *count, int *capacity)
 
     root->op->visited = true;
 
-    for (int i = 0; i < root->n_children; ++i)
+    for (size_t i = 0; i < root->n_children; ++i)
     {
         build_topo (root->children[i], list, count, capacity);
     }
