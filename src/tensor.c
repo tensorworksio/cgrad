@@ -360,7 +360,7 @@ tensor_pow_ft (float a, tensor_t *b)
 
 // REDUCE OPS
 tensor_t *
-tensor_sum (tensor_t *tensor, size_t n_axis, const int axes[])
+tensor_sum (tensor_t *tensor, const int axes[], size_t n_axis)
 {
     if (!n_axis || axes == NULL)
     {

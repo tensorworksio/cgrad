@@ -8,7 +8,7 @@ main ()
     log_set_level (LOG_INFO);
 
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 2, 3 }, 2, true);
-    smart tensor_t *f = tensor_sum (a, 2, (int[]) { 0, 1 });
+    smart tensor_t *f = tensor_sum (a, (int[]) { 0, 1 }, 2);
 
     tensor_backward (f); // compute gradients
 
