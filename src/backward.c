@@ -219,7 +219,7 @@ backward_cat (tensor_t *self)
     ASSERT (self->n_children >= 1, "backward_cat must have at least 1 child, got %d",
             self->n_children);
 
-    cat_params_t *params = (cat_params_t *) self->op->params;
+    axis_params_t *params = (axis_params_t *) self->op->params;
     ASSERT (params != NULL, "Cat parameters must be set for backward_cat");
 
     for (int i = 0; i < self->n_children; i++)

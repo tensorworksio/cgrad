@@ -360,11 +360,52 @@ tensor_pow_ft (float a, tensor_t *b)
 
 // REDUCE OPS
 tensor_t *
-tensor_sum (tensor_t *a)
+tensor_sum (tensor_t *tensor, int n_axis, ...)
 {
-    tensor_t *out = tensor_init ((int[]) { 1 }, 1, a->requires_grad, op_sum ());
-    tensor_add_child (out, a);
+    if (n_axis <= 0)
+    {
+        tensor_t *out = tensor_init ((int[]) { 1 }, 1, tensor->requires_grad, op_sum (NULL));
+        tensor_add_child (out, tensor);
+        return out;
+    }
 
+    va_list args;
+    va_start (args, n_axis);
+
+    int axes[n_axis];
+    for (int i = 0; i < n_axis; i++)
+    {
+        axes[i] = va_arg (args, int);
+    }
+    va_end (args);
+
+    // TODO: qsort axes ?
+    tensor_t *reduced = tensor;
+    for (int i = 0; i < n_axis; i++)
+    {
+        reduced = tensor_sum_dim (reduced, axes[i]);
+    }
+
+    return reduced;
+}
+
+tensor_t *
+tensor_sum_dim (tensor_t *tensor, int axis)
+{
+    axis = (axis < 0) ? tensor->ndim + axis : axis;
+    ASSERT (axis >= 0 && axis < tensor->ndim, "Invalid axis %d for ndim %d", axis, tensor->ndim);
+
+    // Target shape
+    int shape[tensor->ndim];
+    memcpy (shape, tensor->shape, tensor->ndim * sizeof (int));
+    shape[axis] = 1;
+
+    // Sum reduce
+    axis_params_t *params = unique_ptr (axis_params_t, { .axis = axis }, axis_params_destructor);
+    tensor_t      *out = tensor_init (shape, tensor->ndim, tensor->requires_grad, op_sum (params));
+    tensor_add_child (out, tensor);
+
+    // TODO: Squeeze
     return out;
 }
 
@@ -427,8 +468,12 @@ tensor_slice (tensor_t *tensor, slice_t range[])
                    + (abs (range[d].stop - range[d].start) % range[d].step != 0 ? 1 : 0);
     }
 
-    tensor_t *sliced
-        = tensor_init (shape, tensor->ndim, tensor->requires_grad, op_slice (range, tensor->ndim));
+    slice_params_t *params = unique_ptr (slice_params_t, { .range = NULL, .ndim = tensor->ndim },
+                                         slice_params_destructor);
+    params->range          = malloc (sizeof (slice_t) * tensor->ndim);
+    memcpy (params->range, range, sizeof (slice_t) * tensor->ndim);
+
+    tensor_t *sliced = tensor_init (shape, tensor->ndim, tensor->requires_grad, op_slice (params));
     tensor_add_child (sliced, tensor);
 
     return sliced;
@@ -481,7 +526,8 @@ tensor_cat (tensor_t *tensors[], int num_tensors, int axis)
     }
 
     // Create output tensor
-    tensor_t *cated = tensor_init (shape, ndim, requires_grad, op_cat (axis));
+    axis_params_t *params = unique_ptr (axis_params_t, { .axis = axis }, axis_params_destructor);
+    tensor_t      *cated  = tensor_init (shape, ndim, requires_grad, op_cat (params));
 
     for (int i = 0; i < num_tensors; i++)
     {

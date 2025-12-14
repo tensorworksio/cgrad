@@ -93,7 +93,8 @@ tensor_t *tensor_pow_tf (tensor_t *a, float b);
 tensor_t *tensor_pow_ft (float a, tensor_t *b);
 
 // REDUCE OPS
-tensor_t *tensor_sum (tensor_t *tensor);
+tensor_t *tensor_sum (tensor_t *tensor, int n_axis, ...);
+tensor_t *tensor_sum_dim (tensor_t *tensor, int axis);
 
 // MOVEMENT OPS
 tensor_t *tensor_reshape (tensor_t *tensor, int shape[], int ndim);

@@ -46,22 +46,22 @@ typedef struct slice_params
     int      ndim;
 } slice_params_t;
 
-typedef struct cat_params
+typedef struct axis_params
 {
     int axis;
-} cat_params_t;
+} axis_params_t;
 
-static void
+static inline void
 slice_params_destructor (void *ptr, void *meta)
 {
     slice_params_t *params = (slice_params_t *) ptr;
     free (params->range);
 }
 
-static void
-cat_params_destructor (void *ptr, void *meta)
+static inline void
+axis_params_destructor (void *ptr, void *meta)
 {
-    // cat_params_t has no dynamic fields, so no-op (or add if needed)
+    // axis_params_t has no dynamic fields, so no-op (or add if needed)
     (void) ptr;
     (void) meta;
 }
@@ -108,11 +108,11 @@ op_pow (void)
 }
 
 static inline op_t *
-op_sum (void)
+op_sum (axis_params_t *params)
 {
     return unique_ptr (op_t,
                        { .name     = "sum",
-                         .params   = NULL,
+                         .params   = params,
                          .backward = backward_sum,
                          .forward  = forward_sum,
                          .visited  = false },
@@ -156,14 +156,8 @@ op_ref (void)
 }
 
 static inline op_t *
-op_slice (slice_t *range, int ndim)
+op_slice (slice_params_t *params)
 {
-    slice_params_t *params
-        = unique_ptr (slice_params_t, { .range = NULL, .ndim = ndim }, slice_params_destructor);
-    params->range = malloc (sizeof (slice_t) * ndim);
-    memcpy (params->range, range,
-            sizeof (slice_t) * ndim); // Copy range to avoid external management
-
     return unique_ptr (op_t,
                        { .name     = "slice",
                          .params   = params,
@@ -174,10 +168,8 @@ op_slice (slice_t *range, int ndim)
 }
 
 static inline op_t *
-op_cat (int axis)
+op_cat (axis_params_t *params)
 {
-    cat_params_t *params = unique_ptr (cat_params_t, { .axis = axis }, cat_params_destructor);
-
     return unique_ptr (op_t,
                        { .name     = "cat",
                          .params   = params,
@@ -186,5 +178,4 @@ op_cat (int axis)
                          .visited  = false },
                        op_destructor);
 }
-
 #endif // OPERATOR_H

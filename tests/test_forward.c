@@ -231,7 +231,7 @@ Test (sum, sum_t)
     log_set_level (LOG_INFO);
 
     smart tensor_t *a   = tensor ((float[]) { 1., -2., 3., -4. }, (int[]) { 4 }, 1, false);
-    smart tensor_t *res = tensor_sum (a);
+    smart tensor_t *res = tensor_sum (a, 0);
     tensor_forward (res);
 
     smart tensor_t *expected = tensor ((float[]) { -2. }, (int[]) { 1 }, 1, false);
