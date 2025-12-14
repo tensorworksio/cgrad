@@ -99,6 +99,44 @@ update_grad_sum (tensor_t *self, tensor_t *child)
 }
 
 void
+update_grad_sum_dim (tensor_t *self, tensor_t *child)
+{
+    if (!child->requires_grad)
+        return;
+
+    axis_params_t *params = (axis_params_t *) self->op->params;
+    int            axis   = params->axis;
+    int            dim    = child->shape[axis];
+    int            stride = child->stride[axis];
+
+    slice_t range[self->ndim];
+    for (int i = 0; i < self->ndim; ++i)
+    {
+        range[i] = SLICE_RANGE (0, self->shape[i]);
+    }
+
+    smart iterator_t *it = iterator (range, self->stride, self->ndim);
+
+    while (iterator_has_next (it))
+    {
+        int input_offset = 0;
+        for (int d = 0; d < self->ndim; ++d)
+        {
+            input_offset += it->indices[d] * child->stride[d];
+        }
+
+        int   out_idx = iterator_next (it);
+        float grad    = self->grad[out_idx];
+
+        // Broadcast gradient along the axis
+        for (int k = 0; k < dim; ++k)
+        {
+            child->grad[input_offset + k * stride] += grad;
+        }
+    }
+}
+
+void
 update_grad_slice (tensor_t *self, tensor_t *child, slice_t *range, int ndim)
 {
     if (!child->requires_grad)
@@ -181,7 +219,15 @@ backward_sum (tensor_t *self)
     ASSERT (self->n_children == 1, "SUM Node %p expects 1 child, got %d", (void *) self,
             self->n_children);
     init_grad (self->children[0]);
-    update_grad_sum (self, self->children[0]);
+
+    if (self->op->params == NULL)
+    {
+        update_grad_sum (self, self->children[0]);
+    }
+    else
+    {
+        update_grad_sum_dim (self, self->children[0]);
+    }
 }
 
 // MOVEMENT OPS

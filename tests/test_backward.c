@@ -10,7 +10,7 @@ Test (add, backward_add)
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *b = tensor ((float[]) { 5., 6., 7., 8. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_add (a, b);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -32,7 +32,7 @@ Test (add, backward_add_tf)
 
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_add_tf (a, 5.);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -49,7 +49,7 @@ Test (add, backward_add_ft)
 
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_add_ft (5., a);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -67,7 +67,7 @@ Test (sub, backward_sub)
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *b = tensor ((float[]) { 5., 6., 7., 8. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_sub (a, b);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -89,7 +89,7 @@ Test (sub, backward_sub_tf)
 
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_sub_tf (a, 5.);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -106,7 +106,7 @@ Test (sub, backward_sub_ft)
 
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_sub_ft (5., a);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -124,7 +124,7 @@ Test (mul, backward_mul)
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *b = tensor ((float[]) { 5., 6., 7., 8. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_mul (a, b);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -146,7 +146,7 @@ Test (mul, backward_mul_tf)
 
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_mul_tf (a, 5.);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -163,7 +163,7 @@ Test (mul, backward_mul_ft)
 
     smart tensor_t *a = tensor ((float[]) { 5., 6., 7., 8. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_mul_ft (5., a);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -181,7 +181,7 @@ Test (div, backward_div_tt)
     smart tensor_t *a = tensor ((float[]) { 5., 6., 9., 8. }, (int[]) { 4 }, 1, true);
     smart tensor_t *b = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_div (a, b);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -203,7 +203,7 @@ Test (div, backward_div_tf)
 
     smart tensor_t *a = tensor ((float[]) { 5., 6., 9., 8. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_div_tf (a, 5.);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -220,7 +220,7 @@ Test (div, backward_div_ft)
 
     smart tensor_t *a = tensor ((float[]) { 5., 6., 9., 8. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_div_ft (5., a);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -238,7 +238,7 @@ Test (pow, backward_pow_tt)
     smart tensor_t *a = tensor ((float[]) { 4., 3., 2., 1. }, (int[]) { 4 }, 1, true);
     smart tensor_t *b = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_pow (a, b);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -260,7 +260,7 @@ Test (pow, backward_pow_tf)
 
     smart tensor_t *a = tensor ((float[]) { 4., 3., 2., 1. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_pow_tf (a, 5.);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -277,7 +277,7 @@ Test (pow, backward_pow_ft)
 
     smart tensor_t *a = tensor ((float[]) { 4., 3., 2., 1. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_pow_ft (5., a);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -295,7 +295,7 @@ Test (exp, backward_exp)
     smart tensor_t *a
         = tensor ((float[]) { logf (1.), logf (2.), logf (3.), logf (4.) }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_exp (a);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -312,7 +312,7 @@ Test (relu, backward_relu)
 
     smart tensor_t *a = tensor ((float[]) { -1., 2., -3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *c = tensor_relu (a);
-    smart tensor_t *y = tensor_sum (c, 0);
+    smart tensor_t *y = tensor_sum (c, 0, NULL);
 
     tensor_backward (y);
 
@@ -328,7 +328,7 @@ Test (sum, backward_sum)
     log_set_level (LOG_INFO);
 
     smart tensor_t *a = tensor ((float[]) { -1., 2., -3., 4. }, (int[]) { 4 }, 1, true);
-    smart tensor_t *y = tensor_sum (a, 0);
+    smart tensor_t *y = tensor_sum (a, 0, NULL);
 
     tensor_backward (y);
 
@@ -347,10 +347,10 @@ Test (complex, diamond_shape_graph)
     // This tests that smart pointers properly handle shared references
     // without double-free errors
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 3, 2 }, 2, true);
-    smart tensor_t *b = tensor_mul_ft (2.f, a); // b = 2 * a
-    smart tensor_t *c = tensor_mul_ft (3.f, a); // c = 3 * a (a is shared between b and c)
-    smart tensor_t *d = tensor_add (b, c);      // d = b + c
-    smart tensor_t *e = tensor_sum (d, 0);      // e = sum(d)
+    smart tensor_t *b = tensor_mul_ft (2.f, a);  // b = 2 * a
+    smart tensor_t *c = tensor_mul_ft (3.f, a);  // c = 3 * a (a is shared between b and c)
+    smart tensor_t *d = tensor_add (b, c);       // d = b + c
+    smart tensor_t *e = tensor_sum (d, 0, NULL); // e = sum(d)
 
     tensor_backward (e); // compute gradients
 
@@ -392,7 +392,7 @@ Test (complex, diamond_slice_reshape)
     TENSOR_REBIND (trow, tensor_add (trow, row0));
     TENSOR_REBIND (trow, tensor_add (trow, row1));
 
-    smart tensor_t *out = tensor_sum (trow, 0);
+    smart tensor_t *out = tensor_sum (trow, 0, NULL);
 
     tensor_backward (out);
 
@@ -416,7 +416,7 @@ Test (rebind, backward_rebind_basic)
     TENSOR_REBIND (c, tensor_sub_tf (c, 1.0f)); // c = c - 1 = [3., 5., 7.]
 
     // Final operation: sum for scalar output
-    smart tensor_t *y = tensor_sum (c, 0); // y = sum(c) = 15
+    smart tensor_t *y = tensor_sum (c, 0, NULL); // y = sum(c) = 15
 
     tensor_backward (y);
 
@@ -441,7 +441,7 @@ Test (rebind, backward_rebind_tensor_ops)
     TENSOR_REBIND (c, tensor_add (c, a)); // c = c + a = [3., 8., 15.]
 
     // Final operation: sum for scalar output
-    smart tensor_t *y = tensor_sum (c, 0); // y = sum(c) = 26
+    smart tensor_t *y = tensor_sum (c, 0, NULL); // y = sum(c) = 26
 
     tensor_backward (y);
 
@@ -485,7 +485,7 @@ Test (rebind, backward_rebind_complex_chain)
     smart tensor_t *e = tensor_relu (d); // e = [8., 125., 125.]
 
     // f = sum(e)
-    smart tensor_t *f = tensor_sum (e, 0); // f = 258
+    smart tensor_t *f = tensor_sum (e, 0, NULL); // f = 258
 
     tensor_backward (f);
 
@@ -519,7 +519,7 @@ Test (rebind, backward_rebind_power_ops)
     TENSOR_REBIND (c, tensor_pow (c, a)); // c = [4., 9.] ^ [2., 3.] = [16., 729.]
 
     // Final operation: sum for scalar output
-    smart tensor_t *y = tensor_sum (c, 0); // y = sum(c) = 745
+    smart tensor_t *y = tensor_sum (c, 0, NULL); // y = sum(c) = 745
 
     tensor_backward (y);
 
@@ -539,7 +539,7 @@ Test (clone, backward_tensor_clone_basic)
     // Test backward propagation through tensor_clone
     smart tensor_t *a      = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *cloned = tensor_clone (a);
-    smart tensor_t *y      = tensor_sum (cloned, 0);
+    smart tensor_t *y      = tensor_sum (cloned, 0, NULL);
 
     tensor_backward (y);
 
@@ -559,7 +559,7 @@ Test (clone, backward_tensor_clone_chain)
     smart tensor_t *a      = tensor ((float[]) { 2., 3., 4. }, (int[]) { 3 }, 1, true);
     smart tensor_t *cloned = tensor_clone (a);
     smart tensor_t *scaled = tensor_mul_tf (cloned, 2.0f); // scaled = 2 * cloned = 2 * a
-    smart tensor_t *y      = tensor_sum (scaled, 0);       // y = sum(2 * a) = 2 * sum(a)
+    smart tensor_t *y      = tensor_sum (scaled, 0, NULL); // y = sum(2 * a) = 2 * sum(a)
 
     tensor_backward (y);
 
@@ -582,7 +582,7 @@ Test (clone, backward_tensor_clone_multiple)
 
     // Use both clones in computation: y = sum(clone1 + clone2) = sum(2*a)
     smart tensor_t *added = tensor_add (clone1, clone2);
-    smart tensor_t *y     = tensor_sum (added, 0);
+    smart tensor_t *y     = tensor_sum (added, 0, NULL);
 
     tensor_backward (y);
 
@@ -604,7 +604,7 @@ Test (clone, backward_tensor_clone_main_example)
     smart tensor_t *a
         = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 2, 2, 2 }, 3, true);
     smart tensor_t *b = tensor_clone (a);
-    smart tensor_t *c = tensor_sum (b, 0);
+    smart tensor_t *c = tensor_sum (b, 0, NULL);
 
     tensor_backward (c);
 
@@ -623,7 +623,7 @@ Test (reshape, backward_reshape)
 
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 4 }, 1, true);
     smart tensor_t *b = tensor_reshape (a, (int[]) { 2, 2 }, 2);
-    smart tensor_t *y = tensor_sum (b, 0);
+    smart tensor_t *y = tensor_sum (b, 0, NULL);
 
     tensor_backward (y);
 
@@ -641,7 +641,7 @@ Test (transpose, backward_transpose)
 
     smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4. }, (int[]) { 2, 2 }, 2, true);
     smart tensor_t *b = tensor_transpose (a, 0, 1);
-    smart tensor_t *y = tensor_sum (b, 0);
+    smart tensor_t *y = tensor_sum (b, 0, NULL);
 
     tensor_backward (y);
 
@@ -661,7 +661,7 @@ Test (slice, backward_slice)
         = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 4, 2 }, 2, true);
     smart tensor_t *b
         = tensor_slice (a, (slice_t[]) { (slice_t) { 1, 3, 1 }, (slice_t) { 0, 2, 1 } });
-    smart tensor_t *y = tensor_sum (b, 0);
+    smart tensor_t *y = tensor_sum (b, 0, NULL);
 
     tensor_backward (y);
 
@@ -683,7 +683,7 @@ Test (cat, cat_axis0_backward)
     smart tensor_t *weights
         = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 4, 2 }, 2, false);
     smart tensor_t *loss = tensor_mul (c, weights);
-    smart tensor_t *y    = tensor_sum (loss, 0);
+    smart tensor_t *y    = tensor_sum (loss, 0, NULL);
 
     tensor_backward (y);
 
@@ -711,7 +711,7 @@ Test (cat, cat_axis1_backward)
     smart tensor_t *weights
         = tensor ((float[]) { 1., 2., 3., 4., 5., 6., 7., 8. }, (int[]) { 2, 4 }, 2, false);
     smart tensor_t *loss = tensor_mul (c, weights);
-    smart tensor_t *y    = tensor_sum (loss, 0);
+    smart tensor_t *y    = tensor_sum (loss, 0, NULL);
 
     tensor_backward (y);
 
@@ -730,4 +730,22 @@ Test (cat, cat_axis1_backward)
 
     cr_assert (tensor_equals (a, expected_a_grad, true), "cat_axis1_backward a failed");
     cr_assert (tensor_equals (b, expected_b_grad, true), "cat_axis1_backward b failed");
+}
+
+Test (sum, backward_sum_multiple_axes)
+{
+    log_set_level (LOG_INFO);
+
+    // Test tensor_sum over multiple axes (0 and 1) for a 2D tensor
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 2, 3 }, 2, true);
+    smart tensor_t *y = tensor_sum (a, 2, (int[]) { 0, 1 }); // sum over both axes
+
+    tensor_backward (y);
+
+    // Expected gradients: dy/da = 1 for each element since sum over all elements
+    smart tensor_t *expected_a_grad = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (expected_a_grad, a->data, a->size);
+    tensor_set_grad (expected_a_grad, (float[]) { 1., 1., 1., 1., 1., 1. }, a->size);
+
+    cr_assert (tensor_equals (a, expected_a_grad, true), "backward_sum_multiple_axes failed");
 }

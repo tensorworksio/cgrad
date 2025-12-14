@@ -360,30 +360,19 @@ tensor_pow_ft (float a, tensor_t *b)
 
 // REDUCE OPS
 tensor_t *
-tensor_sum (tensor_t *tensor, int n_axis, ...)
+tensor_sum (tensor_t *tensor, size_t n_axis, const int axes[])
 {
-    if (n_axis <= 0)
+    if (!n_axis || axes == NULL)
     {
         tensor_t *out = tensor_init ((int[]) { 1 }, 1, tensor->requires_grad, op_sum (NULL));
         tensor_add_child (out, tensor);
         return out;
     }
 
-    va_list args;
-    va_start (args, n_axis);
-
-    int axes[n_axis];
-    for (int i = 0; i < n_axis; i++)
+    tensor_t *reduced = tensor_sum_dim (tensor, axes[0]);
+    for (int i = 1; i < n_axis; i++)
     {
-        axes[i] = va_arg (args, int);
-    }
-    va_end (args);
-
-    // TODO: qsort axes ?
-    tensor_t *reduced = tensor;
-    for (int i = 0; i < n_axis; i++)
-    {
-        reduced = tensor_sum_dim (reduced, axes[i]);
+        TENSOR_REBIND (reduced, tensor_sum_dim (reduced, axes[i]));
     }
 
     return reduced;

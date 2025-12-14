@@ -231,11 +231,27 @@ Test (sum, sum_t)
     log_set_level (LOG_INFO);
 
     smart tensor_t *a   = tensor ((float[]) { 1., -2., 3., -4. }, (int[]) { 4 }, 1, false);
-    smart tensor_t *res = tensor_sum (a, 0);
+    smart tensor_t *res = tensor_sum (a, 0, NULL);
     tensor_forward (res);
 
     smart tensor_t *expected = tensor ((float[]) { -2. }, (int[]) { 1 }, 1, false);
     cr_assert (tensor_equals (res, expected, true), "sum_t failed");
+}
+
+Test (sum, sum_axis)
+{
+    log_set_level (LOG_INFO);
+
+    // Shape (2, 3)
+    // [[1, 2, 3],
+    //  [4, 5, 6]]
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 2, 3 }, 2, false);
+
+    // Sum axis 0 -> [5, 7, 9]
+    smart tensor_t *res0 = tensor_sum (a, 1, (int[]) { 0 });
+    tensor_forward (res0);
+
+    smart tensor_t *expected0 = tensor ((float[]) { 5., 7., 9. }, (int[]) { 3 }, 1, false);
 }
 
 Test (rebind, tensor_rebind)

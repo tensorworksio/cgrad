@@ -78,6 +78,44 @@ update_data_sum (tensor_t *self, tensor_t *child)
 }
 
 void
+update_data_sum_dim (tensor_t *self, tensor_t *child)
+{
+    axis_params_t *params = (axis_params_t *) self->op->params;
+    int            axis   = params->axis;
+    int            dim    = child->shape[axis];
+    int            stride = child->stride[axis];
+
+    // Create full range for output tensor
+    slice_t range[self->ndim];
+    for (int i = 0; i < self->ndim; ++i)
+    {
+        range[i] = SLICE_RANGE (0, self->shape[i]);
+    }
+
+    smart iterator_t *it = iterator (range, self->stride, self->ndim);
+
+    while (iterator_has_next (it))
+    {
+        // Map output coordinates to input base offset
+        int input_offset = 0;
+        for (int d = 0; d < self->ndim; ++d)
+        {
+            input_offset += it->indices[d] * child->stride[d];
+        }
+
+        int   out_idx = iterator_next (it);
+        float acc     = 0.0f;
+
+        // Sum along the axis
+        for (int k = 0; k < dim; ++k)
+        {
+            acc += child->data[input_offset + k * stride];
+        }
+        self->data[out_idx] = acc;
+    }
+}
+
+void
 update_data_slice (tensor_t *self, tensor_t *child, slice_t *range, int ndim)
 {
     smart iterator_t *it  = iterator (range, child->stride, ndim);
@@ -139,7 +177,15 @@ forward_sum (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "forward_sum must have 1 child, got %d", self->n_children);
     init_data (self);
-    update_data_sum (self, self->children[0]);
+
+    if (self->op->params == NULL)
+    {
+        update_data_sum (self, self->children[0]);
+    }
+    else
+    {
+        update_data_sum_dim (self, self->children[0]);
+    }
 }
 
 // MOVEMENT OPS
