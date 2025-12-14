@@ -749,3 +749,47 @@ Test (sum, backward_sum_multiple_axes)
 
     cr_assert (tensor_equals (a, expected_a_grad, true), "backward_sum_multiple_axes failed");
 }
+Test (matmul, backward_matmul)
+{
+    log_set_level (LOG_INFO);
+
+    // A = [[1, 2, 3], [4, 5, 6]] (2x3)
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 2, 3 }, 2, true);
+    
+    // B = [[1, 2], [3, 4], [5, 6]] (3x2)
+    smart tensor_t *b = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 3, 2 }, 2, true);
+    
+    // C = A @ B (2x2)
+    smart tensor_t *c = tensor_matmul (a, b);
+    
+    // L = sum(C)
+    smart tensor_t *l = tensor_sum (c, NULL, 0);
+    
+    tensor_backward (l);
+
+    // dL/dA = dL/dC * B.T
+    // dL/dC is ones(2,2)
+    // B.T = [[1, 3, 5], [2, 4, 6]]
+    // dL/dA = [[1, 1], [1, 1]] @ [[1, 3, 5], [2, 4, 6]]
+    // = [[1+2, 3+4, 5+6], [1+2, 3+4, 5+6]]
+    // = [[3, 7, 11], [3, 7, 11]]
+    smart tensor_t *a_grad_expected = tensor ((float[]) { 3., 7., 11., 3., 7., 11. }, (int[]) { 2, 3 }, 2, false);
+    
+    // dL/dB = A.T * dL/dC
+    // A.T = [[1, 4], [2, 5], [3, 6]]
+    // dL/dB = [[1, 4], [2, 5], [3, 6]] @ [[1, 1], [1, 1]]
+    // = [[1+4, 1+4], [2+5, 2+5], [3+6, 3+6]]
+    // = [[5, 5], [7, 7], [9, 9]]
+    smart tensor_t *b_grad_expected = tensor ((float[]) { 5., 5., 7., 7., 9., 9. }, (int[]) { 3, 2 }, 2, false);
+
+    smart tensor_t *a_expected = tensor_create (a->shape, a->ndim, true);
+    tensor_set_data (a_expected, a->data, a->size);
+    tensor_set_grad (a_expected, a_grad_expected->data, a->size);
+    
+    smart tensor_t *b_expected = tensor_create (b->shape, b->ndim, true);
+    tensor_set_data (b_expected, b->data, b->size);
+    tensor_set_grad (b_expected, b_grad_expected->data, b->size);
+
+    cr_assert (tensor_equals (a, a_expected, true), "backward_matmul A grad failed");
+    cr_assert (tensor_equals (b, b_expected, true), "backward_matmul B grad failed");
+}

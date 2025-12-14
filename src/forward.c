@@ -202,7 +202,20 @@ forward_copy (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "forward_copy must have 1 child, got %d", self->n_children);
     init_data (self);
-    memcpy (self->data, self->children[0]->data, self->size * sizeof (float));
+
+    tensor_t *child = self->children[0];
+    slice_t   range[child->ndim];
+    for (int i = 0; i < child->ndim; ++i)
+    {
+        range[i] = SLICE_RANGE (0, child->shape[i]);
+    }
+
+    smart iterator_t *it  = iterator (range, child->stride, child->ndim);
+    int               idx = 0;
+    while (iterator_has_next (it))
+    {
+        self->data[idx++] = child->data[iterator_next (it)];
+    }
 }
 
 void

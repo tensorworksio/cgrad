@@ -545,3 +545,45 @@ Test (cat, cat_axis1_forward)
         = tensor ((float[]) { 1., 2., 5., 6., 3., 4., 7., 8. }, (int[]) { 2, 4 }, 2, false);
     cr_assert (tensor_equals (c, expected, true), "cat_axis1_forward failed");
 }
+Test (clone, clone_transpose)
+{
+    log_set_level (LOG_INFO);
+
+    // A = [[1, 2, 3], [4, 5, 6]]
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 2, 3 }, 2, false);
+    
+    // B = A.T = [[1, 4], [2, 5], [3, 6]]
+    smart tensor_t *b = tensor_transpose (a, 0, 1);
+    
+    // C = clone(B)
+    smart tensor_t *c = tensor_clone (b);
+    tensor_forward (c);
+
+    // Expected data for C (contiguous)
+    smart tensor_t *expected = tensor ((float[]) { 1., 4., 2., 5., 3., 6. }, (int[]) { 3, 2 }, 2, false);
+    
+    cr_assert (tensor_equals (c, expected, true), "clone_transpose failed");
+}
+
+Test (matmul, matmul_simple)
+{
+    log_set_level (LOG_INFO);
+
+    // A = [[1, 2, 3], [4, 5, 6]] (2x3)
+    smart tensor_t *a = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 2, 3 }, 2, false);
+    
+    // B = [[1, 2], [3, 4], [5, 6]] (3x2)
+    smart tensor_t *b = tensor ((float[]) { 1., 2., 3., 4., 5., 6. }, (int[]) { 3, 2 }, 2, false);
+    
+    // C = A @ B (2x2)
+    // [[1*1+2*3+3*5, 1*2+2*4+3*6],
+    //  [4*1+5*3+6*5, 4*2+5*4+6*6]]
+    // = [[1+6+15, 2+8+18], [4+15+30, 8+20+36]]
+    // = [[22, 28], [49, 64]]
+    smart tensor_t *c = tensor_matmul (a, b);
+    tensor_forward (c);
+
+    smart tensor_t *expected = tensor ((float[]) { 22., 28., 49., 64. }, (int[]) { 2, 2 }, 2, false);
+    
+    cr_assert (tensor_equals (c, expected, true), "matmul_simple failed");
+}

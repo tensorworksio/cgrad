@@ -243,7 +243,23 @@ backward_copy (tensor_t *self)
 {
     ASSERT (self->n_children == 1, "backward_copy expects 1 child, got %d", self->n_children);
     init_grad (self->children[0]);
-    update_grad_add (self, self->children[0]);
+
+    tensor_t *child = self->children[0];
+    if (!child->requires_grad)
+        return;
+
+    slice_t range[child->ndim];
+    for (int i = 0; i < child->ndim; ++i)
+    {
+        range[i] = SLICE_RANGE (0, child->shape[i]);
+    }
+
+    smart iterator_t *it  = iterator (range, child->stride, child->ndim);
+    int               idx = 0;
+    while (iterator_has_next (it))
+    {
+        child->grad[iterator_next (it)] += self->grad[idx++];
+    }
 }
 
 void

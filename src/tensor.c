@@ -358,6 +358,42 @@ tensor_pow_ft (float a, tensor_t *b)
     return out;
 }
 
+tensor_t *
+tensor_matmul (tensor_t *a, tensor_t *b)
+{
+    ASSERT (a->ndim == 2, "Matmul requires 2D tensor A");
+    ASSERT (b->ndim == 2, "Matmul requires 2D tensor B");
+    ASSERT (a->shape[1] == b->shape[0], "Shape mismatch for matmul: (%d, %d) x (%d, %d)",
+            a->shape[0], a->shape[1], b->shape[0], b->shape[1]);
+
+    int M = a->shape[0];
+    int K = a->shape[1];
+    int N = b->shape[1];
+
+    smart tensor_t *a_3d         = tensor_reshape (a, (int[]) { M, 1, K }, 3);
+    smart tensor_t *b_t          = tensor_transpose (b, 0, 1);
+    smart tensor_t *b_contiguous = tensor_clone (b_t);
+    smart tensor_t *b_3d         = tensor_reshape (b_contiguous, (int[]) { 1, N, K }, 3);
+
+    // Broadcast A to (M, N, K)
+    tensor_t **a_copies = malloc (sizeof (tensor_t *) * N);
+    for (int i = 0; i < N; ++i)
+        a_copies[i] = a_3d;
+    smart tensor_t *a_broadcast = tensor_cat (a_copies, N, 1);
+    free (a_copies);
+
+    // Broadcast B to (M, N, K)
+    tensor_t **b_copies = malloc (sizeof (tensor_t *) * M);
+    for (int i = 0; i < M; ++i)
+        b_copies[i] = b_3d;
+    smart tensor_t *b_broadcast = tensor_cat (b_copies, M, 0);
+    free (b_copies);
+
+    smart tensor_t *prod = tensor_mul (a_broadcast, b_broadcast);
+    smart tensor_t *sum  = tensor_sum (prod, (int[]) { 2 }, 1);
+    return tensor_reshape (sum, (int[]) { M, N }, 2);
+}
+
 // REDUCE OPS
 tensor_t *
 tensor_sum (tensor_t *tensor, const int axes[], size_t n_axis)

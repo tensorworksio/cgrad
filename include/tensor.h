@@ -92,6 +92,8 @@ tensor_t *tensor_pow_tt (tensor_t *a, tensor_t *b);
 tensor_t *tensor_pow_tf (tensor_t *a, float b);
 tensor_t *tensor_pow_ft (float a, tensor_t *b);
 
+tensor_t *tensor_matmul (tensor_t *a, tensor_t *b);
+
 // REDUCE OPS
 tensor_t *tensor_sum (tensor_t *tensor, const int axes[], size_t n_axis);
 tensor_t *tensor_sum_dim (tensor_t *tensor, int axis);
